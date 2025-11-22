@@ -2,6 +2,10 @@ import ExpandableText from "@/components/Expandable";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import { ScrollView, Image, Dimensions, Pressable } from "react-native";
+import ReviewCarousel from "@/components/Reviews";
+import Star from "@/components/SVGs/Star";
+import ProfileCard from "@/components/ProfileCard";
+import Footer from "@/components/Footer";
 
 const images = [
   "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
@@ -92,15 +96,38 @@ export default function ReebahScreen() {
           {/* Left Column */}
           <div className="lg:col-span-2">
             {/* Property Details */}
-            <div className="pb-8 border-b">
+            <div className="text-center">
               <h2 className="text-xl font-semibold mb-2 mt-6">
-                Sector 100, Noida
+                Oasis Homestay{" "}
               </h2>
-              <p className="text-gray-600">3 guests · 2 beds · 2 bathrooms</p>
+              <p className="text-sm text-gray-600">Sector 100, Noida</p>
+              <p className="text-sm text-gray-600">
+                2 guest · 1 bed · 1 bathroom
+              </p>
+            </div>
+            {/* Stats */}
+            <div className="flex w-full items-center text-center justify-around gap-6 border-b border-zinc-300 px-6 py-6">
+              <div className="flex items-center gap-1 ">
+                <Star />
+                <p className="font-semibold text-gray-900">4.8</p>
+                <p className="text-sm text-gray-500 ml-1"></p>
+              </div>
+              <div className="h-10 w-0.5 rounded-full bg-zinc-300"></div>
+
+              <div>
+                <p className="font-semibold text-gray-900">1+</p>
+                <p className="text-sm text-gray-500">Years</p>
+              </div>
+
+              <div className="h-10 w-0.5 rounded-full bg-zinc-300"></div>
+              <div>
+                <p className="font-semibold text-gray-900">4</p>
+                <p className="text-sm text-gray-500">Reviews</p>
+              </div>
             </div>
 
             {/* Description */}
-            <div className="py-8 border-b">
+            <div className="py-8 border-b border-zinc-300 ">
               <ExpandableText
                 limit={200}
                 text="The price mentioned is for room only, breakfast is not included. 
@@ -111,7 +138,7 @@ export default function ReebahScreen() {
             </div>
 
             {/* Amenities */}
-            <div className="py-8 border-b">
+            <div className="py-8 border-b border-zinc-300">
               <h3 className="text-xl font-semibold mb-6">
                 What this place offers
               </h3>
@@ -151,8 +178,25 @@ export default function ReebahScreen() {
                 </div>
               </div>
             </div>
+            {/*Host*/}
+
+            <div className="flex-1 relative py-8">
+              <h3 className="text-xl text-center font-semibold mb-6">
+                Meet your host
+              </h3>
+              <ProfileCard />
+            </div>
+
+            {/*Reviews*/}
+            <div className="py-8 border-y border-zinc-300">
+              <h3 className="text-xl  font-semibold mb-6">Reviews</h3>
+              <div className="flex items-center gap-2 mb-4">
+                <Star /> <p className="text-lg font-medium">4.6 • 20 Reviews</p>
+              </div>
+              <ReviewCarousel />
+            </div>
             {/* Highlights */}
-            <div className="py-8 border-b space-y-6">
+            <div className="py-8 space-y-6">
               <div className="flex items-start gap-4">
                 <svg
                   className="w-6 h-6 "
@@ -254,6 +298,7 @@ export default function ReebahScreen() {
           </div>
         </div>
       </main>
+      <Footer />
     </ScrollView>
   );
 }

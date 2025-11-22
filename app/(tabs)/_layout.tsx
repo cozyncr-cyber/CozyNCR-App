@@ -25,6 +25,15 @@ export default function RootLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="/profile"
+        options={{
+          tabBarShowLabel: false,
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="paperplane.fill" color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
