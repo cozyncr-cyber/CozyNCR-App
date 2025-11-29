@@ -1,4 +1,6 @@
 "use client"; // Required for useState and useEffect
+"use dom";
+import "../src/global.css";
 
 import React, { useState, useEffect } from "react";
 import Star from "./SVGs/Star";

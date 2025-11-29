@@ -1,3 +1,5 @@
+"use dom";
+import "../src/global.css";
 import { ScrollView } from "react-native";
 import Star from "./SVGs/Star";
 
@@ -76,7 +78,7 @@ export default function ProfileCard() {
               </p>
 
               {/* Stats */}
-              <div className="flex w-full items-center text-center justify-around gap-6 mb-6 px-6">
+              <div className="flex w-full items-center text-center justify-around gap-3 sm:gap-6 mb-6 ">
                 <div className="flex items-center gap-1 ">
                   <Star />
                   <p className="font-semibold text-white">4.8</p>

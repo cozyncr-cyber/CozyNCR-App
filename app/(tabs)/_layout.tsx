@@ -1,4 +1,6 @@
-import { IconSymbol } from "@/components/ui/icon-symbol";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { Tabs } from "expo-router";
 import "react-native-reanimated";
 
@@ -8,29 +10,29 @@ export default function RootLayout() {
       screenOptions={{ tabBarActiveTintColor: "#e91e63", headerShown: false }}
     >
       <Tabs.Screen
-        name="/index"
+        name="index"
         options={{
-          tabBarShowLabel: false,
+          title: "Home",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <Ionicons name="home-outline" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="/explore"
+        name="explore"
         options={{
-          tabBarShowLabel: false,
+          title: "Trips",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
+            <AntDesign name="history" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="/profile"
+        name="profile"
         options={{
-          tabBarShowLabel: false,
+          title: "Profile",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
+            <MaterialCommunityIcons name="account" size={24} color={color} />
           ),
         }}
       />

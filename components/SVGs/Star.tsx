@@ -1,3 +1,5 @@
+"use dom";
+import "../../src/global.css";
 export default function Star() {
   return (
     <svg

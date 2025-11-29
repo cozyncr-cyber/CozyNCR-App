@@ -1,3 +1,5 @@
+"use dom";
+import "../src/global.css";
 import Skeleton from "./Skeleton";
 
 export default function SkeletonCard() {

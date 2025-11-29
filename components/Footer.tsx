@@ -1,4 +1,8 @@
+"use dom";
+import "../src/global.css";
 import React from "react";
+import Entypo from "@expo/vector-icons/Entypo";
+import Feather from "@expo/vector-icons/Feather";
 
 const Footer = () => {
   return (
@@ -10,9 +14,11 @@ const Footer = () => {
         <p className="text-slate-600">Company Details</p>
       </div>
 
-      <div className="flex gap-2 ">
-        <p className="text-slate-600">X</p>
-        <p className="text-slate-600">Y</p>
+      <div className="flex gap-4 ">
+        <Entypo name="instagram" size={20} color="gray" />
+        <div className="text-slate-600">
+          <Feather name="mail" size={20} color="gray" />
+        </div>
       </div>
     </div>
   );

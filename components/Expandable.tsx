@@ -1,3 +1,5 @@
+"use dom";
+import "../src/global.css";
 import React, { useState } from "react";
 
 export default function ExpandableText({
@@ -9,10 +11,12 @@ export default function ExpandableText({
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  const isLong = text.length > limit;
+  const isLong = text?.length > limit;
 
   // Cut at last full word (nearest space before limit)
-  const shortText = isLong ? text.slice(0, text.lastIndexOf(" ", limit)) : text;
+  const shortText = isLong
+    ? text?.slice(0, text.lastIndexOf(" ", limit))
+    : text;
 
   const displayText = expanded ? text : shortText + (isLong ? "..." : "");
 
