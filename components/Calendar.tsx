@@ -1,3 +1,4 @@
+import Feather from "@expo/vector-icons/Feather";
 import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
 
@@ -183,7 +184,7 @@ export default function Calendar({ onSave, onClose }: any) {
         <View className="flex-row items-center justify-between mb-6">
           <Text className="text-2xl font-semibold">Change dates</Text>
           <Pressable onPress={onClose} className="p-2">
-            <Text className="text-lg">×</Text>
+            <Feather name="x" size={24} color="black" />
           </Pressable>
         </View>
 

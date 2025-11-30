@@ -16,7 +16,7 @@ interface GuestRowProps {
   link?: string;
 }
 
-const AirbnbGuests = () => {
+export default function Guests({ onSave, onClose }: any) {
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
@@ -102,11 +102,11 @@ const AirbnbGuests = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-50 items-center justify-center p-4">
-      <View className="bg-white rounded-3xl shadow-xl w-full max-w-md p-6">
+    <View className="flex-1 bg-gray-50 items-center justify-center">
+      <View className="bg-white w-full h-full p-6">
         <View className="flex-row items-center justify-between mb-4">
           <Text className="text-2xl font-semibold">Change guests</Text>
-          <Pressable className="p-2 rounded-full">
+          <Pressable className="p-2 rounded-full" onPress={onClose}>
             <Feather name="x" size={24} color="black" />
           </Pressable>
         </View>
@@ -152,9 +152,21 @@ const AirbnbGuests = () => {
             link="Bringing a service animal?"
           />
         </View>
+        <Pressable
+          onPress={() => {
+            const guestString =
+              `${adults} adult${adults > 1 ? "s" : ""}` +
+              `${children ? `, ${children} child${children > 1 ? "ren" : ""}` : ""}` +
+              `${infants ? `, ${infants} infant${infants > 1 ? "s" : ""}` : ""}` +
+              `${pets ? `, ${pets} pet${pets > 1 ? "s" : ""}` : ""}`;
+
+            onSave(guestString);
+          }}
+          className="mt-6 bg-gray-900 py-3 rounded-xl"
+        >
+          <Text className="text-white text-center font-semibold">Save</Text>
+        </Pressable>
       </View>
     </View>
   );
-};
-
-export default AirbnbGuests;
+}

@@ -5,12 +5,14 @@ import Star from "@/components/SVGs/Star";
 import { useRouter } from "expo-router";
 import { useProperty } from "@/src/contexts/PropertyContext";
 import Calendar from "@/components/Calendar";
+import Guests from "@/components/Guests";
 export default function Booking() {
   const { data, loading } = useProperty();
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [guestModalOpen, setGuestModalOpen] = useState(false);
   const [bookingType, setBookingType] = useState("daily");
   const [dates, setDates] = useState("7–12 Dec 2025");
-  const [guests, setGuests] = useState("1 adult, 2 children, 1 infant");
+  const [guests, setGuests] = useState("1 adult");
   const router = useRouter();
 
   const bookingTypes = [
@@ -113,8 +115,10 @@ export default function Booking() {
                 <Text className="text-sm font-semibold mb-1">Guests</Text>
                 <Text className="text-sm text-gray-700">{guests}</Text>
               </View>
-
-              <Pressable className="px-4 py-2 rounded-lg bg-gray-100">
+              <Pressable
+                className="px-4 py-2 rounded-lg bg-gray-100"
+                onPress={() => setGuestModalOpen(true)}
+              >
                 <Text className="text-sm font-semibold">Change</Text>
               </Pressable>
             </View>
@@ -211,6 +215,32 @@ export default function Booking() {
           </Text>
         </View>
       </View>
+
+      {/* Guests Modal */}
+      <Modal
+        visible={guestModalOpen}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setGuestModalOpen(false)}
+      >
+        {/* Backdrop */}
+        <Pressable
+          className="flex-1 bg-black/40"
+          onPress={() => setGuestModalOpen(false)}
+        />
+
+        {/* Bottom Sheet */}
+        <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
+          <Guests
+            onClose={() => setGuestModalOpen(false)}
+            onSave={(guestString) => {
+              setGuests(guestString);
+              setGuestModalOpen(false);
+            }}
+          />
+        </ScrollView>
+      </Modal>
+
       {/* Calendar Modal */}
       <Modal
         visible={calendarOpen}
