@@ -12,17 +12,20 @@ interface CalendarOnSavePayload {
 interface CalendarProps {
   onSave: (payload: CalendarOnSavePayload) => void;
   onClose: () => void;
-  mode?: "range" | "single"; // 🔥 NEW
+  mode?: "range" | "single";
+  checkoutOnlyDates?: Date[]; // 🔥 new prop
 }
 
 export default function Calendar({
   onSave,
   onClose,
   mode = "range",
+  checkoutOnlyDates = [],
 }: CalendarProps) {
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date(2025, 10));
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const minDate = new Date(2025, 10, 15);
 
@@ -49,6 +52,13 @@ export default function Calendar({
 
   const days = ["S", "M", "T", "W", "T", "F", "S"];
 
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 2000);
+  };
+
   const getDaysInMonth = (date: any) => {
     const y = date.getFullYear();
     const m = date.getMonth();
@@ -62,22 +72,39 @@ export default function Calendar({
   const isBlockedDate = (date: Date) =>
     blockedDates.some((d) => d.toDateString() === date.toDateString());
 
+  const isCheckoutOnlyDate = (date: Date) =>
+    checkoutOnlyDates.some((d) => d.toDateString() === date.toDateString());
+
   const handleDateClick = (date: Date) => {
-    // SINGLE DATE MODE (hourly)
+    const checkoutOnly = isCheckoutOnlyDate(date);
+
+    // SINGLE DATE MODE (hourly) -> cannot pick checkout-only as single
     if (mode === "single") {
       if (isBeforeMin(date) || isBlockedDate(date)) return;
+      if (checkoutOnly) {
+        showToast("This date is only available for checkout.");
+        return;
+      }
       setCheckIn(date);
       setCheckOut(null);
       return;
     }
 
     // RANGE MODE
-    if (!checkIn || (checkIn && checkOut) || date < checkIn) {
+    const choosingCheckIn = !checkIn || (checkIn && checkOut) || date < checkIn;
+
+    if (choosingCheckIn) {
+      // can't choose checkout-only as check-in
+      if (checkoutOnly) {
+        showToast("This date is only available for checkout.");
+        return;
+      }
       setCheckIn(date);
       setCheckOut(null);
       return;
     }
 
+    // choosing checkout
     const blockedInside = blockedDates.some((d) => d > checkIn! && d < date);
     if (blockedInside) return;
 
@@ -157,7 +184,7 @@ export default function Calendar({
             <View
               key={`blank-${i}`}
               className="h-8 items-center justify-center"
-              style={{ width: `${100 / 7}%` }} // 1/7 of the row
+              style={{ width: `${100 / 7}%` }}
             />
           ))}
 
@@ -170,6 +197,8 @@ export default function Calendar({
               isBeforeMin(dateObj) ||
               isBlockedDate(dateObj) ||
               isInvalidCheckout(dateObj);
+
+            const checkoutOnly = isCheckoutOnlyDate(dateObj);
 
             return (
               <Pressable
@@ -194,11 +223,15 @@ export default function Calendar({
                       : "hover:border hover:border-gray-900"
                   }
                 `}
-                style={{ width: `${100 / 7}%` }} // 7 columns
+                style={{ width: `${100 / 7}%` }}
               >
                 <Text
                   className={`text-sm ${
-                    selected ? "text-white" : "text-gray-800"
+                    selected
+                      ? "text-white"
+                      : checkoutOnly
+                        ? "text-indigo-500"
+                        : "text-gray-800"
                   }`}
                 >
                   {day}
@@ -242,8 +275,8 @@ export default function Calendar({
   };
 
   return (
-    <View className="flex-1 bg-gray-50 items-center justify-center">
-      <View className="bg-white  w-full h-full px-6">
+    <View className="flex-1 bg-gray-50 items-center justify-center relative">
+      <View className="bg-white w-full h-full px-6">
         <View className="flex-row items-center justify-between py-6 sticky top-0 bg-white z-10">
           <Text className="text-2xl font-semibold">
             {mode === "single" ? "Select date" : "Change dates"}
@@ -271,6 +304,15 @@ export default function Calendar({
           </Pressable>
         </View>
       </View>
+
+      {/* Toast */}
+      {toastMessage && (
+        <View className="absolute bottom-8 left-0 right-0 items-center">
+          <View className="bg-black/80 px-4 py-2 rounded-full">
+            <Text className="text-white text-xs">{toastMessage}</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }

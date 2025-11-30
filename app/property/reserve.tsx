@@ -328,7 +328,8 @@ export default function Booking() {
         />
         <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
           <Calendar
-            mode={isHourlyType(bookingType) ? "single" : "range"}
+            mode={isHourly ? "single" : "range"}
+            checkoutOnlyDates={[new Date(2025, 10, 25), new Date(2025, 10, 27)]}
             onSave={({ label, checkIn, checkOut }) => {
               setCheckInDate(checkIn);
               setCheckOutDate(checkOut);
