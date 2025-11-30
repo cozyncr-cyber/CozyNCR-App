@@ -2,6 +2,8 @@ import { UserProvider, useUser } from "@/src/contexts/UserContext";
 import { Stack } from "expo-router";
 import "../global.css";
 
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+
 export function Router() {
   const user = useUser();
   return (
@@ -20,7 +22,9 @@ export function Router() {
 export default function RootLayout() {
   return (
     <UserProvider>
-      <Router />
+      <SafeAreaProvider>
+        <Router />
+      </SafeAreaProvider>
     </UserProvider>
   );
 }

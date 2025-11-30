@@ -8,8 +8,9 @@ export default function Map() {
   const longitude = 75.7873;
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} className="rounded-xl overflow-hidden">
       <MapView
+        className="rounded-xl overflow-hidden"
         style={styles.map}
         initialRegion={{
           latitude,

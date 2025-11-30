@@ -19,13 +19,14 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { amenityIcons } from "@/components/AmenityIcon";
 import { useProperty } from "@/src/contexts/PropertyContext";
+import PriceModal from "@/components/PriceModal";
 
 export default function Details() {
   const { data, loading } = useProperty();
   const width = Dimensions.get("window").width;
   const [activeIndex, setActiveIndex] = useState(0);
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [priceOpen, setPriceOpen] = useState(false);
 
   const handleScroll = (event: any) => {
     const slide = Math.round(event.nativeEvent.contentOffset.x / width);
@@ -256,11 +257,21 @@ export default function Details() {
           </View>
           <View className="h-20 w-full"></View>
         </View>
+        <PriceModal
+          visible={priceOpen}
+          onClose={() => setPriceOpen(false)}
+          nights={2}
+          pricePerNight={2065.53}
+          total={4131.06}
+          datesLabel="12–14 Dec"
+          cancellationText="Free cancellation before 11 December"
+          currencySymbol="₹"
+        />
       </ScrollView>
 
       {/* Sticky Bottom Bar */}
       <View className="absolute left-0 right-0 bottom-0 h-20 flex-row items-center justify-between shadow-sm bg-white p-4 border-t border-gray-200 z-20">
-        <Pressable onPress={() => setOpen(true)}>
+        <Pressable onPress={() => setPriceOpen(true)}>
           <Text className="font-semibold underline">Rs 4131.06 /-</Text>
           <Text className="text-zinc-500 text-sm">For 2 nights</Text>
         </Pressable>
@@ -271,46 +282,6 @@ export default function Details() {
           </View>
         </Pressable>
       </View>
-
-      {/* Bottom sheet */}
-      <View
-        className="absolute left-0 right-0 bg-white rounded-t-2xl z-30 p-5 max-h-[75vh]"
-        style={{
-          bottom: open ? 0 : -Dimensions.get("window").height,
-        }}
-      >
-        <Pressable
-          className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"
-          onPress={() => setOpen(false)}
-        />
-
-        <Text className="text-xl font-semibold mb-4">Price Details</Text>
-
-        <View>
-          <View className="flex-row justify-between mb-3 border-b border-zinc-400 pb-3">
-            <Text className="text-base text-gray-700">
-              2 nights × ₹2,065.53
-            </Text>
-            <Text className="text-base font-semibold">₹4,131.06</Text>
-          </View>
-
-          <View className="mt-4 mb-3">
-            <Text className="text-lg mb-1 font-medium">Dates</Text>
-            <Text className="text-gray-600">12–14 Dec</Text>
-            <Text className="text-sm text-gray-500">
-              Free cancellation before 11 December
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Backdrop */}
-      {open && (
-        <Pressable
-          className="absolute inset-0 bg-black/40 z-20"
-          onPress={() => setOpen(false)}
-        />
-      )}
     </>
   );
 }

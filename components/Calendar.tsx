@@ -2,7 +2,24 @@ import Feather from "@expo/vector-icons/Feather";
 import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
 
-export default function Calendar({ onSave, onClose }: any) {
+interface CalendarOnSavePayload {
+  label: string;
+  checkIn: Date;
+  checkOut: Date | null;
+  mode: "range" | "single";
+}
+
+interface CalendarProps {
+  onSave: (payload: CalendarOnSavePayload) => void;
+  onClose: () => void;
+  mode?: "range" | "single"; // 🔥 NEW
+}
+
+export default function Calendar({
+  onSave,
+  onClose,
+  mode = "range",
+}: CalendarProps) {
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date(2025, 10));
@@ -46,6 +63,15 @@ export default function Calendar({ onSave, onClose }: any) {
     blockedDates.some((d) => d.toDateString() === date.toDateString());
 
   const handleDateClick = (date: Date) => {
+    // SINGLE DATE MODE (hourly)
+    if (mode === "single") {
+      if (isBeforeMin(date) || isBlockedDate(date)) return;
+      setCheckIn(date);
+      setCheckOut(null);
+      return;
+    }
+
+    // RANGE MODE
     if (!checkIn || (checkIn && checkOut) || date < checkIn) {
       setCheckIn(date);
       setCheckOut(null);
@@ -53,13 +79,13 @@ export default function Calendar({ onSave, onClose }: any) {
     }
 
     const blockedInside = blockedDates.some((d) => d > checkIn! && d < date);
-
     if (blockedInside) return;
 
     setCheckOut(date);
   };
 
   const isInRange = (date: Date) => {
+    if (mode === "single") return false;
     if (!checkIn || !checkOut) return false;
     if (isBlockedDate(date) || isBeforeMin(date)) return false;
 
@@ -72,6 +98,7 @@ export default function Calendar({ onSave, onClose }: any) {
   };
 
   const isInvalidCheckout = (date: Date) => {
+    if (mode === "single") return false;
     if (!checkIn) return false;
     if (date <= checkIn) return false;
 
@@ -80,6 +107,11 @@ export default function Calendar({ onSave, onClose }: any) {
 
   const isSelected = (date: Date) => {
     if (!checkIn) return false;
+
+    if (mode === "single") {
+      return date.getTime() === checkIn.getTime();
+    }
+
     if (!checkOut) {
       return date.getTime() === checkIn.getTime();
     }
@@ -119,9 +151,14 @@ export default function Calendar({ onSave, onClose }: any) {
         </View>
 
         {/* Days grid */}
-        <View className="grid grid-cols-7 flex-wrap">
+        <View className="flex-row flex-wrap">
+          {/* blanks */}
           {blanks.map((_, i) => (
-            <View key={`blank-${i}`} className="w-8 h-8" />
+            <View
+              key={`blank-${i}`}
+              className="h-8 items-center justify-center"
+              style={{ width: `${100 / 7}%` }} // 1/7 of the row
+            />
           ))}
 
           {daysArray.map((day) => {
@@ -157,6 +194,7 @@ export default function Calendar({ onSave, onClose }: any) {
                       : "hover:border hover:border-gray-900"
                   }
                 `}
+                style={{ width: `${100 / 7}%` }} // 7 columns
               >
                 <Text
                   className={`text-sm ${
@@ -178,11 +216,38 @@ export default function Calendar({ onSave, onClose }: any) {
     setCheckOut(null);
   };
 
+  const handleSave = () => {
+    if (!checkIn) return;
+
+    if (mode === "single") {
+      const label = checkIn.toLocaleDateString();
+      onSave({
+        label,
+        checkIn,
+        checkOut: null,
+        mode,
+      });
+      return;
+    }
+
+    if (!checkOut) return;
+
+    const label = `${checkIn.toLocaleDateString()} – ${checkOut.toLocaleDateString()}`;
+    onSave({
+      label,
+      checkIn,
+      checkOut,
+      mode,
+    });
+  };
+
   return (
     <View className="flex-1 bg-gray-50 items-center justify-center">
-      <View className="bg-white  w-full h-full p-6">
-        <View className="flex-row items-center justify-between mb-6">
-          <Text className="text-2xl font-semibold">Change dates</Text>
+      <View className="bg-white  w-full h-full px-6">
+        <View className="flex-row items-center justify-between py-6 sticky top-0 bg-white z-10">
+          <Text className="text-2xl font-semibold">
+            {mode === "single" ? "Select date" : "Change dates"}
+          </Text>
           <Pressable onPress={onClose} className="p-2">
             <Feather name="x" size={24} color="black" />
           </Pressable>
@@ -192,7 +257,7 @@ export default function Calendar({ onSave, onClose }: any) {
         {renderCalendar(1)}
 
         {/* Footer */}
-        <View className="flex-row items-center justify-between pt-4 border-t">
+        <View className="flex-row items-center justify-between bg-white py-4 border-t sticky bottom-0">
           <Pressable onPress={clearDates} className="px-4 py-2 rounded-lg">
             <Text className="text-base font-semibold underline">
               Clear dates
@@ -200,28 +265,11 @@ export default function Calendar({ onSave, onClose }: any) {
           </Pressable>
           <Pressable
             className="bg-gray-900 px-6 py-3 rounded-lg"
-            onPress={() =>
-              onSave(
-                `${checkIn?.toLocaleDateString()} – ${checkOut?.toLocaleDateString()}`
-              )
-            }
+            onPress={handleSave}
           >
             <Text className="text-white font-semibold">Save</Text>
           </Pressable>
         </View>
-
-        {(checkIn || checkOut) && (
-          <View className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <Text className="text-sm">
-              <Text className="font-bold">Check-in:</Text>{" "}
-              {checkIn ? checkIn.toLocaleDateString() : "Not selected"}
-            </Text>
-            <Text className="text-sm mt-1">
-              <Text className="font-bold">Check-out:</Text>{" "}
-              {checkOut ? checkOut.toLocaleDateString() : "Not selected"}
-            </Text>
-          </View>
-        )}
       </View>
     </View>
   );

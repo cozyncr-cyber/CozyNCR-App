@@ -5,8 +5,8 @@ export default function RootLayout() {
   return (
     <PropertyProvider>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="[id].tsx" />
-        <Stack.Screen name="reserve.tsx" />
+        <Stack.Screen name="[id]" />
+        <Stack.Screen name="reserve" />
       </Stack>
     </PropertyProvider>
   );
