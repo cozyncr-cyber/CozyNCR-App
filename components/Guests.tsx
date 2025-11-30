@@ -1,6 +1,5 @@
-"use dom";
-import "../src/global.css";
 import React, { useState } from "react";
+import { View, Text, Pressable } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Feather from "@expo/vector-icons/Feather";
 
@@ -38,6 +37,7 @@ const AirbnbGuests = () => {
     }
     if (totalGuests < maxGuests) setter(value + 1);
   };
+
   const decrement = (setter: Setter, value: number, min = 0) => {
     if (value > min) setter(value - 1);
   };
@@ -51,65 +51,72 @@ const AirbnbGuests = () => {
     minValue = 0,
     disabledIncrement,
     link,
-  }: GuestRowProps) => (
-    <div className="flex items-center justify-between py-6 border-b border-gray-200 last:border-b-0">
-      <div>
-        <h3 className="text-base font-normal text-gray-900">{title}</h3>
-        <p className="text-sm text-gray-500 mt-0.5">
-          {subtitle}
-          {link && (
-            <button className="text-left underline text-gray-500 hover:text-gray-700">
-              {link}
-            </button>
-          )}
-        </p>
-      </div>
-      <div className="flex items-center gap-4">
-        <button
-          onClick={onDecrement}
-          disabled={value <= minValue}
-          className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors
-            ${
-              value <= minValue
-                ? "border-gray-200 text-gray-300 cursor-not-allowed"
-                : "border-gray-400 text-gray-600 hover:border-gray-900"
-            }`}
-        >
-          <AntDesign name="minus" size={14} color="gray" />
-        </button>
-        <span className="w-4 text-center text-base text-gray-900">{value}</span>
-        <button
-          onClick={onIncrement}
-          disabled={disabledIncrement}
-          className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors
-            ${
-              disabledIncrement
-                ? "border-gray-200 text-gray-300 cursor-not-allowed"
-                : "border-gray-400 text-gray-600 hover:border-gray-900"
-            }`}
-        >
-          <AntDesign name="plus" size={14} color="gray" />
-        </button>
-      </div>
-    </div>
-  );
+  }: GuestRowProps) => {
+    const minusDisabled = value <= minValue;
+    const plusDisabled = !!disabledIncrement;
+
+    return (
+      <View className="flex-row items-center justify-between py-6 border-b border-gray-200">
+        <View className="flex-1">
+          <Text className="text-base font-normal text-gray-900">{title}</Text>
+          <Text className="text-sm text-gray-500 mt-0.5">
+            {subtitle}
+            {!!link && <Text>{"\n"}</Text>}
+            {!!link && <Text className="underline text-gray-500">{link}</Text>}
+          </Text>
+        </View>
+
+        <View className="flex-row items-center gap-4">
+          <Pressable
+            onPress={onDecrement}
+            disabled={minusDisabled}
+            className={`w-8 h-8 rounded-full border items-center justify-center
+              ${minusDisabled ? "border-gray-200" : "border-gray-400"}`}
+          >
+            <AntDesign
+              name="minus"
+              size={14}
+              color={minusDisabled ? "lightgray" : "gray"}
+            />
+          </Pressable>
+
+          <Text className="w-4 text-center text-base text-gray-900">
+            {value}
+          </Text>
+
+          <Pressable
+            onPress={onIncrement}
+            disabled={plusDisabled}
+            className={`w-8 h-8 rounded-full border items-center justify-center
+              ${plusDisabled ? "border-gray-200" : "border-gray-400"}`}
+          >
+            <AntDesign
+              name="plus"
+              size={14}
+              color={plusDisabled ? "lightgray" : "gray"}
+            />
+          </Pressable>
+        </View>
+      </View>
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-xl max-w-md w-full p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-semibold">Change guests</h2>
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+    <View className="flex-1 bg-gray-50 items-center justify-center p-4">
+      <View className="bg-white rounded-3xl shadow-xl w-full max-w-md p-6">
+        <View className="flex-row items-center justify-between mb-4">
+          <Text className="text-2xl font-semibold">Change guests</Text>
+          <Pressable className="p-2 rounded-full">
             <Feather name="x" size={24} color="black" />
-          </button>
-        </div>
+          </Pressable>
+        </View>
 
-        <p className="text-sm text-gray-600 mb-6">
+        <Text className="text-sm text-gray-600 mb-6">
           This place has a maximum of {maxGuests} guests, not including infants.
           Pets aren&apos;t allowed.
-        </p>
+        </Text>
 
-        <div>
+        <View>
           <GuestRow
             title="Adults"
             subtitle="Age 13+"
@@ -131,7 +138,7 @@ const AirbnbGuests = () => {
             title="Infants"
             subtitle="Under 2"
             value={infants}
-            onIncrement={() => setInfants(infants + 1)}
+            onIncrement={() => increment(setInfants, infants, "infants")}
             onDecrement={() => decrement(setInfants, infants)}
             disabledIncrement={infants >= maxInfants}
           />
@@ -139,14 +146,14 @@ const AirbnbGuests = () => {
             title="Pets"
             subtitle=""
             value={pets}
-            onIncrement={() => setPets(pets + 1)}
+            onIncrement={() => increment(setPets, pets, "pets")}
             onDecrement={() => decrement(setPets, pets)}
             disabledIncrement={false}
             link="Bringing a service animal?"
           />
-        </div>
-      </div>
-    </div>
+        </View>
+      </View>
+    </View>
   );
 };
 

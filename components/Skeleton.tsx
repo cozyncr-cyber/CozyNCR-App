@@ -1,7 +1,7 @@
-"use dom";
-import "../src/global.css";
+import { View } from "react-native";
+
 export default function Skeleton() {
   return (
-    <div className="relative w-full h-full overflow-hidden bg-gray-300 animate-pulse" />
+    <View className="relative w-full h-full overflow-hidden bg-gray-300 animate-pulse" />
   );
 }

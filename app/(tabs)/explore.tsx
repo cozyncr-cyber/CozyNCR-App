@@ -1,5 +1,3 @@
-"use dom";
-import "../../src/global.css";
 import { ScrollView } from "react-native";
 import AirbnbGuests from "@/components/Guests";
 

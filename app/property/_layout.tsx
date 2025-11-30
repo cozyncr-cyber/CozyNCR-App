@@ -1,6 +1,4 @@
 import { Stack } from "expo-router";
-import "react-native-reanimated";
-import "../../src/global.css";
 import { PropertyProvider } from "@/src/contexts/PropertyContext";
 
 export default function RootLayout() {

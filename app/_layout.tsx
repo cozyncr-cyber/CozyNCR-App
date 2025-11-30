@@ -1,8 +1,6 @@
-import { Stack } from "expo-router";
-import "react-native-reanimated";
-import "../src/global.css";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { UserProvider, useUser } from "@/src/contexts/UserContext";
+import { Stack } from "expo-router";
+import "../global.css";
 
 export function Router() {
   const user = useUser();
@@ -22,9 +20,7 @@ export function Router() {
 export default function RootLayout() {
   return (
     <UserProvider>
-      <SafeAreaView style={{ flex: 1 }}>
-        <Router /> {/* using context inside provider */}
-      </SafeAreaView>
+      <Router />
     </UserProvider>
   );
 }

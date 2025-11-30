@@ -1,10 +1,14 @@
-"use dom";
-import "../src/global.css";
 import Star from "@/components/SVGs/Star";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-
-import { ScrollView, Image, Dimensions, Pressable } from "react-native";
+import {
+  ScrollView,
+  Image,
+  Dimensions,
+  Pressable,
+  View,
+  Text,
+} from "react-native";
 
 export default function ListingCard({ data }: { data?: any }) {
   const width = Dimensions.get("window").width * 0.9;
@@ -16,86 +20,89 @@ export default function ListingCard({ data }: { data?: any }) {
     const slide = Math.round(event.nativeEvent.contentOffset.x / width);
     setActiveIndex(slide);
   };
+
   return (
     <Pressable
-      onPress={() => {
+      onPress={() =>
         router.push({
           pathname: "/property/[id]",
           params: { id: String(data.$id) },
-        });
-      }}
-      style={{ $$css: true, _: "w-[90%] h-auto" } as any}
+        })
+      }
+      style={{ width: width, marginBottom: 16 }} // FIXES INVISIBLE CARD ISSUE
+      className="rounded-2xl bg-white shadow-sm overflow-hidden"
     >
-      <div className="relative">
+      {/* IMAGE CAROUSEL */}
+      <View>
         <ScrollView
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           onScroll={handleScroll}
           scrollEventThrottle={16}
-          style={
-            {
-              $$css: true,
-              _: "w-full h-auto rounded-2xl",
-              width: `${width}px`,
-            } as any
-          }
+          style={{ width, height: width, borderRadius: 16 }}
         >
           {data.images.map((src: string, index: number) => (
             <Image
               key={index}
               source={{ uri: src }}
-              style={
-                {
-                  width: `${width}px`,
-                  height: `${width}px`,
-                  resizeMode: "cover",
-                  objectFit: "cover",
-                } as any
-              }
+              style={{
+                width,
+                height: width,
+              }}
+              resizeMode="cover" // FIX
             />
           ))}
         </ScrollView>
-        {/* DOTS INDICATOR */}
-        {data.images.length > 1 ? (
-          <div className="flex flex-row mt-3 absolute left-1/2 -translate-x-1/2 bottom-4 z-10">
-            {data.images.map((_: any, index: number) => (
-              <div
+
+        {/* DOTS */}
+        {data.images.length > 1 && (
+          <View className="flex-row absolute bottom-4 left-1/2 -translate-x-1/2">
+            {data.images.map((_, index: number) => (
+              <View
                 key={index}
-                className={
-                  "h-2 w-2 mx-0.5 rounded-full " +
-                  (index === activeIndex
-                    ? "bg-white"
-                    : "bg-gray-200 opacity-80")
-                }
+                style={{
+                  height: 8,
+                  width: 8,
+                  borderRadius: 8,
+                  marginHorizontal: 3,
+                  backgroundColor:
+                    index === activeIndex ? "white" : "rgba(255,255,255,0.5)",
+                }}
               />
             ))}
-          </div>
-        ) : null}
-      </div>
-      <div className="p-4 bg flex flex-col ">
-        <div className="flex justify-between items-start">
-          <p className="font-semibold text-gray-900">{data.title}</p>
-          <div className="flex items-center gap-1">
-            <span className="scale-75">
-              <Star />
-            </span>
-            <span className="text-sm font-semibold">4.94</span>
-          </div>
-        </div>
+          </View>
+        )}
+      </View>
 
-        <p className="text-gray-600 text-sm">
-          {data.category.charAt(0)?.toUpperCase() + data.category?.slice(1)} in{" "}
+      {/* CONTENT */}
+      <View className="p-4">
+        <View className="flex-row justify-between items-start mb-1">
+          <Text className="font-semibold text-gray-900" numberOfLines={1}>
+            {data.title}
+          </Text>
+
+          <View className="flex-row items-center gap-1">
+            <View style={{ transform: [{ scale: 0.75 }] }}>
+              <Star />
+            </View>
+            <Text className="text-sm font-semibold">4.94</Text>
+          </View>
+        </View>
+
+        <Text className="text-gray-600 text-sm">
+          {data.category.charAt(0).toUpperCase() + data.category.slice(1)} in{" "}
           {data.city}
-        </p>
-        <p className="text-gray-600 text-sm mb-1">
+        </Text>
+        <Text className="text-gray-600 text-sm mb-1">
           2 Beds • Upto {data.maxGuests} guests
-        </p>
-        <p className="text-gray-900">
-          <span className="font-semibold">₹{best?.price}</span>
-          <span className="text-gray-600 text-sm"> per {best?.duration}</span>
-        </p>
-      </div>
+        </Text>
+
+        <Text className="text-gray-900">
+          <Text className="font-semibold">₹{best?.price}</Text>
+          <Text className="text-gray-600 text-sm"> per {best?.duration}</Text>
+        </Text>
+      </View>
     </Pressable>
   );
 }
@@ -107,6 +114,7 @@ function getBestPrice(listing: any) {
       price: listing.price_24h,
     };
   }
+
   const map = {
     "1 hour": listing.price_1h,
     "3 hours": listing.price_3h,

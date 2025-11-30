@@ -1,11 +1,12 @@
-"use dom";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, Text } from "react-native";
 
 export default function Map() {
   return (
     <View style={styles.container}>
-      <p className="text-zinc-500 font-light mt-6">Map not available on web.</p>
+      <Text className="text-zinc-500 font-light mt-6">
+        Map not available on web.
+      </Text>
     </View>
   );
 }

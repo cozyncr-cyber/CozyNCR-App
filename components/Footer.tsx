@@ -1,26 +1,24 @@
-"use dom";
-import "../src/global.css";
 import React from "react";
 import Entypo from "@expo/vector-icons/Entypo";
 import Feather from "@expo/vector-icons/Feather";
-
+import { View, Text } from "react-native";
 const Footer = () => {
   return (
-    <div className="flex bg-slate-100 justify-between px-4 md:px-8 py-4 rounded-t-md text-sm">
-      <div className="flex gap-2">
-        <p className="text-slate-600">&copy; 2025 Cozy NCR</p>
-        <p className="text-slate-600">Privacy</p>
-        <p className="text-slate-600">Terms</p>
-        <p className="text-slate-600">Company Details</p>
-      </div>
+    <View className="flex bg-slate-100 justify-between px-4 md:px-8 py-4 rounded-t-md text-sm">
+      <View className="flex gap-2">
+        <Text className="text-slate-600">&copy; 2025 Cozy NCR</Text>
+        <Text className="text-slate-600">Privacy</Text>
+        <Text className="text-slate-600">Terms</Text>
+        <Text className="text-slate-600">Company Details</Text>
+      </View>
 
-      <div className="flex gap-4 ">
+      <View className="flex gap-4 ">
         <Entypo name="instagram" size={20} color="gray" />
-        <div className="text-slate-600">
+        <View className="text-slate-600">
           <Feather name="mail" size={20} color="gray" />
-        </div>
-      </div>
-    </div>
+        </View>
+      </View>
+    </View>
   );
 };
 
