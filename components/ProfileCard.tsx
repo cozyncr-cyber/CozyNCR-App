@@ -1,7 +1,7 @@
 import { Image, ScrollView, View, Text } from "react-native";
 import Star from "./SVGs/Star";
 import { LinearGradient } from "expo-linear-gradient";
-export default function ProfileCard() {
+export default function ProfileCard(owner: any) {
   return (
     <ScrollView>
       <View className="flex-1 relative">
@@ -27,7 +27,7 @@ export default function ProfileCard() {
               {/* Name */}
               <View className="flex items-center gap-2 mb-3">
                 <Text className="text-xl font-semibold text-white">
-                  Natasha Romanoff
+                  {owner?.owner?.name}
                 </Text>
               </View>
 
@@ -45,8 +45,9 @@ export default function ProfileCard() {
                 <View className="h-10 w-0.5 rounded-full bg-zinc-300"></View>
 
                 <View>
-                  <Text className="font-semibold text-white">1+</Text>
-                  <Text className="text-sm text-gray-300">Years</Text>
+                  <Text className="font-semibold text-white">
+                    {timeSince(owner?.owner?.$createdAt)}
+                  </Text>
                 </View>
 
                 <View className="h-10 w-0.5 rounded-full bg-zinc-300"></View>
@@ -61,4 +62,24 @@ export default function ProfileCard() {
       </View>
     </ScrollView>
   );
+}
+function timeSince(dateString: string) {
+  const created = new Date(dateString);
+  const now = new Date();
+
+  let diffMs = now.getTime() - created.getTime();
+
+  // Handle future dates → treat as 1 month old minimum
+  if (diffMs < 0) diffMs = 0;
+
+  const months = diffMs / (1000 * 60 * 60 * 24 * 30.44); // avg month length
+  const years = Math.floor(months / 12);
+
+  if (years >= 1) {
+    return years === 1 ? "1 Year" : `${years} Years`;
+  }
+
+  // Less than 1 year → show months
+  const wholeMonths = Math.max(1, Math.floor(months));
+  return wholeMonths === 1 ? "1 Month" : `${wholeMonths} Months`;
 }

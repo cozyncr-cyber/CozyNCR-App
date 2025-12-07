@@ -9,32 +9,31 @@ export default function SkeletonCard() {
         <Skeleton />
       </View>
 
-      <View className="px-4 pt-4 space-y-2">
+      <View className="px-4 pt-4 flex flex-col gap-2">
         {/* Title */}
-        <View className="w-[70%] h-5 rounded-md overflow-hidden">
-          <Skeleton />
+        <View className="flex flex-row items-center justify-between">
+          <View className="w-[60%] h-4 rounded-md overflow-hidden">
+            <Skeleton />
+          </View>
+
+          {/* Rating row */}
+          <View className="flex flex-row items-center gap-2">
+            <View className="w-5 h-4 rounded-md overflow-hidden">
+              <Skeleton />
+            </View>
+            <View className="w-10 h-4 rounded-md overflow-hidden">
+              <Skeleton />
+            </View>
+          </View>
         </View>
 
         {/* Subtitle lines */}
         <View className="w-[90%] h-4 rounded-md overflow-hidden">
           <Skeleton />
         </View>
-        <View className="w-[50%] h-4 rounded-md overflow-hidden">
-          <Skeleton />
-        </View>
-
-        {/* Rating row */}
-        <View className="flex items-center gap-2 pt-1">
-          <View className="w-5 h-5 rounded-md overflow-hidden">
-            <Skeleton />
-          </View>
-          <View className="w-10 h-4 rounded-md overflow-hidden">
-            <Skeleton />
-          </View>
-        </View>
 
         {/* Price */}
-        <View className="w-[30%] h-5 rounded-md mt-2 overflow-hidden">
+        <View className="w-[30%] h-4 rounded-md overflow-hidden">
           <Skeleton />
         </View>
       </View>

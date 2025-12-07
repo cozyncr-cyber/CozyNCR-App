@@ -7,11 +7,12 @@ interface PriceModalProps {
 
   nights: number;
   pricePerNight: number;
-  total: number;
+  subtotal: number; // <-- parent provides this
+  total: number; // <-- parent provides this
 
-  datesLabel: string; // e.g. "12–14 Dec"
-  cancellationText: string; // e.g. "Free cancellation before 11 December"
-  currencySymbol?: string; // default: ₹
+  datesLabel: string;
+  cancellationText: string;
+  currencySymbol?: string;
 }
 
 const PriceModal: React.FC<PriceModalProps> = ({
@@ -19,14 +20,12 @@ const PriceModal: React.FC<PriceModalProps> = ({
   onClose,
   nights,
   pricePerNight,
+  subtotal,
   total,
-  datesLabel,
-  cancellationText,
   currencySymbol = "₹",
 }) => {
   const height = Dimensions.get("window").height;
-
-  const subtotal = nights * pricePerNight;
+  const taxes = total - subtotal;
 
   return (
     <Modal
@@ -45,7 +44,6 @@ const PriceModal: React.FC<PriceModalProps> = ({
           bottom: visible ? 0 : -height,
         }}
       >
-        {/* Handle */}
         <Pressable
           className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"
           onPress={onClose}
@@ -53,34 +51,34 @@ const PriceModal: React.FC<PriceModalProps> = ({
 
         <Text className="text-xl font-semibold mb-4">Price Details</Text>
 
-        <View>
-          {/* Nights × price */}
-          <View className="flex-row justify-between mb-3 border-b border-zinc-400 pb-3">
+        {/* Nights × price */}
+        <View className="mb-3 pb-3 flex gap-2">
+          <View className="flex-row justify-between ">
             <Text className="text-base text-gray-700">
               {nights} nights × {currencySymbol}
               {pricePerNight.toLocaleString("en-IN")}
             </Text>
+
             <Text className="text-base font-semibold">
               {currencySymbol}
-              {subtotal.toLocaleString("en-IN")}
+              {subtotal?.toLocaleString("en-IN")}
             </Text>
           </View>
-
-          {/* Dates + cancellation */}
-          <View className="mt-4 mb-3">
-            <Text className="text-lg mb-1 font-medium">Dates</Text>
-            <Text className="text-gray-600">{datesLabel}</Text>
-            <Text className="text-sm text-gray-500">{cancellationText}</Text>
-          </View>
-
-          {/* Total (optional extra row) */}
-          <View className="flex-row justify-between pt-3 border-t border-zinc-400">
-            <Text className="text-base font-semibold">Total</Text>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-700 text-base">Taxes</Text>
             <Text className="text-base font-semibold">
-              {currencySymbol}
-              {total.toLocaleString("en-IN")}
+              ₹{taxes.toLocaleString("en-IN")}
             </Text>
           </View>
+        </View>
+
+        {/* Total */}
+        <View className="flex-row justify-between pt-3 border-t border-zinc-400">
+          <Text className="text-base font-semibold">Total</Text>
+          <Text className="text-base font-semibold">
+            {currencySymbol}
+            {total?.toLocaleString("en-IN")}
+          </Text>
         </View>
       </View>
     </Modal>

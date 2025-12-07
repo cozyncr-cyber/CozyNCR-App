@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, Pressable, Image, ScrollView, Modal } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import Star from "@/components/SVGs/Star";
@@ -8,23 +8,103 @@ import Calendar from "@/components/Calendar";
 import Guests from "@/components/Guests";
 import PriceModal from "@/components/PriceModal";
 import TimeModal from "@/components/TimeModal";
+import { tablesDB, DATABASE_ID, BOOKINGS_TABLE_ID, ID } from "@/lib/appwrite";
+// also your auth context to get current userId
+// also you probably have current user somewhere, e.g. useAuth()
+
+type BookingTypeId = "3hours" | "6hours" | "12hours" | "daily";
+
+type BookingType = {
+  id: BookingTypeId;
+  label: string;
+  price: number;
+};
+
+const defaultSlots: Record<BookingTypeId, string> = {
+  "3hours": "11 AM - 2 PM",
+  "6hours": "11 AM - 5 PM",
+  "12hours": "9 AM - 9 PM",
+  daily: "", // not used for daily
+};
+// Convert "11 AM" / "2 PM" to 24h
+const parseTimeLabelToHour = (label: string): number | null => {
+  const [hourStr, suffixRaw] = label.trim().split(" ");
+  const suffix = suffixRaw?.toUpperCase();
+  let hour = parseInt(hourStr, 10);
+  if (isNaN(hour) || !suffix) return null;
+
+  const isPM = suffix === "PM";
+
+  // 12 AM -> 0, 12 PM -> 12, 1–11 PM -> +12
+  if (hour === 12) {
+    hour = isPM ? 12 : 0;
+  } else if (isPM) {
+    hour += 12;
+  }
+
+  return hour;
+};
+
+type ParsedSlot = {
+  startHour: number;
+  endHour: number;
+  overnight: boolean;
+};
+
+// "11 AM - 2 PM" -> { startHour: 11, endHour: 14, overnight: false }
+const parseSlot = (slot: string): ParsedSlot | null => {
+  const [startLabel, endLabel] = slot.split("-");
+  if (!startLabel || !endLabel) return null;
+
+  const startHour = parseTimeLabelToHour(startLabel);
+  const endHour = parseTimeLabelToHour(endLabel);
+
+  if (startHour == null || endHour == null) return null;
+
+  const overnight = endHour <= startHour; // e.g. 11 PM -> 11 AM
+  return { startHour, endHour, overnight };
+};
+
+// Format a concrete Date as "Dec 5, 2025, 10:30 PM"
+const formatDateTimeLabel = (date: Date): string =>
+  date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+// Helpers
+const formatSingle = (d: Date) => d.toLocaleDateString();
+const formatRange = (start: Date, end: Date) =>
+  `${start.toLocaleDateString()} – ${end.toLocaleDateString()}`;
+
+const isHourlyType = (t: BookingTypeId) =>
+  t === "3hours" || t === "6hours" || t === "12hours";
 
 export default function Booking() {
   const { data, loading } = useProperty();
+  const router = useRouter();
 
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [guestModalOpen, setGuestModalOpen] = useState(false);
   const [timeModalOpen, setTimeModalOpen] = useState(false);
-
-  const [bookingType, setBookingType] = useState("daily");
-  const [hours, setHours] = useState("11 AM - 2 PM");
-  const [guests, setGuests] = useState("1 adult");
   const [priceOpen, setPriceOpen] = useState(false);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [endTime, setEndTime] = useState<Date | null>(null);
+  const [guestCounts, setGuestCounts] = useState({
+    adults: 1,
+    children: 0,
+    infants: 0,
+    pets: 0,
+  });
+  const [submitting, setSubmitting] = useState(false);
 
-  // Helper formatters
-  const formatSingle = (d: Date) => d.toLocaleDateString();
-  const formatRange = (start: Date, end: Date) =>
-    `${start.toLocaleDateString()} – ${end.toLocaleDateString()}`;
+  const [bookingType, setBookingType] = useState<BookingTypeId>("daily");
+  const [hours, setHours] = useState("");
+  const [guests, setGuests] = useState("1 adult");
 
   // Initial dates (example: 7–12 Dec 2025)
   const initialCheckIn = new Date(2025, 11, 7); // Dec is month 11 (0-based)
@@ -38,56 +118,183 @@ export default function Booking() {
     formatRange(initialCheckIn, initialCheckOut)
   );
 
-  const router = useRouter();
+  const isHourly = isHourlyType(bookingType);
 
-  const bookingTypes = [
-    { id: "3hours", label: "3 Hours", price: 2500 },
-    { id: "6hours", label: "6 Hours", price: 12000 },
-    { id: "12hours", label: "12 Hours", price: 18000 },
-    { id: "daily", label: "Daily", price: 30179.07 },
-  ];
+  // Build booking types dynamically based on data.price_* values
+  const bookingTypes: BookingType[] = useMemo(() => {
+    if (!data) return [];
 
-  const currentBooking =
-    bookingTypes.find((b) => b.id === bookingType) || bookingTypes[0];
+    const types: BookingType[] = [];
 
-  const nights = 5;
-  const subtotal =
-    currentBooking.price * (bookingType === "daily" ? nights : 1);
-  const taxes = Math.round(subtotal * 0.158);
-  const total = subtotal + taxes;
+    if (data.price_3h != null) {
+      types.push({ id: "3hours", label: "3 Hours", price: data.price_3h });
+    }
+    if (data.price_6h != null) {
+      types.push({ id: "6hours", label: "6 Hours", price: data.price_6h });
+    }
+    if (data.price_12h != null) {
+      types.push({ id: "12hours", label: "12 Hours", price: data.price_12h });
+    }
+    if (data.price_24h != null) {
+      types.push({ id: "daily", label: "Daily", price: data.price_24h });
+    }
 
-  const isHourly =
-    bookingType === "3hours" ||
-    bookingType === "6hours" ||
-    bookingType === "12hours";
-  const isHourlyType = (t: string) =>
-    t === "3hours" || t === "6hours" || t === "12hours";
+    return types;
+  }, [data]);
 
-  const handleChangeBookingType = (newType: string) => {
+  // Ensure bookingType is always one of the available bookingTypes
+  useEffect(() => {
+    if (bookingTypes.length === 0) return;
+
+    setBookingType((prev) => {
+      const exists = bookingTypes.some((b) => b.id === prev);
+      return exists ? prev : (bookingTypes[0].id as BookingTypeId);
+    });
+  }, [bookingTypes]);
+
+  const currentBooking = useMemo(() => {
+    if (bookingTypes.length === 0) return undefined;
+    return bookingTypes.find((b) => b.id === bookingType) || bookingTypes[0];
+  }, [bookingTypes, bookingType]);
+
+  // Nights (for daily bookings)
+  const nights = useMemo(() => {
+    if (!checkInDate || !checkOutDate) return 1;
+
+    const diffMs = checkOutDate.getTime() - checkInDate.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    return Math.max(1, diffDays);
+  }, [checkInDate, checkOutDate]);
+
+  // Price calculations
+  const subtotal = useMemo(() => {
+    if (!currentBooking) return 0;
+    const quantity = bookingType === "daily" ? nights : 1;
+    return currentBooking.price * quantity;
+  }, [currentBooking, bookingType, nights]);
+
+  const taxes = useMemo(() => Math.round(subtotal * 0.158), [subtotal]);
+  const total = useMemo(() => subtotal + taxes, [subtotal, taxes]);
+
+  // Keep date label in sync with booking type + selected dates
+  useEffect(() => {
+    if (!checkInDate) return;
+
+    if (isHourly) {
+      setDates(formatSingle(checkInDate));
+    } else {
+      const end = checkOutDate || checkInDate;
+      setDates(formatRange(checkInDate, end));
+    }
+  }, [bookingType, checkInDate, checkOutDate, isHourly]);
+
+  // Auto-update hours when switching to an hourly type
+  useEffect(() => {
+    if (!isHourly || !checkInDate) return;
+
+    const slot = defaultSlots[bookingType];
+    setHours(slot);
+
+    const parsed = parseSlot(slot);
+    if (parsed) {
+      const { startHour, endHour, overnight } = parsed;
+
+      const start = new Date(checkInDate);
+      start.setHours(startHour, 0, 0, 0);
+
+      const end = new Date(checkInDate);
+      if (overnight) {
+        end.setDate(end.getDate() + 1);
+      }
+      end.setHours(endHour, 0, 0, 0);
+
+      setStartTime(start);
+      setEndTime(end);
+    }
+  }, [bookingType, isHourly, checkInDate]);
+  useEffect(() => {
+    if (isHourly) return;
+    if (!checkInDate) return;
+
+    const start = new Date(checkInDate);
+    start.setHours(15, 0, 0, 0); // e.g. 3:00 PM check-in
+
+    const endBase = checkOutDate || checkInDate;
+    const end = new Date(endBase);
+    end.setHours(11, 0, 0, 0); // e.g. 11:00 AM check-out
+
+    setStartTime(start);
+    setEndTime(end);
+  }, [isHourly, checkInDate, checkOutDate]);
+
+  const handleChangeBookingType = (newType: BookingTypeId) => {
     setBookingType((prevType) => {
       const wasHourly = isHourlyType(prevType);
       const isHourlyNow = isHourlyType(newType);
 
       if (checkInDate) {
-        // range → single
+        // daily → hourly: collapse to single date
         if (!wasHourly && isHourlyNow) {
           setCheckOutDate(null);
-          setDates(formatSingle(checkInDate));
         }
 
-        // single → range
+        // hourly → daily: create a simple 1-night range
         if (wasHourly && !isHourlyNow) {
           const end = new Date(checkInDate);
           end.setDate(end.getDate() + 1);
           setCheckOutDate(end);
-          setDates(formatRange(checkInDate, end));
         }
       }
 
       return newType;
     });
   };
-  if (loading) return null;
+
+  const handleContinueToRazorpay = async () => {
+    console.log("Continue to Razorpay clicked", { startTime, endTime });
+
+    if (!startTime || !endTime) {
+      console.warn("Missing start/end time");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const customerName = "John Doe";
+      const listingId = "6924091500025d93c611";
+
+      const guestCount = guestCounts.adults + guestCounts.children;
+
+      await tablesDB.createRow({
+        rowId: ID.unique(),
+        databaseId: DATABASE_ID,
+        tableId: BOOKINGS_TABLE_ID,
+        data: {
+          listingId,
+          customerName,
+          startTime: startTime.toISOString(), // 👈 Date column
+          endTime: endTime.toISOString(), // 👈 Date column
+          status: "pending",
+          totalPrice: total,
+          serviceType: isHourly ? "hourly" : "daily",
+          bookingType,
+          guestCount,
+          childrenCount: guestCounts.children,
+          infantCount: guestCounts.infants,
+          petCount: guestCounts.pets,
+        },
+      });
+
+      router.push("/property/success");
+    } catch (err) {
+      console.error("Error creating booking:", err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading || !data) return null;
 
   return (
     <ScrollView className="bg-white">
@@ -106,7 +313,7 @@ export default function Booking() {
           <View className="border border-gray-200 rounded-xl p-4 mb-4">
             <View className="flex-row gap-3 mb-4">
               <Image
-                source={{ uri: data.images[0] }}
+                source={{ uri: data.images?.[0] }}
                 className="w-20 h-20 rounded-lg"
               />
 
@@ -126,30 +333,38 @@ export default function Booking() {
             </View>
 
             {/* Booking Type Selector */}
-            <View className="mb-4">
-              <Text className="text-sm font-semibold mb-2">Booking type</Text>
+            {bookingTypes.length > 0 && (
+              <View className="mb-4  min-h-10 ">
+                <Text className="text-sm font-semibold mb-2">Booking type</Text>
 
-              <View className="grid grid-cols-3 gap-2">
-                {bookingTypes.map((type) => (
-                  <Pressable
-                    key={type.id}
-                    onPress={() => handleChangeBookingType(type.id)}
-                    className={`
-      flex-1 py-2 px-3 rounded-lg text-sm font-medium
-      ${bookingType === type.id ? "bg-gray-900" : "bg-gray-100"}
-    `}
-                  >
-                    <Text
-                      className={`text-center ${
-                        bookingType === type.id ? "text-white" : "text-gray-700"
-                      }`}
+                <View className="flex gap-2">
+                  {bookingTypes.map((type) => (
+                    <Pressable
+                      key={type.id}
+                      onPress={() => handleChangeBookingType(type.id)}
+                      className={`
+                        flex-1 py-2 px-3 rounded-lg text-sm font-medium
+                        ${
+                          bookingType === type.id
+                            ? "bg-gray-900"
+                            : "bg-gray-100"
+                        }
+                      `}
                     >
-                      {type.label}
-                    </Text>
-                  </Pressable>
-                ))}
+                      <Text
+                        className={`text-center ${
+                          bookingType === type.id
+                            ? "text-white"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        {type.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
               </View>
-            </View>
+            )}
 
             {/* Dates */}
             <View className="flex-row items-center justify-between py-3 border-b border-gray-200">
@@ -189,6 +404,7 @@ export default function Booking() {
                 <Text className="text-sm font-semibold mb-1">Guests</Text>
                 <Text className="text-sm text-gray-700">{guests}</Text>
               </View>
+
               <Pressable
                 className="px-4 py-2 rounded-lg bg-gray-100"
                 onPress={() => setGuestModalOpen(true)}
@@ -198,23 +414,27 @@ export default function Booking() {
             </View>
 
             {/* Total Price */}
-            <View className="flex-row items-center justify-between py-3">
-              <View>
-                <Text className="text-sm font-semibold mb-1">Total price</Text>
+            {currentBooking && (
+              <View className="flex-row items-center justify-between py-3">
+                <View>
+                  <Text className="text-sm font-semibold mb-1">
+                    Total price
+                  </Text>
 
-                <Text className="text-sm text-gray-700">
-                  ₹{total.toLocaleString("en-IN")} including taxes{" "}
-                  <Text className="underline">INR</Text>
-                </Text>
+                  <Text className="text-sm text-gray-700">
+                    ₹{total.toLocaleString("en-IN")} including taxes{" "}
+                    <Text className="underline">INR</Text>
+                  </Text>
+                </View>
+
+                <Pressable
+                  onPress={() => setPriceOpen(true)}
+                  className="px-4 py-2 rounded-lg bg-gray-100"
+                >
+                  <Text className="text-sm font-semibold">Details</Text>
+                </Pressable>
               </View>
-
-              <Pressable
-                onPress={() => setPriceOpen(true)}
-                className="px-4 py-2 rounded-lg bg-gray-100"
-              >
-                <Text className="text-sm font-semibold">Details</Text>
-              </Pressable>
-            </View>
+            )}
 
             {/* Cancellation Policy */}
             <View className="pt-3 border-t border-gray-200">
@@ -230,42 +450,44 @@ export default function Booking() {
           </View>
 
           {/* Price Details */}
-          <View className="mb-4">
-            <Text className="text-lg font-semibold mb-3">Price details</Text>
+          {currentBooking && (
+            <View className="mb-4">
+              <Text className="text-lg font-semibold mb-3">Price details</Text>
 
-            <View className="space-y-3">
-              <View className="flex-row justify-between">
-                <Text className="text-gray-700">
-                  {bookingType === "daily" ? `${nights} nights` : "1 session"} ×
-                  ₹{currentBooking.price.toLocaleString("en-IN")}
-                </Text>
+              <View className="space-y-3">
+                <View className="flex-row justify-between">
+                  <Text className="text-gray-700">
+                    {bookingType === "daily" ? `${nights} nights` : "1 session"}{" "}
+                    × ₹{currentBooking.price.toLocaleString("en-IN")}
+                  </Text>
 
-                <Text className="text-gray-900">
-                  ₹{subtotal.toLocaleString("en-IN")}
-                </Text>
+                  <Text className="text-gray-900">
+                    ₹{subtotal.toLocaleString("en-IN")}
+                  </Text>
+                </View>
+
+                <View className="flex-row justify-between">
+                  <Text className="text-gray-700">Taxes</Text>
+                  <Text className="text-gray-900">
+                    ₹{taxes.toLocaleString("en-IN")}
+                  </Text>
+                </View>
+
+                <View className="flex-row justify-between pt-3 border-t border-gray-200 font-semibold">
+                  <Text>
+                    Total <Text className="font-normal">INR</Text>
+                  </Text>
+                  <Text>₹{total.toLocaleString("en-IN")}</Text>
+                </View>
+
+                <Pressable onPress={() => setPriceOpen(true)}>
+                  <Text className="text-sm underline font-semibold">
+                    Price breakdown
+                  </Text>
+                </Pressable>
               </View>
-
-              <View className="flex-row justify-between">
-                <Text className="text-gray-700">Taxes</Text>
-                <Text className="text-gray-900">
-                  ₹{taxes.toLocaleString("en-IN")}
-                </Text>
-              </View>
-
-              <View className="flex-row justify-between pt-3 border-t border-gray-200 font-semibold">
-                <Text>
-                  Total <Text className="font-normal">INR</Text>
-                </Text>
-                <Text>₹{total.toLocaleString("en-IN")}</Text>
-              </View>
-
-              <Pressable onPress={() => setPriceOpen(true)}>
-                <Text className="text-sm underline font-semibold">
-                  Price breakdown
-                </Text>
-              </Pressable>
             </View>
-          </View>
+          )}
 
           {/* Notice */}
           <View className="bg-gray-50 rounded-xl p-4 mb-4">
@@ -280,9 +502,15 @@ export default function Booking() {
           </Text>
 
           {/* Continue Button */}
-          <Pressable className="w-full bg-gray-900 py-4 rounded-xl flex-row items-center justify-center">
+          <Pressable
+            className={`w-full py-4 rounded-xl flex-row items-center justify-center ${
+              submitting ? "bg-gray-400" : "bg-gray-900"
+            }`}
+            disabled={submitting}
+            onPress={handleContinueToRazorpay}
+          >
             <Text className="text-white text-base font-semibold">
-              Continue to <Text className="italic">Razorpay</Text>
+              {submitting ? "Processing..." : "Continue to Razorpay"}
             </Text>
           </Pressable>
 
@@ -307,8 +535,14 @@ export default function Booking() {
         <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
           <Guests
             onClose={() => setGuestModalOpen(false)}
-            onSave={(guestString: string) => {
-              setGuests(guestString);
+            onSave={(result) => {
+              setGuests(result.label);
+              setGuestCounts({
+                adults: result.adults,
+                children: result.children,
+                infants: result.infants,
+                pets: result.pets,
+              });
               setGuestModalOpen(false);
             }}
           />
@@ -355,32 +589,50 @@ export default function Booking() {
         <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
           <TimeModal
             bookingType={bookingType}
-            initialTime={hours} // preselect previously chosen time
-            unavailableSlots={
-              [
-                // example: mark some slots as unavailable
-                // "11 AM - 2 PM",
-                // "2 PM - 5 PM",
-              ]
-            }
+            initialTime={hours}
+            unavailableSlots={[]}
             onClose={() => setTimeModalOpen(false)}
             onSave={(slot: string) => {
               setHours(slot);
+
+              if (checkInDate) {
+                const parsed = parseSlot(slot);
+                if (parsed) {
+                  const { startHour, endHour, overnight } = parsed;
+
+                  const start = new Date(checkInDate);
+                  start.setHours(startHour, 0, 0, 0);
+
+                  const end = new Date(checkInDate);
+                  if (overnight) {
+                    end.setDate(end.getDate() + 1);
+                  }
+                  end.setHours(endHour, 0, 0, 0);
+
+                  setStartTime(start);
+                  setEndTime(end);
+                }
+              }
+
               setTimeModalOpen(false);
             }}
           />
         </ScrollView>
       </Modal>
 
-      <PriceModal
-        visible={priceOpen}
-        onClose={() => setPriceOpen(false)}
-        nights={nights}
-        pricePerNight={currentBooking.price}
-        total={total}
-        datesLabel={dates}
-        cancellationText="Free cancellation before 11 December"
-      />
+      {/* Price Modal */}
+      {currentBooking && (
+        <PriceModal
+          visible={priceOpen}
+          onClose={() => setPriceOpen(false)}
+          nights={nights}
+          pricePerNight={currentBooking.price}
+          subtotal={subtotal}
+          total={total}
+          datesLabel={dates}
+          cancellationText="Free cancellation before 11 December"
+        />
+      )}
     </ScrollView>
   );
 }

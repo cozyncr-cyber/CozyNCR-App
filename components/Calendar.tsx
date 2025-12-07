@@ -15,7 +15,10 @@ interface CalendarProps {
   mode?: "range" | "single";
   checkoutOnlyDates?: Date[]; // 🔥 new prop
 }
-
+const isSameDay = (a: Date | null, b: Date | null) => {
+  if (!a || !b) return false;
+  return a.toDateString() === b.toDateString();
+};
 export default function Calendar({
   onSave,
   onClose,
@@ -199,44 +202,55 @@ export default function Calendar({
               isInvalidCheckout(dateObj);
 
             const checkoutOnly = isCheckoutOnlyDate(dateObj);
+            const isStart = isSameDay(checkIn, dateObj);
+            const isEnd = isSameDay(checkOut, dateObj);
+
+            // background for the range (no pseudo-elements)
+            const showRangeBg = inRange || isStart || isEnd;
 
             return (
-              <Pressable
+              <View
                 key={day}
-                disabled={disabled}
-                onPress={() => handleDateClick(dateObj)}
-                className={`
-                  relative aspect-square flex items-center justify-center text-sm
-                  transition-colors rounded-full
-              
-                  ${selected ? "bg-gray-900 text-white font-semibold z-[2]" : ""}
-                  ${inRange ? "bg-gray-100 rounded-none" : ""}
-                  ${
-                    inRange
-                      ? "before:content-[''] z-1 before:absolute before:inset-y-0 before:-left-1/3 before:-right-1/3 before:bg-gray-100 before:z-[-1]"
-                      : ""
-                  }
-              
-                  ${
-                    disabled
-                      ? "opacity-40 cursor-not-allowed text-gray-400"
-                      : "hover:border hover:border-gray-900"
-                  }
-                `}
                 style={{ width: `${100 / 7}%` }}
+                className="aspect-square items-center justify-center relative"
               >
-                <Text
-                  className={`text-sm ${
-                    selected
-                      ? "text-white"
-                      : checkoutOnly
-                        ? "text-indigo-500"
-                        : "text-gray-800"
-                  }`}
+                {showRangeBg && (
+                  <View
+                    className={[
+                      "absolute inset-y-0 left-0 right-0 ",
+                      isStart && !isEnd ? "rounded-l-full" : "",
+                      isEnd && !isStart ? "rounded-r-full" : "",
+                      isStart && isEnd ? "rounded-full" : "",
+                      "bg-gray-100",
+                    ].join(" ")}
+                  />
+                )}
+
+                <Pressable
+                  disabled={disabled}
+                  onPress={() => handleDateClick(dateObj)}
+                  className={[
+                    "relative rounded-full items-center justify-center w-full h-full",
+                    selected ? "bg-gray-900" : "",
+                    disabled ? "opacity-40" : "",
+                  ].join(" ")}
+                  style={{ aspectRatio: 1 }}
                 >
-                  {day}
-                </Text>
-              </Pressable>
+                  <Text
+                    className={[
+                      "text-sm",
+                      selected
+                        ? "text-white font-semibold"
+                        : checkoutOnly
+                          ? "text-indigo-500"
+                          : "text-gray-800",
+                      disabled ? "text-gray-400" : "",
+                    ].join(" ")}
+                  >
+                    {day}
+                  </Text>
+                </Pressable>
+              </View>
             );
           })}
         </View>

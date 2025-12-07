@@ -22,7 +22,7 @@ import { useProperty } from "@/src/contexts/PropertyContext";
 import PriceModal from "@/components/PriceModal";
 
 export default function Details() {
-  const { data, loading } = useProperty();
+  const { data, owner, loading } = useProperty();
   const width = Dimensions.get("window").width;
   const [activeIndex, setActiveIndex] = useState(0);
   const router = useRouter();
@@ -193,7 +193,7 @@ export default function Details() {
                 <Text className="text-xl text-center font-semibold mb-6">
                   Meet your host
                 </Text>
-                <ProfileCard />
+                <ProfileCard owner={owner} />
               </View>
 
               {/* Reviews */}
@@ -262,6 +262,7 @@ export default function Details() {
           onClose={() => setPriceOpen(false)}
           nights={2}
           pricePerNight={2065.53}
+          subtotal={4131.06}
           total={4131.06}
           datesLabel="12–14 Dec"
           cancellationText="Free cancellation before 11 December"

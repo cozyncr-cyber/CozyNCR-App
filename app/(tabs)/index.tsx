@@ -18,7 +18,7 @@ export default function HomeScreen() {
     try {
       const response = await tablesDB.listRows({
         databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID!,
-        tableId: process.env.EXPO_PUBLIC_APPWRITE_LISTING_ID!,
+        tableId: process.env.EXPO_PUBLIC_APPWRITE_LISTING_TABLE_ID!,
         queries: [Query.orderDesc("$createdAt"), Query.limit(10)],
       });
 
@@ -57,7 +57,7 @@ export default function HomeScreen() {
                 <View className="flex-col">
                   <Text className="font-medium">Where To?</Text>
                   <View className="mt-0.5 flex-row flex-wrap gap-0.5">
-                    <Text className="text-sm text-zinc-500">Anywhere </Text>
+                    <Text className="text-sm text-zinc-500">Anytime </Text>
                     <Text className="text-sm text-zinc-500">• </Text>
                     <Text className="text-sm text-zinc-500">Add guests</Text>
                   </View>
