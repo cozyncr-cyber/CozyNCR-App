@@ -6,7 +6,11 @@ import { Tabs } from "expo-router";
 export default function RootLayout() {
   return (
     <Tabs
-      screenOptions={{ tabBarActiveTintColor: "#e91e63", headerShown: false }}
+      screenOptions={{
+        tabBarActiveTintColor: "#e91e63",
+        headerShown: false,
+        tabBarStyle: { height: 60 },
+      }}
     >
       <Tabs.Screen
         name="index"
@@ -18,7 +22,7 @@ export default function RootLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="trips"
         options={{
           title: "Trips",
           tabBarIcon: ({ color }) => (
@@ -27,7 +31,16 @@ export default function RootLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="explore"
+        options={{
+          title: "Explore",
+          tabBarIcon: ({ color }) => (
+            <AntDesign name="history" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="(profile)"
         options={{
           title: "Profile",
           tabBarIcon: ({ color }) => (

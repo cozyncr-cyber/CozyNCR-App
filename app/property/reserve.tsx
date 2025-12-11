@@ -262,7 +262,7 @@ export default function Booking() {
       setSubmitting(true);
 
       const customerName = "John Doe";
-      const listingId = "6924091500025d93c611";
+      const customerId = "6924091500025d93c611";
 
       const guestCount = guestCounts.adults + guestCounts.children;
 
@@ -271,8 +271,9 @@ export default function Booking() {
         databaseId: DATABASE_ID,
         tableId: BOOKINGS_TABLE_ID,
         data: {
-          listingId,
+          listingId: data!.$id,
           customerName,
+          customerId,
           startTime: startTime.toISOString(), // 👈 Date column
           endTime: endTime.toISOString(), // 👈 Date column
           status: "pending",
@@ -561,6 +562,14 @@ export default function Booking() {
           onPress={() => setCalendarOpen(false)}
         />
         <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
+          <View className="flex-row items-center justify-between py-6 sticky top-0 bg-white z-10">
+            <Text className="text-2xl font-semibold">
+              {isHourly ? "Select date" : "Change dates"}
+            </Text>
+            <Pressable onPress={() => setCalendarOpen(false)} className="p-2">
+              <Feather name="x" size={24} color="black" />
+            </Pressable>
+          </View>
           <Calendar
             mode={isHourly ? "single" : "range"}
             checkoutOnlyDates={[new Date(2025, 10, 25), new Date(2025, 10, 27)]}

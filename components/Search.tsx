@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,108 +7,153 @@ import {
   ScrollView,
   Image,
   Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
+import AntDesign from "@expo/vector-icons/AntDesign";
+
+import Calendar, { CalendarOnSavePayload } from "./Calendar"; // <- adjust path
 
 const { width } = Dimensions.get("window");
 
-const cities = [
-  {
-    id: 1,
-    name: "New York",
-    country: "United States",
-    image:
-      "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&h=300&fit=crop",
-  },
-  {
-    id: 2,
-    name: "Paris",
-    country: "France",
-    image:
-      "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&h=300&fit=crop",
-  },
-  {
-    id: 3,
-    name: "Tokyo",
-    country: "Japan",
-    image:
-      "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=300&fit=crop",
-  },
-  {
-    id: 4,
-    name: "London",
-    country: "United Kingdom",
-    image:
-      "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&h=300&fit=crop",
-  },
-  {
-    id: 5,
-    name: "Dubai",
-    country: "UAE",
-    image:
-      "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&h=300&fit=crop",
-  },
-  {
-    id: 6,
-    name: "Barcelona",
-    country: "Spain",
-    image:
-      "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=400&h=300&fit=crop",
-  },
-];
+type GuestsResult = {
+  label: string;
+  adults: number;
+  children: number;
+  infants: number;
+  pets: number;
+};
 
 export default function CityDestinationSelector() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCity, setSelectedCity] = useState<any | null>(null);
+  const [currentSlide, setCurrentSlide] = useState<number>(0);
 
-  const scrollRef = useRef<ScrollView>(null);
+  // Search / city states
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [storedSearchValue, setStoredSearchValue] = useState<string>("");
 
-  const filteredCities = cities.filter(
-    (city) =>
-      city.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      city.country.toLowerCase().includes(searchQuery.toLowerCase())
+  // Calendar selection stored in parent
+  const [calendarSelection, setCalendarSelection] =
+    useState<CalendarOnSavePayload | null>(null);
+
+  // Guests inline (no limits)
+  const [adults, setAdults] = useState<number>(1);
+  const [children, setChildren] = useState<number>(0);
+  const [infants, setInfants] = useState<number>(0);
+  const [pets, setPets] = useState<number>(0);
+  const [guestSelection, setGuestSelection] = useState<GuestsResult | null>(
+    null
   );
 
+  // scroll / indicator
+  const scrollRef = useRef<ScrollView | null>(null);
+
+  // calendar actions from child (populated by Calendar.onMount)
+  const calendarActionsRef = useRef<{
+    save?: () => void;
+    getSelection?: () => CalendarOnSavePayload | null;
+  }>({});
+
+  const scrollToSlide = (index: number) => {
+    setCurrentSlide(index);
+    scrollRef.current?.scrollTo({ x: index * width, animated: true });
+  };
+
+  // Back button handler
+  const handleBack = () => {
+    if (currentSlide > 0) scrollToSlide(currentSlide - 1);
+  };
+
+  // Next button handler (keeps flow single-threaded)
   const handleNext = () => {
+    // Slide 0: store search and go to Calendar
     if (currentSlide === 0) {
-      if (!selectedCity) return;
-      const next = 1;
-      setCurrentSlide(next);
-      scrollRef.current?.scrollTo({ x: next * width, animated: true });
-    } else if (currentSlide === 1) {
-      const next = 2;
-      setCurrentSlide(next);
-      scrollRef.current?.scrollTo({ x: next * width, animated: true });
+      setStoredSearchValue(searchQuery);
+      scrollToSlide(1);
+      return;
+    }
+
+    // Slide 1: trigger calendar save programmatically, read selection, go to Guests
+    if (currentSlide === 1) {
+      // If calendar mounted, call its save; onSave handler will set calendarSelection as well.
+      calendarActionsRef.current.save?.();
+      const sel = calendarActionsRef.current.getSelection?.();
+      if (sel) setCalendarSelection(sel);
+      scrollToSlide(2);
+      return;
+    }
+
+    // Slide 2: save guests and finalize
+    if (currentSlide === 2) {
+      const guestString =
+        `${adults} adult${adults > 1 ? "s" : ""}` +
+        `${children ? `, ${children} child${children > 1 ? "ren" : ""}` : ""}` +
+        `${infants ? `, ${infants} infant${infants > 1 ? "s" : ""}` : ""}` +
+        `${pets ? `, ${pets} pet${pets > 1 ? "s" : ""}` : ""}`;
+
+      const payload: GuestsResult = {
+        label: guestString,
+        adults,
+        children,
+        infants,
+        pets,
+      };
+      setGuestSelection(payload);
+
+      // Final assembled payload for query/navigation
+      const finalPayload = {
+        search: storedSearchValue || searchQuery,
+        calendar:
+          calendarSelection ?? calendarActionsRef.current.getSelection?.(),
+        guests: payload,
+      };
+
+      console.log("=== FINAL SEARCH PAYLOAD ===");
+      console.log(finalPayload);
+      // TODO: call your search function / navigation here
+
+      return;
     }
   };
 
-  const handleChangeCity = () => {
-    const next = 0;
-    setCurrentSlide(next);
-    scrollRef.current?.scrollTo({ x: next * width, animated: true });
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const idx = Math.round(e.nativeEvent.contentOffset.x / width);
+    if (idx !== currentSlide) setCurrentSlide(idx);
   };
 
-  const onMomentumScrollEnd = (e: any) => {
-    const index = Math.round(e.nativeEvent.contentOffset.x / width);
-    setCurrentSlide(index);
+  const nextLabel = currentSlide === 2 ? "Done" : "Next";
+
+  // Guests helpers (no limits)
+  const increment = (category: "adults" | "children" | "infants" | "pets") => {
+    if (category === "adults") setAdults((a) => a + 1);
+    if (category === "children") setChildren((c) => c + 1);
+    if (category === "infants") setInfants((i) => i + 1);
+    if (category === "pets") setPets((p) => p + 1);
+  };
+  const decrement = (
+    category: "adults" | "children" | "infants" | "pets",
+    min = 0
+  ) => {
+    if (category === "adults") setAdults((a) => Math.max(min, a - 1));
+    if (category === "children") setChildren((c) => Math.max(min, c - 1));
+    if (category === "infants") setInfants((i) => Math.max(min, i - 1));
+    if (category === "pets") setPets((p) => Math.max(min, p - 1));
   };
 
-  const isNextDisabled =
-    currentSlide === 0 && !selectedCity
-      ? true
-      : currentSlide === 2
-        ? true
-        : false;
-
-  const nextLabel =
-    currentSlide === 0 ? "Next" : currentSlide === 1 ? "Next" : "Done";
+  // Calendar child onSave handler
+  const handleCalendarSave = (payload: CalendarOnSavePayload) => {
+    setCalendarSelection(payload);
+    // don't auto-advance here — Next controls the flow
+  };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white max-h-[calc(100vh-60px)]">
       {/* Header */}
       <View className="border-b border-gray-200 px-4 py-3 flex-row items-center justify-end">
-        <Pressable className="p-2 -mr-2 rounded-full">
+        <Pressable
+          className="p-2 -mr-2 rounded-full"
+          onPress={() => console.log("close")}
+        >
           <Feather name="x" size={24} color="black" />
         </Pressable>
       </View>
@@ -120,11 +165,15 @@ export default function CityDestinationSelector() {
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={onMomentumScrollEnd}
+          scrollEventThrottle={16}
+          onScroll={onScroll}
+          directionalLockEnabled={true}
+          nestedScrollEnabled={false}
+          contentContainerStyle={{ flexGrow: 1 }}
         >
-          {/* Slide 1 - City Selection */}
+          {/* Slide 0 - Search / City Grid */}
           <View style={{ width }} className="px-6 py-8">
-            <View className="max-w-xl w-full self-center">
+            <View className="max-w-xl w-full self-center h-[70vh] flex justify-center -mt-32">
               <Text className="text-3xl font-bold text-gray-900 mb-2">
                 Choose the city{"\n"}you&apos;re going to visit
               </Text>
@@ -144,141 +193,160 @@ export default function CityDestinationSelector() {
                   className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-full text-base"
                 />
               </View>
-
-              {/* City Grid */}
-              <ScrollView showsVerticalScrollIndicator={false}>
-                <View className="flex-row flex-wrap -mx-1">
-                  {filteredCities.map((city) => {
-                    const isSelected = selectedCity?.id === city.id;
-                    return (
-                      <Pressable
-                        key={city.id}
-                        onPress={() => setSelectedCity(city)}
-                        className="px-1 pb-2"
-                        style={{ width: "50%" }}
-                      >
-                        <View
-                          className={`overflow-hidden rounded-2xl ${
-                            isSelected ? "border-2 border-gray-900" : ""
-                          }`}
-                        >
-                          <View className="aspect-[4/3] relative">
-                            <Image
-                              source={{ uri: city.image }}
-                              className="w-full h-full"
-                              style={{ resizeMode: "cover" }}
-                            />
-                            <View className="absolute inset-0 bg-black/30" />
-                            <View className="absolute bottom-0 left-0 p-3">
-                              <Text className="text-white font-semibold text-base">
-                                {city.name}
-                              </Text>
-                              <Text className="text-white/80 text-xs">
-                                {city.country}
-                              </Text>
-                            </View>
-                            {isSelected && (
-                              <View className="absolute top-3 right-3 w-6 h-6 bg-gray-900 rounded-full items-center justify-center">
-                                <View className="w-3 h-3 bg-white rounded-full" />
-                              </View>
-                            )}
-                          </View>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </ScrollView>
             </View>
           </View>
 
-          {/* Slide 2 - Confirmation/Details */}
+          {/* Slide 1 - Calendar */}
+          <View style={{ width, flex: 1 }}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                paddingBottom: 120, // keep space so bottom bar doesn't overlap calendar content
+                backgroundColor: "white",
+              }}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true} // allow inner vertical scrolling on Android
+            >
+              <View className="flex-row items-center justify-between py-6 bg-white px-4">
+                <Text className="text-2xl font-semibold">Change dates</Text>
+              </View>
+
+              <Calendar
+                onSave={handleCalendarSave}
+                onClose={() => scrollToSlide(0)}
+                onMount={(actions) => {
+                  calendarActionsRef.current.save = actions.save;
+                  calendarActionsRef.current.getSelection =
+                    actions.getSelection;
+                }}
+              />
+            </ScrollView>
+          </View>
+
+          {/* Slide 2 - Guests (inline, no limits) */}
           <View style={{ width }} className="px-6 py-8">
             <View className="max-w-xl w-full self-center">
-              <Text className="text-3xl font-bold text-gray-900 mb-8">
-                Perfect choice!
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-2xl font-semibold">Change guests</Text>
+              </View>
+
+              <Text className="text-sm text-gray-600 mb-6">
+                No limits set — this is for search. Increase or decrease as
+                needed.
               </Text>
 
-              {selectedCity && (
-                <View className="bg-gray-50 rounded-3xl p-6 mb-8">
-                  <View className="flex-row items-center gap-4 mb-4">
-                    <Feather name="map-pin" size={24} color="#4B5563" />
-                    <View>
-                      <Text className="text-xl font-semibold">
-                        {selectedCity.name}
-                      </Text>
-                      <Text className="text-gray-600">
-                        {selectedCity.country}
-                      </Text>
-                    </View>
+              {[
+                {
+                  key: "adults",
+                  title: "Adults",
+                  subtitle: "Age 13+",
+                  value: adults,
+                  minValue: 1,
+                },
+                {
+                  key: "children",
+                  title: "Children",
+                  subtitle: "Ages 2–12",
+                  value: children,
+                  minValue: 0,
+                },
+                {
+                  key: "infants",
+                  title: "Infants",
+                  subtitle: "Under 2",
+                  value: infants,
+                  minValue: 0,
+                },
+                {
+                  key: "pets",
+                  title: "Pets",
+                  subtitle: "Bringing a pet?",
+                  value: pets,
+                  minValue: 0,
+                },
+              ].map((row) => (
+                <View
+                  key={row.key}
+                  className="flex-row items-center justify-between py-6 border-b border-gray-200"
+                >
+                  <View className="flex-1">
+                    <Text className="text-base font-normal text-gray-900">
+                      {row.title}
+                    </Text>
+                    <Text className="text-sm text-gray-500 mt-0.5">
+                      {row.subtitle}
+                    </Text>
                   </View>
-                  <Image
-                    source={{ uri: selectedCity.image }}
-                    className="w-full h-48 rounded-2xl"
-                    style={{ resizeMode: "cover" }}
-                  />
+
+                  <View className="flex-row items-center gap-4">
+                    <Pressable
+                      onPress={() => decrement(row.key as any, row.minValue)}
+                      disabled={row.value <= row.minValue}
+                      className={`w-8 h-8 rounded-full border items-center justify-center ${row.value <= row.minValue ? "border-gray-200" : "border-gray-400"}`}
+                    >
+                      <AntDesign
+                        name="minus"
+                        size={14}
+                        color={row.value <= row.minValue ? "lightgray" : "gray"}
+                      />
+                    </Pressable>
+
+                    <Text className="w-8 text-center text-base text-gray-900">
+                      {row.value}
+                    </Text>
+
+                    <Pressable
+                      onPress={() => increment(row.key as any)}
+                      className="w-8 h-8 rounded-full border items-center justify-center border-gray-400"
+                    >
+                      <AntDesign name="plus" size={14} color="gray" />
+                    </Pressable>
+                  </View>
                 </View>
-              )}
-
-              <Pressable onPress={handleChangeCity}>
-                <Text className="text-gray-600 underline font-semibold">
-                  ← Change city
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-
-          {/* Slide 3 - Empty/Coming Soon */}
-          <View style={{ width }} className="px-6 py-8">
-            <View className="flex-1 items-center justify-center">
-              <Text className="text-3xl font-bold text-gray-900 mb-4">
-                Coming soon
-              </Text>
-              <Text className="text-gray-500 text-center">
-                We&apos;re working on personalized guides, tips, and more for{" "}
-                {selectedCity ? selectedCity.name : "your next trip"}.
-              </Text>
+              ))}
             </View>
           </View>
         </ScrollView>
       </View>
 
-      {/* Bottom Navigation */}
-      <View className="border-t border-gray-200 px-6 py-4">
+      {/* Bottom Navigation (Back & Next always present) */}
+      <View className="border-t border-gray-200 px-6 py-4 bg-white absolute w-full bottom-0">
+        {/* Progress dots */}
         <View className="flex-row gap-2 mb-3 justify-center">
           <View
-            className={`h-1 w-10 rounded-full ${
-              currentSlide === 0 ? "bg-gray-900" : "bg-gray-300"
-            }`}
+            className={`h-1 w-10 rounded-full ${currentSlide === 0 ? "bg-gray-900" : "bg-gray-300"}`}
           />
           <View
-            className={`h-1 w-10 rounded-full ${
-              currentSlide === 1 ? "bg-gray-900" : "bg-gray-300"
-            }`}
+            className={`h-1 w-10 rounded-full ${currentSlide === 1 ? "bg-gray-900" : "bg-gray-300"}`}
           />
           <View
-            className={`h-1 w-10 rounded-full ${
-              currentSlide === 2 ? "bg-gray-900" : "bg-gray-300"
-            }`}
+            className={`h-1 w-10 rounded-full ${currentSlide === 2 ? "bg-gray-900" : "bg-gray-300"}`}
           />
         </View>
 
-        <Pressable
-          onPress={handleNext}
-          disabled={isNextDisabled}
-          className={`
-            w-full py-4 rounded-xl items-center justify-center
-            ${isNextDisabled ? "bg-gray-200" : "bg-gray-900"}
-          `}
-        >
-          <Text
-            className={`text-base font-semibold ${
-              isNextDisabled ? "text-gray-400" : "text-white"
-            }`}
+        {/* Back + Next/Done */}
+        <View className="flex-row items-center gap-3">
+          <Pressable
+            onPress={handleBack}
+            disabled={currentSlide === 0}
+            className={`flex-1 py-4 rounded-xl border ${currentSlide === 0 ? "border-gray-200" : "border-gray-400"}`}
           >
-            {nextLabel}
-          </Text>
-        </Pressable>
+            <Text
+              className={`text-center font-semibold ${currentSlide === 0 ? "text-gray-300" : "text-gray-700"}`}
+            >
+              Back
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={handleNext}
+            className="flex-1 py-4 rounded-xl items-center justify-center bg-gray-900"
+          >
+            <Text className="text-base font-semibold text-white">
+              {nextLabel}
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );

@@ -1,8 +1,9 @@
+// Calendar.tsx
 import Feather from "@expo/vector-icons/Feather";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 
-interface CalendarOnSavePayload {
+export interface CalendarOnSavePayload {
   label: string;
   checkIn: Date;
   checkOut: Date | null;
@@ -13,21 +14,32 @@ interface CalendarProps {
   onSave: (payload: CalendarOnSavePayload) => void;
   onClose: () => void;
   mode?: "range" | "single";
-  checkoutOnlyDates?: Date[]; // 🔥 new prop
+  checkoutOnlyDates?: Date[]; // optional; parent can pass
+  /**
+   * onMount allows the parent to receive an object with actions, e.g. { save, getSelection }
+   * so parent can programmatically call save() when needed (e.g. on Next button).
+   */
+  onMount?: (actions: {
+    save: () => void;
+    getSelection: () => CalendarOnSavePayload | null;
+  }) => void;
 }
+
 const isSameDay = (a: Date | null, b: Date | null) => {
   if (!a || !b) return false;
   return a.toDateString() === b.toDateString();
 };
+
 export default function Calendar({
   onSave,
   onClose,
   mode = "range",
   checkoutOnlyDates = [],
+  onMount,
 }: CalendarProps) {
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 10));
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const minDate = new Date(2025, 10, 15);
@@ -81,7 +93,7 @@ export default function Calendar({
   const handleDateClick = (date: Date) => {
     const checkoutOnly = isCheckoutOnlyDate(date);
 
-    // SINGLE DATE MODE (hourly) -> cannot pick checkout-only as single
+    // SINGLE DATE MODE -> cannot pick checkout-only as single
     if (mode === "single") {
       if (isBeforeMin(date) || isBlockedDate(date)) return;
       if (checkoutOnly) {
@@ -94,7 +106,8 @@ export default function Calendar({
     }
 
     // RANGE MODE
-    const choosingCheckIn = !checkIn || (checkIn && checkOut) || date < checkIn;
+    const choosingCheckIn =
+      !checkIn || (checkIn && checkOut) || date < checkIn!;
 
     if (choosingCheckIn) {
       // can't choose checkout-only as check-in
@@ -109,7 +122,10 @@ export default function Calendar({
 
     // choosing checkout
     const blockedInside = blockedDates.some((d) => d > checkIn! && d < date);
-    if (blockedInside) return;
+    if (blockedInside) {
+      showToast("Selected range includes blocked dates.");
+      return;
+    }
 
     setCheckOut(date);
   };
@@ -263,8 +279,11 @@ export default function Calendar({
     setCheckOut(null);
   };
 
-  const handleSave = () => {
-    if (!checkIn) return;
+  const internalHandleSave = () => {
+    if (!checkIn) {
+      showToast("Pick a check-in date first.");
+      return;
+    }
 
     if (mode === "single") {
       const label = checkIn.toLocaleDateString();
@@ -277,7 +296,10 @@ export default function Calendar({
       return;
     }
 
-    if (!checkOut) return;
+    if (!checkOut) {
+      showToast("Pick a check-out date.");
+      return;
+    }
 
     const label = `${checkIn.toLocaleDateString()} – ${checkOut.toLocaleDateString()}`;
     onSave({
@@ -288,18 +310,32 @@ export default function Calendar({
     });
   };
 
+  useEffect(() => {
+    if (onMount) {
+      onMount({
+        save: internalHandleSave,
+        getSelection: () => {
+          if (!checkIn) return null;
+          return {
+            label:
+              mode === "single"
+                ? checkIn.toLocaleDateString()
+                : checkOut
+                  ? `${checkIn.toLocaleDateString()} – ${checkOut.toLocaleDateString()}`
+                  : checkIn.toLocaleDateString(),
+            checkIn,
+            checkOut,
+            mode,
+          } as CalendarOnSavePayload;
+        },
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkIn, checkOut, mode, onMount]);
+
   return (
     <View className="flex-1 bg-gray-50 items-center justify-center relative">
       <View className="bg-white w-full h-full px-6">
-        <View className="flex-row items-center justify-between py-6 sticky top-0 bg-white z-10">
-          <Text className="text-2xl font-semibold">
-            {mode === "single" ? "Select date" : "Change dates"}
-          </Text>
-          <Pressable onPress={onClose} className="p-2">
-            <Feather name="x" size={24} color="black" />
-          </Pressable>
-        </View>
-
         {renderCalendar(0)}
         {renderCalendar(1)}
 
@@ -312,7 +348,7 @@ export default function Calendar({
           </Pressable>
           <Pressable
             className="bg-gray-900 px-6 py-3 rounded-lg"
-            onPress={handleSave}
+            onPress={internalHandleSave}
           >
             <Text className="text-white font-semibold">Save</Text>
           </Pressable>

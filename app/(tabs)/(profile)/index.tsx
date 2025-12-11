@@ -1,13 +1,15 @@
 import { useUser } from "@/src/contexts/UserContext";
 import Entypo from "@expo/vector-icons/Entypo";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Link } from "expo-router";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 export default function Profile() {
   const user = useUser();
   return (
     <ScrollView>
       <View className="min-h-screen p-4 flex flex-col gap-6">
-        <Text className="text-2xl font-medium">Profile</Text>
+        <Text className="text-3xl font-semibold mt-6 mb-4 px-4">Profile</Text>
         {/* Cards */}
         <View className="flex flex-col gap-2">
           {/* CARD A */}
@@ -36,11 +38,28 @@ export default function Profile() {
           </View>
         </View>
         <View className="w-full flex flex-col  border-b border-zinc-300">
-          <View className="w-full h-12 text-zinc-700 flex flex-row items-center gap-4 px-2">
+          {/*<View className="w-full h-12 text-zinc-700 flex flex-row items-center gap-4 px-2">
             <Ionicons name="settings-outline" size={24} color="#3f3f46" />
             <Text className="w-full">Settings</Text>
             <Entypo name="chevron-thin-right" size={16} color="#3f3f46" />
           </View>
+          */}
+          <Link href="/privacy">
+            <View className="w-full h-12 text-zinc-700 flex flex-row items-center gap-4 px-2">
+              <MaterialIcons name="privacy-tip" size={24} color="#3f3f46" />
+              <Text>Privacy Policy</Text>
+            </View>
+          </Link>
+          <Link href="/terms">
+            <View className="w-full h-12 text-zinc-700 flex flex-row items-center gap-4 px-2">
+              <Ionicons
+                name="document-text-outline"
+                size={24}
+                color="#3f3f46"
+              />
+              <Text>Terms & Conditions</Text>
+            </View>
+          </Link>
           <Pressable onPress={() => user.logout()}>
             <View className="w-full h-12 text-zinc-700 flex flex-row items-center gap-4 px-2">
               <Ionicons name="exit-outline" size={24} color="#3f3f46" />
