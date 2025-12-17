@@ -58,7 +58,7 @@ export default function ListingCard({ data }: { data?: any }) {
         {/* DOTS */}
         {data.images.length > 1 && (
           <View className="flex-row absolute bottom-4 left-1/2 -translate-x-1/2">
-            {data.images.map((_, index: number) => (
+            {data.images.map((_: any, index: number) => (
               <View
                 key={index}
                 style={{
@@ -86,7 +86,9 @@ export default function ListingCard({ data }: { data?: any }) {
             <View style={{ transform: [{ scale: 0.75 }] }}>
               <Star />
             </View>
-            <Text className="text-sm font-semibold">4.94</Text>
+            <Text className="text-sm font-semibold text-gray-400">
+              {data.avg_rating ? data.avg_rating : "NA"}
+            </Text>
           </View>
         </View>
 

@@ -10,6 +10,7 @@ import Feather from "@expo/vector-icons/Feather";
 import { useUser } from "../../src/contexts/UserContext";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { Link } from "expo-router";
+import { sendPasswordRecovery } from "@/lib/services/auth";
 export default function SignIn() {
   const { login } = useUser();
 
@@ -40,11 +41,19 @@ export default function SignIn() {
     if (!validateForm()) return;
 
     if (view === "forgot_password") {
-      // TODO: implement Appwrite recovery
-      setRecoverySent(true);
+      try {
+        setIsLoading(true);
+        await sendPasswordRecovery(email);
+        setRecoverySent(true);
+      } catch (err: any) {
+        setErrors({
+          general: err?.message || "Failed to send recovery email",
+        });
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
-    console.log("Submitting login for:", email);
 
     try {
       setIsLoading(true);
@@ -75,8 +84,8 @@ export default function SignIn() {
         {view === "forgot_password" && recoverySent ? (
           <View className="items-center">
             <Text className="text-lg font-medium mt-4">Check your email</Text>
-            <View className="text-gray-500 text-center mt-2">
-              <Text>
+            <View className="text-gray-500 mt-2">
+              <Text className="text-center w-full">
                 We&apos;ve sent a recovery link to{" "}
                 <Text className="font-medium">{email}</Text>
               </Text>
@@ -180,7 +189,10 @@ export default function SignIn() {
                 <View className="text-gray-500 text-sm">
                   <Text>
                     Don&apos;t have an account?{" "}
-                    <Link href="/" className="font-medium underline text-black">
+                    <Link
+                      href="/signup"
+                      className="font-medium underline text-black"
+                    >
                       Sign Up
                     </Link>
                   </Text>

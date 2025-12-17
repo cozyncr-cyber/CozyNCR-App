@@ -7,8 +7,7 @@ interface PriceModalProps {
 
   nights: number;
   pricePerNight: number;
-  subtotal: number; // <-- parent provides this
-  total: number; // <-- parent provides this
+  subtotal: number;
 
   datesLabel: string;
   cancellationText: string;
@@ -21,11 +20,10 @@ const PriceModal: React.FC<PriceModalProps> = ({
   nights,
   pricePerNight,
   subtotal,
-  total,
   currencySymbol = "₹",
 }) => {
   const height = Dimensions.get("window").height;
-  const taxes = total - subtotal;
+  const taxes = 0.045;
 
   return (
     <Modal
@@ -67,7 +65,7 @@ const PriceModal: React.FC<PriceModalProps> = ({
           <View className="flex-row justify-between">
             <Text className="text-gray-700 text-base">Taxes</Text>
             <Text className="text-base font-semibold">
-              ₹{taxes.toLocaleString("en-IN")}
+              ₹{(taxes * subtotal).toFixed(2)}
             </Text>
           </View>
         </View>
@@ -77,7 +75,7 @@ const PriceModal: React.FC<PriceModalProps> = ({
           <Text className="text-base font-semibold">Total</Text>
           <Text className="text-base font-semibold">
             {currencySymbol}
-            {total?.toLocaleString("en-IN")}
+            {(subtotal + taxes * subtotal).toFixed(2)}
           </Text>
         </View>
       </View>

@@ -1,5 +1,4 @@
-// Calendar.tsx
-import Feather from "@expo/vector-icons/Feather";
+// Calendar.tsx\
 import React, { useEffect, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 
@@ -9,20 +8,19 @@ export interface CalendarOnSavePayload {
   checkOut: Date | null;
   mode: "range" | "single";
 }
-
 interface CalendarProps {
   onSave: (payload: CalendarOnSavePayload) => void;
   onClose: () => void;
   mode?: "range" | "single";
   checkoutOnlyDates?: Date[]; // optional; parent can pass
-  /**
-   * onMount allows the parent to receive an object with actions, e.g. { save, getSelection }
-   * so parent can programmatically call save() when needed (e.g. on Next button).
-   */
   onMount?: (actions: {
     save: () => void;
     getSelection: () => CalendarOnSavePayload | null;
   }) => void;
+  /**
+   * If provided, calendar will pre-select these dates on mount.
+   */
+  initialSelection?: CalendarOnSavePayload | null;
 }
 
 const isSameDay = (a: Date | null, b: Date | null) => {
@@ -36,6 +34,7 @@ export default function Calendar({
   mode = "range",
   checkoutOnlyDates = [],
   onMount,
+  initialSelection = null,
 }: CalendarProps) {
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
@@ -66,6 +65,20 @@ export default function Calendar({
   ];
 
   const days = ["S", "M", "T", "W", "T", "F", "S"];
+  useEffect(() => {
+    if (initialSelection && initialSelection.checkIn) {
+      setCheckIn(initialSelection.checkIn);
+      setCheckOut(initialSelection.checkOut ?? null);
+
+      // center calendar view on the check-in month (or check-out if checkIn missing)
+      const monthDate = initialSelection.checkIn || initialSelection.checkOut;
+      if (monthDate) {
+        setCurrentMonth(
+          new Date(monthDate.getFullYear(), monthDate.getMonth(), 1)
+        );
+      }
+    }
+  }, [initialSelection]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

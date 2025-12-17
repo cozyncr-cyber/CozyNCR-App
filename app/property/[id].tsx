@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ScrollView,
   Image,
@@ -6,8 +6,10 @@ import {
   Pressable,
   View,
   Text,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
+import Entypo from "@expo/vector-icons/Entypo";
 
 import ExpandableText from "@/components/Expandable";
 import ReviewCarousel from "@/components/Reviews";
@@ -20,13 +22,66 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { amenityIcons } from "@/components/AmenityIcon";
 import { useProperty } from "@/src/contexts/PropertyContext";
 import PriceModal from "@/components/PriceModal";
+import { useSearch } from "@/src/contexts/SearchContext";
+import { isWishlisted, toggleWishlist } from "@/lib/services/wishlist";
+import { useUser } from "@/src/contexts/UserContext";
 
 export default function Details() {
+  const { searchState } = useSearch();
+  const user = useUser();
+  let nights = 1;
+
+  if (searchState.calendar?.checkIn && searchState.calendar?.checkOut) {
+    const ms =
+      searchState.calendar.checkOut.getTime() -
+      searchState.calendar.checkIn.getTime();
+    nights = Math.max(1, Math.round(ms / (1000 * 60 * 60 * 24)));
+  }
+
   const { data, owner, loading } = useProperty();
   const width = Dimensions.get("window").width;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [loadingWishlist, setLoadingWishlist] = useState(false);
   const router = useRouter();
   const [priceOpen, setPriceOpen] = useState(false);
+  const userId = user?.current?.$id;
+  const listingId = data?.$id;
+
+  useEffect(() => {
+    if (!userId || !listingId) return;
+
+    let mounted = true;
+
+    const checkWishlist = async () => {
+      const exists = await isWishlisted(userId, listingId);
+      if (mounted) setWishlisted(exists);
+    };
+
+    checkWishlist();
+
+    return () => {
+      mounted = false;
+    };
+  }, [userId, listingId]);
+  const handleToggleWishlist = async () => {
+    if (!user?.current?.$id) return;
+
+    setLoadingWishlist(true);
+
+    // Optimistic UI
+    setWishlisted((prev) => !prev);
+
+    try {
+      await toggleWishlist(user.current.$id, data.$id);
+    } catch (err) {
+      // rollback on failure
+      setWishlisted((prev) => !prev);
+      console.error("Wishlist toggle failed", err);
+    } finally {
+      setLoadingWishlist(false);
+    }
+  };
 
   const handleScroll = (event: any) => {
     const slide = Math.round(event.nativeEvent.contentOffset.x / width);
@@ -36,7 +91,9 @@ export default function Details() {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center">
-        <Text>Loading...</Text>
+        <Text>
+          <ActivityIndicator size="large" color="#2563eb" />
+        </Text>
       </View>
     );
   }
@@ -64,6 +121,19 @@ export default function Details() {
               className="w-full h-full rounded-full items-center justify-center"
             >
               <MaterialIcons name="arrow-back" size={22} />
+            </Pressable>
+          </View>
+          <View className="w-12 h-12 absolute z-10 rounded-full top-6 right-4 shadow-lg items-center justify-center">
+            <Pressable
+              onPress={handleToggleWishlist}
+              disabled={loadingWishlist}
+              className="w-full h-full rounded-full items-center justify-center"
+            >
+              <Entypo
+                name={wishlisted ? "heart" : "heart-outlined"}
+                size={24}
+                color={wishlisted ? "red" : "white"}
+              />
             </Pressable>
           </View>
 
@@ -127,21 +197,26 @@ export default function Details() {
               <View className="flex-row w-full items-center justify-around gap-3 border-b border-zinc-300 py-6">
                 <View className="flex-row items-center gap-1">
                   <Star />
-                  <Text className="font-semibold text-gray-900">4.8</Text>
+                  <Text className="font-semibold text-gray-900">
+                    {data.avg_rating ? data.avg_rating : "NA"}
+                  </Text>
                   <Text className="text-sm text-gray-500 ml-1" />
                 </View>
 
                 <View className="h-10 w-0.5 rounded-full bg-zinc-300" />
 
                 <View className="items-center">
-                  <Text className="font-semibold text-gray-900">1+</Text>
-                  <Text className="text-sm text-gray-500">Years</Text>
+                  <Text className="font-semibold text-gray-900">
+                    {timeSinceMinOneMonth(data.$createdAt)}
+                  </Text>
                 </View>
 
                 <View className="h-10 w-0.5 rounded-full bg-zinc-300" />
 
                 <View className="items-center">
-                  <Text className="font-semibold text-gray-900">4</Text>
+                  <Text className="font-semibold text-gray-900">
+                    {data.review_count ? data.review_count : "0"}
+                  </Text>
                   <Text className="text-sm text-gray-500">Reviews</Text>
                 </View>
               </View>
@@ -201,9 +276,18 @@ export default function Details() {
                 <Text className="text-xl font-semibold mb-6">Reviews</Text>
                 <View className="flex-row items-center gap-2 mb-4">
                   <Star />
-                  <Text className="text-lg font-medium">4.6 • 20 Reviews</Text>
+                  <Text className="text-lg font-medium">
+                    {data.avg_rating ? data.avg_rating + " • " : ""}
+                    {data.review_count ? data.review_count : "0"} Reviews
+                  </Text>
                 </View>
-                <ReviewCarousel />
+                {data.review_count > 0 ? (
+                  <ReviewCarousel listingId={data.$id} />
+                ) : (
+                  <View className="w-full flex items-center justify-center h-12">
+                    <Text className="">No reviews yet.</Text>
+                  </View>
+                )}
               </View>
 
               {/* Highlights */}
@@ -260,11 +344,10 @@ export default function Details() {
         <PriceModal
           visible={priceOpen}
           onClose={() => setPriceOpen(false)}
-          nights={2}
+          nights={nights}
           pricePerNight={2065.53}
-          subtotal={4131.06}
-          total={4131.06}
-          datesLabel="12–14 Dec"
+          subtotal={nights * 2065.53}
+          datesLabel={searchState.calendar?.label || ""}
           cancellationText="Free cancellation before 11 December"
           currencySymbol="₹"
         />
@@ -273,8 +356,12 @@ export default function Details() {
       {/* Sticky Bottom Bar */}
       <View className="absolute left-0 right-0 bottom-0 h-20 flex-row items-center justify-between shadow-sm bg-white p-4 border-t border-gray-200 z-20">
         <Pressable onPress={() => setPriceOpen(true)}>
-          <Text className="font-semibold underline">Rs 4131.06 /-</Text>
-          <Text className="text-zinc-500 text-sm">For 2 nights</Text>
+          <Text className="font-semibold underline">
+            Rs {nights * 2065.53} /-
+          </Text>
+          <Text className="text-zinc-500 text-sm">
+            For {nights} {nights > 1 ? "nights" : "night"}
+          </Text>
         </Pressable>
 
         <Pressable onPress={() => router.push(`/property/reserve`)}>
@@ -285,4 +372,31 @@ export default function Details() {
       </View>
     </>
   );
+}
+
+function timeSinceMinOneMonth(createdAt: Date) {
+  const start = new Date(createdAt);
+  const now = new Date();
+
+  let years = now.getFullYear() - start.getFullYear();
+  let months = now.getMonth() - start.getMonth();
+
+  // Adjust if current day is before the created day
+  if (now.getDate() < start.getDate()) {
+    months--;
+  }
+
+  const totalMonths = years * 12 + months;
+
+  // Minimum is always 1 Month
+  if (totalMonths <= 0) {
+    return "1 Month";
+  }
+
+  if (totalMonths >= 12) {
+    const y = Math.floor(totalMonths / 12);
+    return `${y} Year${y > 1 ? "s" : ""}`;
+  }
+
+  return `${totalMonths} Month${totalMonths > 1 ? "s" : ""}`;
 }

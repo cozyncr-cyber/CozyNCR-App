@@ -5,59 +5,80 @@ export default function ProfileCard(owner: any) {
   return (
     <ScrollView>
       <View className="flex-1 relative">
-        <View className="bg-gray-900 rounded-3xl shadow-lg overflow-hidden">
-          <View className="relative h-[500px]">
-            <Image
-              source={{
-                uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=600&fit=crop",
-              }}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <LinearGradient
-              colors={["transparent", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.95)"]}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-              }}
-            />
-            <View className="relative h-full flex flex-col justify-end p-6">
-              {/* Name */}
-              <View className="flex items-center gap-2 mb-3">
-                <Text className="text-xl font-semibold text-white">
-                  {owner?.owner?.name}
-                </Text>
-              </View>
-
-              <Text className="text-gray-200 text-center text-sm mb-6">
-                I am a Brand Designer who focuses on clarity & emotional
-                connection.
-              </Text>
-
-              {/* Stats */}
-              <View className="flex flex-row w-full items-center text-center justify-around gap-3 sm:gap-6 mb-6 ">
-                <View className="flex flex-row items-center gap-1 ">
-                  <Star />
-                  <Text className="font-semibold text-white">4.8</Text>
-                </View>
-                <View className="h-10 w-0.5 rounded-full bg-zinc-300"></View>
-
-                <View>
-                  <Text className="font-semibold text-white">
-                    {timeSince(owner?.owner?.$createdAt)}
+        <View className="bg-gray-900 rounded-3xl  overflow-hidden">
+          {owner.owner.avatarUrl ? (
+            <View className="relative h-[500px]">
+              <Image
+                source={{
+                  uri: owner?.owner?.avatarUrl,
+                }}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <LinearGradient
+                colors={["transparent", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.95)"]}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                }}
+              />
+              <View className="relative h-full flex flex-col justify-end p-6">
+                {/* Name */}
+                <View className="flex items-center gap-2 mb-3">
+                  <Text className="text-xl font-semibold text-white">
+                    {owner?.owner?.name}
                   </Text>
                 </View>
 
-                <View className="h-10 w-0.5 rounded-full bg-zinc-300"></View>
-                <View>
-                  <Text className="font-semibold text-white">3</Text>
-                  <Text className="text-sm text-gray-300">Property</Text>
+                {/* Stats */}
+                <View className="flex flex-row w-full items-center text-center justify-around gap-3 sm:gap-6 mb-6 ">
+                  <View>
+                    <Text className="font-semibold text-white">
+                      Hosting for {timeSince(owner?.owner?.$createdAt)}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
+          ) : (
+            <>
+              <View className="flex-1 relative">
+                <View className="bg-white rounded-3xl overflow-hidden pt-6">
+                  {/* Image */}
+                  <View className="relative w-32 h-32 rounded-full overflow-hidden mx-auto bg-orange-300">
+                    <Image
+                      source={{
+                        uri: "https://images.unsplash.com/photo-1750535135696-4421c9a90746?w=400&h=400&fit=crop",
+                      }}
+                      className="w-full h-full"
+                      resizeMode="cover"
+                    />
+                  </View>
+
+                  {/* Content */}
+                  <View className="p-6">
+                    <View className="flex-row items-center gap-2 mb-3">
+                      <Text className="text-xl text-center w-full font-semibold text-gray-900">
+                        {owner?.owner?.name}
+                      </Text>
+                    </View>
+
+                    {/* Stats */}
+                    <View className="flex-row items-center gap-6 justify-around mb-6 px-6">
+                      {/* Years */}
+                      <View className="items-center">
+                        <Text className="font-semibold text-gray-900">
+                          Hosting for {timeSince(owner?.owner?.$createdAt)}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </>
+          )}
         </View>
       </View>
     </ScrollView>

@@ -1,11 +1,12 @@
+/* eslint-disable eqeqeq */
 import { useUser } from "@/src/contexts/UserContext";
-import Entypo from "@expo/vector-icons/Entypo";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Link } from "expo-router";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 export default function Profile() {
   const user = useUser();
+  console.log("User in Profile:", user);
   return (
     <ScrollView>
       <View className="min-h-screen p-4 flex flex-col gap-6">
@@ -19,7 +20,9 @@ export default function Profile() {
               <View className="relative w-28 aspect-square rounded-full overflow-hidden mx-auto bg-orange-300">
                 <Image
                   source={{
-                    uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
+                    uri: user?.profileImage
+                      ? user.profileImage
+                      : "https://images.unsplash.com/photo-1750535135696-4421c9a90746?w=400&h=400&fit=crop",
                   }}
                   className="w-full h-full object-cover"
                 />
@@ -29,9 +32,11 @@ export default function Profile() {
               <View className="">
                 <View className="flex flex-col items-center">
                   <Text className="text-xl font-semibold text-gray-900">
-                    Natasha Romanoff
+                    {user?.current?.name || "Guest User"}
                   </Text>
-                  <Text className="text-gray-600 text-sm">Guest</Text>
+                  <Text className="text-gray-600 text-sm">
+                    {user?.profile?.kycStatus == "verified" ? "Host" : "Guest"}
+                  </Text>
                 </View>
               </View>
             </View>

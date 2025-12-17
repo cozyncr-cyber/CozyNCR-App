@@ -9,6 +9,7 @@ import Guests from "@/components/Guests";
 import PriceModal from "@/components/PriceModal";
 import TimeModal from "@/components/TimeModal";
 import { tablesDB, DATABASE_ID, BOOKINGS_TABLE_ID, ID } from "@/lib/appwrite";
+import { useUser } from "@/src/contexts/UserContext";
 // also your auth context to get current userId
 // also you probably have current user somewhere, e.g. useAuth()
 
@@ -65,17 +66,6 @@ const parseSlot = (slot: string): ParsedSlot | null => {
   return { startHour, endHour, overnight };
 };
 
-// Format a concrete Date as "Dec 5, 2025, 10:30 PM"
-const formatDateTimeLabel = (date: Date): string =>
-  date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-
 // Helpers
 const formatSingle = (d: Date) => d.toLocaleDateString();
 const formatRange = (start: Date, end: Date) =>
@@ -86,6 +76,7 @@ const isHourlyType = (t: BookingTypeId) =>
 
 export default function Booking() {
   const { data, loading } = useProperty();
+  const user = useUser();
   const router = useRouter();
 
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -262,7 +253,7 @@ export default function Booking() {
       setSubmitting(true);
 
       const customerName = "John Doe";
-      const customerId = "6924091500025d93c611";
+      const customerId = user.current.$id;
 
       const guestCount = guestCounts.adults + guestCounts.children;
 
@@ -637,7 +628,6 @@ export default function Booking() {
           nights={nights}
           pricePerNight={currentBooking.price}
           subtotal={subtotal}
-          total={total}
           datesLabel={dates}
           cancellationText="Free cancellation before 11 December"
         />

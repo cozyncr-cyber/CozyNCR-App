@@ -2,6 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { Tabs } from "expo-router";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 export default function RootLayout() {
   return (
@@ -22,7 +23,7 @@ export default function RootLayout() {
         }}
       />
       <Tabs.Screen
-        name="trips"
+        name="(trips)"
         options={{
           title: "Trips",
           tabBarIcon: ({ color }) => (
@@ -31,11 +32,11 @@ export default function RootLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="wishlist"
         options={{
-          title: "Explore",
+          title: "Wishlist",
           tabBarIcon: ({ color }) => (
-            <AntDesign name="history" size={24} color={color} />
+            <FontAwesome name="heart-o" size={24} color={color} />
           ),
         }}
       />

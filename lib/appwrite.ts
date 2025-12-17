@@ -3,6 +3,7 @@ import {
   Client,
   TablesDB,
   Account,
+  Databases,
   Storage,
   ID,
   Permission,
@@ -29,10 +30,15 @@ export const LISTINGS_TABLE_ID =
 export const PROFILES_TABLE_ID =
   process.env.EXPO_PUBLIC_APPWRITE_PROFILES_TABLE_ID!;
 export const BOOKINGS_TABLE_ID =
-  process.env.EXPO_PUBLIC_APPWRITE_BOOKINGS_TABLE_ID!; // <-- add to .env
+  process.env.EXPO_PUBLIC_APPWRITE_BOOKINGS_TABLE_ID!;
+export const REVIEWS_TABLE_ID =
+  process.env.EXPO_PUBLIC_APPWRITE_REVIEWS_TABLE_ID!;
+export const WISHLIST_TABLE_ID =
+  process.env.EXPO_PUBLIC_APPWRITE_WISHLISTS_TABLE_ID!;
 
 export const account = new Account(client);
 export const tablesDB = new TablesDB(client);
+export const databases = new Databases(client);
 export const storage = new Storage(client);
 
 // re-export helpers for convenience
