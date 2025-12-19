@@ -1,73 +1,57 @@
 import Feather from "@expo/vector-icons/Feather";
 import React, { useState, useMemo, useEffect } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-
 interface TimeModalProps {
-  bookingType: "3hours" | "6hours" | "12hours" | string;
+  bookingType: "3hours" | "6hours" | "12hours";
+  openMinutes: number;
+  closeMinutes: number;
+  bufferMinutes: number;
   onSave: (slot: string) => void;
   onClose: () => void;
   initialTime?: string | null;
   unavailableSlots?: string[];
 }
+export function generateSlots(
+  bookingType: "3hours" | "6hours" | "12hours",
+  openMinutes: number,
+  closeMinutes: number,
+  bufferMinutes: number
+): string[] {
+  const durationMinutes =
+    bookingType === "3hours" ? 180 : bookingType === "6hours" ? 360 : 720;
 
-function formatHour(hour24: number): string {
-  const h = ((hour24 + 11) % 12) + 1; // 0–23 -> 1–12
-  const suffix = hour24 >= 12 && hour24 < 24 ? "PM" : "AM";
-  return `${h} ${suffix}`;
-}
+  let cursor = openMinutes;
+  const slots: string[] = [];
 
-function formatRange(start: number, end: number): string {
-  const startLabel = formatHour(start);
-  const endLabel = formatHour(end % 24);
-  return `${startLabel} - ${endLabel}`;
-}
+  while (cursor + durationMinutes <= closeMinutes) {
+    const start = cursor;
+    const end = cursor + durationMinutes;
 
-function generateSlots(bookingType: string): string[] {
-  const START = 11; // 11 AM
-  const END = 23; // 11 PM
+    slots.push(formatRangeMinutes(start, end));
 
-  if (bookingType === "3hours") {
-    const duration = 3;
-    const slots: string[] = [];
-    for (let s = START; s + duration <= END; s += duration) {
-      slots.push(formatRange(s, s + duration));
-    }
-    return slots;
+    cursor = end + bufferMinutes;
   }
 
-  if (bookingType === "6hours") {
-    const duration = 6;
-    const slots: string[] = [];
-    for (let s = START; s + duration <= END; s += duration) {
-      slots.push(formatRange(s, s + duration));
-    }
-    return slots;
-  }
-
-  if (bookingType === "12hours") {
-    // exactly two: 11 AM - 11 PM, 11 PM - 11 AM
-    return [formatRange(11, 23), formatRange(23, 11 + 24)];
-  }
-
-  return [];
+  return slots;
 }
-
 export default function TimeModal({
   bookingType,
+  openMinutes,
+  closeMinutes,
+  bufferMinutes,
   onSave,
   onClose,
   initialTime,
   unavailableSlots = [],
 }: TimeModalProps) {
-  const slots = useMemo(() => generateSlots(bookingType), [bookingType]);
-
+  const slots = useMemo(
+    () => generateSlots(bookingType, openMinutes, closeMinutes, bufferMinutes),
+    [bookingType, openMinutes, closeMinutes, bufferMinutes]
+  );
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  // pick initial selection:
-  // 1. use initialTime if valid & not disabled
-  // 2. else first non-disabled slot
   useEffect(() => {
-    if (slots.length === 0) {
+    if (!slots.length) {
       setSelectedTime(null);
       return;
     }
@@ -83,10 +67,8 @@ export default function TimeModal({
       return;
     }
 
-    const firstAvailable = slots.find((slot) => !isUnavailable(slot)) || null;
-    setSelectedTime(firstAvailable);
+    setSelectedTime(slots.find((s) => !isUnavailable(s)) || null);
   }, [slots, initialTime, unavailableSlots]);
-
   return (
     <View className="flex-1 bg-gray-50 items-center justify-center pt-4">
       <ScrollView
@@ -98,9 +80,7 @@ export default function TimeModal({
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-lg font-semibold">Select time</Text>
             <Pressable onPress={onClose}>
-              <Text className="text-xl">
-                <Feather name="x" size={24} color="black" />
-              </Text>
+              <Feather name="x" size={24} color="black" />
             </Pressable>
           </View>
 
@@ -150,7 +130,6 @@ export default function TimeModal({
             </View>
           </View>
 
-          {/* Confirm Button */}
           <Pressable
             disabled={!selectedTime}
             onPress={() => selectedTime && onSave(selectedTime)}
@@ -173,3 +152,15 @@ export default function TimeModal({
     </View>
   );
 }
+const toMinutes = (hour: number, minute = 0) => hour * 60 + minute;
+
+const minutesToLabel = (mins: number) => {
+  const h24 = Math.floor(mins / 60) % 24;
+  const m = mins % 60;
+  const h12 = ((h24 + 11) % 12) + 1;
+  const suffix = h24 >= 12 ? "PM" : "AM";
+  return `${h12}${m ? `:${String(m).padStart(2, "0")}` : ""} ${suffix}`;
+};
+
+const formatRangeMinutes = (start: number, end: number) =>
+  `${minutesToLabel(start)} - ${minutesToLabel(end)}`;

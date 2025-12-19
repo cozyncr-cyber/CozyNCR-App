@@ -195,7 +195,7 @@ export default function Details() {
                   {data?.city}, {data?.state}
                 </Text>
                 <Text className="text-sm text-gray-600">
-                  {data?.maxGuests} guest · 1 bed · 1 bathroom
+                  {data?.maxGuests} guest
                 </Text>
               </View>
 
@@ -258,7 +258,7 @@ export default function Details() {
                 </View>
               </View>
               {/* Add-ons */}
-              {data?.addOns && data.addOns.length > 0 && (
+              {addOnsArray[0].length ? (
                 <View className="py-8 border-b border-zinc-300">
                   <Text className="text-xl font-semibold">
                     Add-ons available
@@ -286,6 +286,8 @@ export default function Details() {
                     )
                   )}
                 </View>
+              ) : (
+                <></>
               )}
 
               {/* Map */}

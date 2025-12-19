@@ -30,7 +30,9 @@ export default function RootLayout() {
   return (
     <UserProvider>
       <SearchProvider>
-        <Router />
+        <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
+          <Router />
+        </SafeAreaView>
       </SearchProvider>
     </UserProvider>
   );

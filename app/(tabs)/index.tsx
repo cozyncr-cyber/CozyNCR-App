@@ -60,7 +60,7 @@ export default function HomeScreen() {
           queries.push(Query.cursorAfter(lastId));
         }
 
-        if (!isSearchActive && filters) {
+        if (filters) {
           if (filters.placeTypes.length)
             queries.push(Query.equal("category", filters.placeTypes));
           if (filters.bookingOptions.includes("pets"))
@@ -206,7 +206,7 @@ export default function HomeScreen() {
         <Pressable onPress={() => setOpenSearch(true)} style={{ width: "90%" }}>
           <View className="w-full h-20 bg-white rounded-full shadow-sm flex-row items-center px-4 justify-between">
             <View className="pl-2 flex-row items-center gap-3">
-              <Feather name="search" size={24} color="black" />
+              <Feather name="search" size={20} color="black" />
 
               {/* <-- WRAPS TEXT NOW --> */}
               <View className="flex-col flex flex-wrap max-w-[70%]">
@@ -214,7 +214,7 @@ export default function HomeScreen() {
                   {searchState.search ? searchState.search : "Where To?"}
                 </Text>
 
-                <View className="mt-2 flex-row flex-wrap gap-0.5">
+                <View className="-mt-0.5 flex-row gap-0.5">
                   <Text className="text-sm text-zinc-500">
                     {searchState.calendar
                       ? searchState.calendar.label
@@ -223,17 +223,15 @@ export default function HomeScreen() {
 
                   <Text className="text-sm text-zinc-500">•</Text>
 
-                  <Text className="text-sm text-zinc-500">
-                    {searchState.guests
-                      ? searchState.guests.label
-                      : "Add Guests"}
+                  <Text className="text-sm text-zinc-500 text-nowrap">
+                    {searchState.guests ? searchState.guests.label : "Guests"}
                   </Text>
                 </View>
               </View>
             </View>
 
             <Pressable onPress={() => setShowFilters(true)}>
-              <View className="rounded-full shadow-sm aspect-square flex items-center justify-center px-4">
+              <View className="rounded-full bg-white w-16 shadow-sm aspect-square flex items-center justify-center px-4">
                 <Ionicons name="options" size={24} color="black" />
               </View>
             </Pressable>

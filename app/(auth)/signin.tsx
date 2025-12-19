@@ -126,11 +126,12 @@ export default function SignIn() {
             {view === "signin" && (
               <>
                 <Text className="font-medium mb-1 mt-4">Password</Text>
-                <View className="relative mb-3 gap-4 flex flex-row items-center bg-gray-100 px-4 py-3 rounded-xl">
+                <View className="mb-3 flex-row items-center bg-gray-100 px-4 py-3 rounded-xl">
                   <Feather name="lock" size={20} color="gray" />
+
                   <TextInput
                     secureTextEntry={!showPassword}
-                    className="w-full outline-none bg-transparent "
+                    className="flex-1 mx-3 bg-transparent"
                     placeholder="Enter Password"
                     value={password}
                     onChangeText={setPassword}
@@ -139,18 +140,13 @@ export default function SignIn() {
                   <TouchableOpacity
                     onPress={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? (
-                      <View>
-                        <Feather name="eye" size={20} color="gray" />
-                      </View>
-                    ) : (
-                      <View>
-                        <Feather name="eye-off" size={20} color="gray" />
-                      </View>
-                    )}
+                    <Feather
+                      name={showPassword ? "eye" : "eye-off"}
+                      size={20}
+                      color="gray"
+                    />
                   </TouchableOpacity>
                 </View>
-
                 {errors.password && (
                   <Text className="text-red-500 text-xs">
                     {errors.password}

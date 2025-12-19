@@ -7,7 +7,7 @@ import { useProperty } from "@/src/contexts/PropertyContext";
 import Calendar from "@/components/Calendar";
 import Guests from "@/components/Guests";
 import PriceModal from "@/components/PriceModal";
-import TimeModal from "@/components/TimeModal";
+import TimeModal, { generateSlots } from "@/components/TimeModal";
 import { tablesDB, DATABASE_ID, BOOKINGS_TABLE_ID, ID } from "@/lib/appwrite";
 import { useUser } from "@/src/contexts/UserContext";
 // also your auth context to get current userId
@@ -21,13 +21,6 @@ type BookingType = {
   price: number;
 };
 
-const defaultSlots: Record<BookingTypeId, string> = {
-  "3hours": "11 AM - 2 PM",
-  "6hours": "11 AM - 5 PM",
-  "12hours": "9 AM - 9 PM",
-  daily: "", // not used for daily
-};
-// Convert "11 AM" / "2 PM" to 24h
 const parseTimeLabelToHour = (label: string): number | null => {
   const [hourStr, suffixRaw] = label.trim().split(" ");
   const suffix = suffixRaw?.toUpperCase();
@@ -45,27 +38,62 @@ const parseTimeLabelToHour = (label: string): number | null => {
 
   return hour;
 };
-
 type ParsedSlot = {
   startHour: number;
+  startMinute: number;
   endHour: number;
+  endMinute: number;
   overnight: boolean;
 };
+const parseTimeLabel = (
+  label: string
+): { hour: number; minute: number } | null => {
+  const trimmed = label.trim(); // "12:15 PM"
+  const [time, suffixRaw] = trimmed.split(" ");
 
+  if (!time || !suffixRaw) return null;
+
+  const suffix = suffixRaw.toUpperCase();
+  const [hStr, mStr = "0"] = time.split(":");
+
+  let hour = Number(hStr);
+  const minute = Number(mStr);
+
+  if (isNaN(hour) || isNaN(minute)) return null;
+
+  const isPM = suffix === "PM";
+
+  if (hour === 12) {
+    hour = isPM ? 12 : 0;
+  } else if (isPM) {
+    hour += 12;
+  }
+
+  return { hour, minute };
+};
 // "11 AM - 2 PM" -> { startHour: 11, endHour: 14, overnight: false }
 const parseSlot = (slot: string): ParsedSlot | null => {
   const [startLabel, endLabel] = slot.split("-");
   if (!startLabel || !endLabel) return null;
 
-  const startHour = parseTimeLabelToHour(startLabel);
-  const endHour = parseTimeLabelToHour(endLabel);
+  const start = parseTimeLabel(startLabel);
+  const end = parseTimeLabel(endLabel);
 
-  if (startHour == null || endHour == null) return null;
+  if (!start || !end) return null;
 
-  const overnight = endHour <= startHour; // e.g. 11 PM -> 11 AM
-  return { startHour, endHour, overnight };
+  const startTotal = start.hour * 60 + start.minute;
+  const endTotal = end.hour * 60 + end.minute;
+
+  const overnight = endTotal <= startTotal;
+
+  return {
+    startHour: start.hour,
+    startMinute: start.minute,
+    endHour: end.hour,
+    endMinute: end.minute,
+    overnight,
+  };
 };
-
 // Helpers
 const formatSingle = (d: Date) => d.toLocaleDateString();
 const formatRange = (start: Date, end: Date) =>
@@ -164,7 +192,7 @@ export default function Booking() {
     return currentBooking.price * quantity;
   }, [currentBooking, bookingType, nights]);
 
-  const taxes = useMemo(() => Math.round(subtotal * 0.158), [subtotal]);
+  const taxes = useMemo(() => Math.round(subtotal * 0.045), [subtotal]);
   const total = useMemo(() => subtotal + taxes, [subtotal, taxes]);
 
   // Keep date label in sync with booking type + selected dates
@@ -179,30 +207,6 @@ export default function Booking() {
     }
   }, [bookingType, checkInDate, checkOutDate, isHourly]);
 
-  // Auto-update hours when switching to an hourly type
-  useEffect(() => {
-    if (!isHourly || !checkInDate) return;
-
-    const slot = defaultSlots[bookingType];
-    setHours(slot);
-
-    const parsed = parseSlot(slot);
-    if (parsed) {
-      const { startHour, endHour, overnight } = parsed;
-
-      const start = new Date(checkInDate);
-      start.setHours(startHour, 0, 0, 0);
-
-      const end = new Date(checkInDate);
-      if (overnight) {
-        end.setDate(end.getDate() + 1);
-      }
-      end.setHours(endHour, 0, 0, 0);
-
-      setStartTime(start);
-      setEndTime(end);
-    }
-  }, [bookingType, isHourly, checkInDate]);
   useEffect(() => {
     if (isHourly) return;
     if (!checkInDate) return;
@@ -285,7 +289,57 @@ export default function Booking() {
       setSubmitting(false);
     }
   };
+  const timeWindow = useMemo(() => {
+    if (!isHourly || !checkInDate || !data) return null;
 
+    const weekend = isWeekend(checkInDate);
+    let closeMinutes = weekend
+      ? toMinutesFromString(data.weekendClose, 23)
+      : toMinutesFromString(data.weekdayClose, 23);
+
+    let openMinutes = weekend
+      ? toMinutesFromString(data.weekendOpen, 9)
+      : toMinutesFromString(data.weekdayOpen, 9);
+
+    // 👇 ADD THIS
+    if (closeMinutes <= openMinutes) {
+      closeMinutes += 24 * 60;
+    }
+
+    return {
+      openMinutes,
+      closeMinutes,
+      bufferMinutes: data.bufferTime ?? 0,
+    };
+  }, [isHourly, checkInDate, data]);
+  useEffect(() => {
+    if (!timeWindow || !checkInDate || !isHourly) return;
+
+    const slots = generateSlots(
+      bookingType as "3hours" | "6hours" | "12hours",
+      timeWindow.openMinutes,
+      timeWindow.closeMinutes,
+      timeWindow.bufferMinutes
+    );
+
+    if (!slots.length) return;
+
+    const first = slots[0];
+    setHours(first);
+
+    const parsed = parseSlot(first);
+    if (!parsed) return;
+
+    const start = new Date(checkInDate);
+    start.setHours(parsed.startHour, parsed.startMinute, 0, 0);
+
+    const end = new Date(checkInDate);
+    if (parsed.overnight) end.setDate(end.getDate() + 1);
+    end.setHours(parsed.endHour, parsed.endMinute, 0, 0);
+
+    setStartTime(start);
+    setEndTime(end);
+  }, [timeWindow, bookingType, checkInDate, isHourly]);
   if (loading || !data) return null;
 
   return (
@@ -587,36 +641,34 @@ export default function Booking() {
           onPress={() => setTimeModalOpen(false)}
         />
         <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
-          <TimeModal
-            bookingType={bookingType}
-            initialTime={hours}
-            unavailableSlots={[]}
-            onClose={() => setTimeModalOpen(false)}
-            onSave={(slot: string) => {
-              setHours(slot);
+          {timeWindow && (
+            <TimeModal
+              bookingType={bookingType as "3hours" | "6hours" | "12hours"}
+              openMinutes={timeWindow.openMinutes}
+              closeMinutes={timeWindow.closeMinutes}
+              bufferMinutes={timeWindow.bufferMinutes}
+              initialTime={hours}
+              unavailableSlots={[]}
+              onClose={() => setTimeModalOpen(false)}
+              onSave={(slot) => {
+                setHours(slot);
 
-              if (checkInDate) {
                 const parsed = parseSlot(slot);
-                if (parsed) {
-                  const { startHour, endHour, overnight } = parsed;
+                if (!parsed || !checkInDate) return;
 
-                  const start = new Date(checkInDate);
-                  start.setHours(startHour, 0, 0, 0);
+                const start = new Date(checkInDate);
+                start.setHours(parsed.startHour, parsed.startMinute, 0, 0);
 
-                  const end = new Date(checkInDate);
-                  if (overnight) {
-                    end.setDate(end.getDate() + 1);
-                  }
-                  end.setHours(endHour, 0, 0, 0);
+                const end = new Date(checkInDate);
+                if (parsed.overnight) end.setDate(end.getDate() + 1);
+                end.setHours(parsed.endHour, parsed.endMinute, 0, 0);
 
-                  setStartTime(start);
-                  setEndTime(end);
-                }
-              }
-
-              setTimeModalOpen(false);
-            }}
-          />
+                setStartTime(start);
+                setEndTime(end);
+                setTimeModalOpen(false);
+              }}
+            />
+          )}
         </ScrollView>
       </Modal>
 
@@ -635,3 +687,46 @@ export default function Booking() {
     </ScrollView>
   );
 }
+
+const isWeekend = (date: Date) => {
+  const day = date.getDay(); // 0 = Sun, 6 = Sat
+  return day === 0 || day === 6;
+};
+const toHour = (
+  value: string | number | null | undefined,
+  fallback: number
+) => {
+  if (typeof value === "number") return value;
+
+  if (typeof value === "string") {
+    // supports "09:00", "9", "21:30"
+    const [h] = value.split(":");
+    const hour = Number(h);
+    return isNaN(hour) ? fallback : hour;
+  }
+
+  return fallback;
+};
+const toMinutesFromString = (
+  value: string | number | null | undefined,
+  fallbackHour: number
+) => {
+  if (value == null) return fallbackHour * 60;
+
+  // string like "09:00"
+  if (typeof value === "string") {
+    const [h, m = "0"] = value.split(":");
+    const hour = Number(h);
+    const minute = Number(m);
+    if (isNaN(hour) || isNaN(minute)) return fallbackHour * 60;
+    return hour * 60 + minute;
+  }
+
+  // number: ASSUME IT IS HOURS, NOT MINUTES
+  // (Appwrite stores numbers as hours in your schema)
+  if (typeof value === "number") {
+    return value * 60;
+  }
+
+  return fallbackHour * 60;
+};

@@ -97,7 +97,7 @@ export default function ListingCard({ data }: { data?: any }) {
           {data.city}
         </Text>
         <Text className="text-gray-600 text-sm mb-1">
-          2 Beds • Upto {data.maxGuests} guests
+          Upto {data.maxGuests} guests
         </Text>
 
         <Text className="text-gray-900">
