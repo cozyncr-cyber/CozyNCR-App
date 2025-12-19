@@ -15,6 +15,7 @@ import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
 
 import Calendar, { CalendarOnSavePayload } from "./Calendar"; // <- adjust path
+import SuggestedDestinations from "./SuggestedDestination";
 
 const { width } = Dimensions.get("window");
 
@@ -24,6 +25,11 @@ type GuestsResult = {
   children: number;
   infants: number;
   pets: number;
+};
+type SelectedCity = {
+  name: string;
+  lat: number | null;
+  long: number | null;
 };
 
 export default function CityDestinationSelector({
@@ -38,6 +44,7 @@ export default function CityDestinationSelector({
   // Search / city states
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [storedSearchValue, setStoredSearchValue] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
 
   // Calendar selection stored in parent
   const [calendarSelection, setCalendarSelection] =
@@ -55,7 +62,18 @@ export default function CityDestinationSelector({
 
   // scroll / indicator
   const scrollRef = useRef<ScrollView | null>(null);
+  const commitSearchState = () => {
+    const finalPayload = {
+      search: storedSearchValue || searchQuery,
+      city: selectedCity,
+      calendar:
+        calendarSelection ?? calendarActionsRef.current.getSelection?.(),
+      guests: guestSelection,
+    };
 
+    setSearchState(finalPayload);
+    console.log("Committed search state:", finalPayload);
+  };
   // calendar actions from child (populated by Calendar.onMount)
   const calendarActionsRef = useRef<{
     save?: () => void;
@@ -65,6 +83,10 @@ export default function CityDestinationSelector({
   const scrollToSlide = (index: number) => {
     setCurrentSlide(index);
     scrollRef.current?.scrollTo({ x: index * width, animated: true });
+  };
+
+  const handleCitySelect = (city: SelectedCity) => {
+    setSelectedCity(city);
   };
 
   // Back button handler
@@ -137,16 +159,13 @@ export default function CityDestinationSelector({
       // Final assembled payload for query/navigation
       const finalPayload = {
         search: storedSearchValue || searchQuery,
+        city: selectedCity, // ✅ coordinates saved here
         calendar:
           calendarSelection ?? calendarActionsRef.current.getSelection?.(),
         guests: payload,
       };
-      // save to context and close modal (if onClose provided)
-      setSearchState(finalPayload);
-      console.log("Saved search to context:", finalPayload);
-      // close modal if provided
-      onClose?.();
-      // TODO: call your search function / navigation here
+      commitSearchState();
+      onClose?.(); // TODO: call your search function / navigation here
 
       return;
     }
@@ -207,7 +226,10 @@ export default function CityDestinationSelector({
         <View className="border-b border-gray-200 px-4 py-3 flex-row items-center justify-end">
           <Pressable
             className="p-2 -mr-2 rounded-full"
-            onPress={() => onClose()}
+            onPress={() => {
+              commitSearchState();
+              onClose();
+            }}
           >
             <Feather name="x" size={24} color="black" />
           </Pressable>
@@ -228,7 +250,7 @@ export default function CityDestinationSelector({
           >
             {/* Slide 0 - Search / City Grid */}
             <View style={{ width }} className="px-6 py-8">
-              <View className="max-w-xl w-full self-center h-[70vh] flex justify-center -mt-32">
+              <View className="max-w-xl w-full self-center h-[70vh] flex justify-center">
                 <Text className="text-3xl font-bold text-gray-900 mb-2">
                   Choose the city{"\n"}you&apos;re going to visit
                 </Text>
@@ -248,6 +270,10 @@ export default function CityDestinationSelector({
                     className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-full text-base"
                   />
                 </View>
+                <SuggestedDestinations
+                  selectedCity={selectedCity}
+                  onSelect={handleCitySelect}
+                />
               </View>
             </View>
 

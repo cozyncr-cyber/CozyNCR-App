@@ -23,6 +23,12 @@ export type SearchPayload = {
     country?: string;
     image?: string;
   } | null;
+
+  city?: {
+    name: string;
+    lat: number | null;
+    long: number | null;
+  } | null;
   calendar?: CalendarPayload | null;
   guests?: GuestsResult | null;
 };

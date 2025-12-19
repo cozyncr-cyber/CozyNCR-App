@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import Entypo from "@expo/vector-icons/Entypo";
+import Feather from "@expo/vector-icons/Feather";
 
 import ExpandableText from "@/components/Expandable";
 import ReviewCarousel from "@/components/Reviews";
@@ -87,6 +88,11 @@ export default function Details() {
     const slide = Math.round(event.nativeEvent.contentOffset.x / width);
     setActiveIndex(slide);
   };
+  const addOnsArray = Array.isArray(data?.addOns)
+    ? data.addOns
+    : data?.addOns
+      ? [JSON.parse(data.addOns)]
+      : [];
 
   if (loading) {
     return (
@@ -251,6 +257,36 @@ export default function Details() {
                     })}
                 </View>
               </View>
+              {/* Add-ons */}
+              {data?.addOns && data.addOns.length > 0 && (
+                <View className="py-8 border-b border-zinc-300">
+                  <Text className="text-xl font-semibold">
+                    Add-ons available
+                  </Text>
+                  <Text className="text-sm text-gray-500 mb-6">
+                    These can be added during checkout
+                  </Text>
+                  {addOnsArray[0].map(
+                    (addOn: { name: string; price: string }, index: number) => (
+                      <View
+                        key={`${addOn.name}-${index}`}
+                        className="flex-row items-center justify-between"
+                      >
+                        <View className="flex flex-row gap-2 items-center">
+                          <Feather name="plus-circle" size={22} color="black" />
+                          <Text className="text-base text-gray-900">
+                            {addOn.name}
+                          </Text>
+                        </View>
+
+                        <Text className="text-base font-medium text-gray-900">
+                          ₹{Number(addOn.price).toLocaleString("en-IN")}
+                        </Text>
+                      </View>
+                    )
+                  )}
+                </View>
+              )}
 
               {/* Map */}
               <View className="py-8 border-b border-zinc-300">

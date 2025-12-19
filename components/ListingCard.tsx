@@ -30,7 +30,7 @@ export default function ListingCard({ data }: { data?: any }) {
         })
       }
       style={{ width: width, marginBottom: 16 }} // FIXES INVISIBLE CARD ISSUE
-      className="rounded-2xl bg-white shadow-sm overflow-hidden"
+      className="rounded-2xl bg-white shadow-sm overflow-hidden mx-auto"
     >
       {/* IMAGE CAROUSEL */}
       <View>
