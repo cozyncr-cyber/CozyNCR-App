@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   ScrollView,
   Image,
@@ -23,21 +23,36 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { amenityIcons } from "@/components/AmenityIcon";
 import { useProperty } from "@/src/contexts/PropertyContext";
 import PriceModal from "@/components/PriceModal";
-import { useSearch } from "@/src/contexts/SearchContext";
 import { isWishlisted, toggleWishlist } from "@/lib/services/wishlist";
 import { useUser } from "@/src/contexts/UserContext";
+import { useSearch } from "@/src/contexts/SearchContext";
+
+export function useNights() {
+  const { searchState } = useSearch();
+  const calendar = searchState.calendar;
+
+  const nights = useMemo(() => {
+    if (!calendar?.checkIn || !calendar?.checkOut) {
+      return 1; // default fallback
+    }
+
+    const start = new Date(calendar.checkIn);
+    const end = new Date(calendar.checkOut);
+
+    const ms = end.getTime() - start.getTime();
+    const diff = Math.ceil(ms / (1000 * 60 * 60 * 24));
+
+    return Math.max(1, diff);
+  }, [calendar?.checkIn, calendar?.checkOut]);
+
+  return nights;
+}
 
 export default function Details() {
-  const { searchState } = useSearch();
   const user = useUser();
-  let nights = 1;
 
-  if (searchState.calendar?.checkIn && searchState.calendar?.checkOut) {
-    const ms =
-      searchState.calendar.checkOut.getTime() -
-      searchState.calendar.checkIn.getTime();
-    nights = Math.max(1, Math.round(ms / (1000 * 60 * 60 * 24)));
-  }
+  const nights = useNights();
+  const { searchState } = useSearch();
 
   const { data, owner, loading } = useProperty();
   const width = Dimensions.get("window").width;
@@ -48,7 +63,7 @@ export default function Details() {
   const [priceOpen, setPriceOpen] = useState(false);
   const userId = user?.current?.$id;
   const listingId = data?.$id;
-
+  const minimumPrice = useMemo(() => getMinimumBookingPrice(data), [data]);
   useEffect(() => {
     if (!userId || !listingId) return;
 
@@ -382,9 +397,15 @@ export default function Details() {
         <PriceModal
           visible={priceOpen}
           onClose={() => setPriceOpen(false)}
-          nights={nights}
-          pricePerNight={2065.53}
-          subtotal={nights * 2065.53}
+          nights={data?.price_24h ? nights : 1}
+          pricePerNight={minimumPrice ?? 0}
+          subtotal={
+            minimumPrice
+              ? data?.price_24h
+                ? minimumPrice * nights
+                : minimumPrice
+              : 0
+          }
           datesLabel={searchState.calendar?.label || ""}
           cancellationText="Free cancellation before 11 December"
           currencySymbol="₹"
@@ -393,14 +414,19 @@ export default function Details() {
 
       {/* Sticky Bottom Bar */}
       <View className="absolute left-0 right-0 bottom-0 h-20 flex-row items-center justify-between shadow-sm bg-white p-4 border-t border-gray-200 z-20">
-        <Pressable onPress={() => setPriceOpen(true)}>
-          <Text className="font-semibold underline">
-            Rs {nights * 2065.53} /-
-          </Text>
-          <Text className="text-zinc-500 text-sm">
-            For {nights} {nights > 1 ? "nights" : "night"}
-          </Text>
-        </Pressable>
+        <View className="flex flex-row gap-2">
+          <Pressable onPress={() => setPriceOpen(true)}>
+            <Text className="font-semibold underline">
+              {minimumPrice
+                ? `₹${minimumPrice.toLocaleString("en-IN")}`
+                : "Price unavailable"}
+            </Text>
+            <Text className="text-zinc-500 text-sm">
+              {data.price_24h ? "Per day" : "Starting price"}
+            </Text>
+          </Pressable>
+          <Text className="text-zinc-500">+ taxes</Text>
+        </View>
 
         <Pressable onPress={() => router.push(`/property/reserve`)}>
           <View className="bg-pink-600 rounded-full px-6 py-2 min-w-10">
@@ -437,4 +463,22 @@ function timeSinceMinOneMonth(createdAt: Date) {
   }
 
   return `${totalMonths} Month${totalMonths > 1 ? "s" : ""}`;
+}
+
+function getMinimumBookingPrice(data: any): number | null {
+  if (!data) return null;
+
+  // Prefer 24h if available
+  if (data.price_24h && Number(data.price_24h) > 0) {
+    return Number(data.price_24h);
+  }
+
+  // Otherwise find minimum among available prices
+  const prices = [data.price_3h, data.price_6h, data.price_12h]
+    .map(Number)
+    .filter((p) => !isNaN(p) && p > 0);
+
+  if (!prices.length) return null;
+
+  return Math.min(...prices);
 }

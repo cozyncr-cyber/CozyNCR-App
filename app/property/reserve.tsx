@@ -388,7 +388,9 @@ export default function Booking() {
                     <Text className="font-semibold">
                       {data.avg_rating ? data.avg_rating : "NA"}
                     </Text>
-                    <Text className="text-gray-600">({data.review_count})</Text>
+                    <Text className="text-gray-600">
+                      ({data.review_count ? data.review_count : 0})
+                    </Text>
                   </View>
                 </View>
               </View>
