@@ -4,7 +4,6 @@ import {
   Text,
   Pressable,
   FlatList,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
 } from "react-native";
@@ -141,7 +140,7 @@ const SuggestedDestinations: React.FC<Props> = ({ selectedCity, onSelect }) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View style={{ flex: 1 }}>
       <View className="px-4 pt-4 pb-2">
         <Text className="text-lg font-semibold text-gray-900">
           Suggested destinations
@@ -149,12 +148,16 @@ const SuggestedDestinations: React.FC<Props> = ({ selectedCity, onSelect }) => {
       </View>
 
       <FlatList
+        style={{ flex: 1 }} // ✅ IMPORTANT
         data={destinations}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 100 }}
+        nestedScrollEnabled
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
