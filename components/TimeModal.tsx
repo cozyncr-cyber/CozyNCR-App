@@ -20,9 +20,10 @@ export function generateSlots(
   const durationMinutes =
     bookingType === "3hours" ? 180 : bookingType === "6hours" ? 360 : 720;
 
-  let cursor = openMinutes;
   const slots: string[] = [];
+  let cursor = openMinutes;
 
+  // 1️⃣ Normal forward slots
   while (cursor + durationMinutes <= closeMinutes) {
     const start = cursor;
     const end = cursor + durationMinutes;
@@ -32,6 +33,26 @@ export function generateSlots(
     cursor = end + bufferMinutes;
   }
 
+  // 2️⃣ LAST SLOT SNAP (minute-accurate + buffer-safe)
+  const lastStart = closeMinutes - durationMinutes;
+
+  if (lastStart >= openMinutes) {
+    const lastSlot = formatRangeMinutes(lastStart, closeMinutes);
+
+    const overlapsExisting = slots.some((slot) => slot === lastSlot);
+
+    // Ensure snapped slot does NOT violate buffer from previous slot
+    const violatesBuffer =
+      slots.length > 0 &&
+      lastStart <
+        openMinutes +
+          slots.length * (durationMinutes + bufferMinutes) -
+          bufferMinutes;
+
+    if (!overlapsExisting && !violatesBuffer) {
+      slots.push(lastSlot);
+    }
+  }
   return slots;
 }
 export default function TimeModal({
@@ -152,7 +173,6 @@ export default function TimeModal({
     </View>
   );
 }
-const toMinutes = (hour: number, minute = 0) => hour * 60 + minute;
 
 const minutesToLabel = (mins: number) => {
   const h24 = Math.floor(mins / 60) % 24;

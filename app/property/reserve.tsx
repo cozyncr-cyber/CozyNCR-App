@@ -21,23 +21,6 @@ type BookingType = {
   price: number;
 };
 
-const parseTimeLabelToHour = (label: string): number | null => {
-  const [hourStr, suffixRaw] = label.trim().split(" ");
-  const suffix = suffixRaw?.toUpperCase();
-  let hour = parseInt(hourStr, 10);
-  if (isNaN(hour) || !suffix) return null;
-
-  const isPM = suffix === "PM";
-
-  // 12 AM -> 0, 12 PM -> 12, 1–11 PM -> +12
-  if (hour === 12) {
-    hour = isPM ? 12 : 0;
-  } else if (isPM) {
-    hour += 12;
-  }
-
-  return hour;
-};
 type ParsedSlot = {
   startHour: number;
   startMinute: number;
@@ -136,6 +119,29 @@ export default function Booking() {
   const [dates, setDates] = useState<string>(
     formatRange(initialCheckIn, initialCheckOut)
   );
+  const [selectedAddOns, setSelectedAddOns] = useState<AddOn[]>([]);
+
+  type AddOn = {
+    name: string;
+    price: string; // comes as string
+  };
+
+  const addOns: AddOn[] = useMemo(() => {
+    try {
+      return data?.addOns ? JSON.parse(data.addOns) : [];
+    } catch {
+      return [];
+    }
+  }, [data?.addOns]);
+  const toggleAddOn = (addOn: AddOn) => {
+    setSelectedAddOns((prev) => {
+      const exists = prev.find((a) => a.name === addOn.name);
+      if (exists) {
+        return prev.filter((a) => a.name !== addOn.name);
+      }
+      return [...prev, addOn];
+    });
+  };
 
   const isHourly = isHourlyType(bookingType);
 
@@ -193,7 +199,11 @@ export default function Booking() {
   }, [currentBooking, bookingType, nights]);
 
   const taxes = useMemo(() => Math.round(subtotal * 0.045), [subtotal]);
-  const total = useMemo(() => subtotal + taxes, [subtotal, taxes]);
+  const addOnsTotal = useMemo(() => {
+    return selectedAddOns.reduce((sum, addOn) => sum + Number(addOn.price), 0);
+  }, [selectedAddOns]);
+  const baseTotal = useMemo(() => subtotal + taxes, [subtotal, taxes]);
+  const total = baseTotal + addOnsTotal;
 
   // Keep date label in sync with booking type + selected dates
   useEffect(() => {
@@ -279,6 +289,9 @@ export default function Booking() {
           childrenCount: guestCounts.children,
           infantCount: guestCounts.infants,
           petCount: guestCounts.pets,
+
+          addOns: JSON.stringify(selectedAddOns),
+          addOnsTotal,
         },
       });
 
@@ -340,6 +353,7 @@ export default function Booking() {
     setStartTime(start);
     setEndTime(end);
   }, [timeWindow, bookingType, checkInDate, isHourly]);
+
   if (loading || !data) return null;
 
   return (
@@ -371,8 +385,10 @@ export default function Booking() {
                 <View className="flex-row items-center gap-2 text-xs">
                   <View className="flex-row items-center gap-1">
                     <Star />
-                    <Text className="font-semibold">4.92</Text>
-                    <Text className="text-gray-600">(12)</Text>
+                    <Text className="font-semibold">
+                      {data.avg_rating ? data.avg_rating : "NA"}
+                    </Text>
+                    <Text className="text-gray-600">({data.review_count})</Text>
                   </View>
                 </View>
               </View>
@@ -481,6 +497,51 @@ export default function Booking() {
                 </Pressable>
               </View>
             )}
+            {addOns.length > 0 && (
+              <View className="py-4 border-b border-gray-200">
+                <Text className="text-sm font-semibold mb-3">Add-ons</Text>
+
+                <View className="space-y-3">
+                  {addOns.map((addOn) => {
+                    const checked = selectedAddOns.some(
+                      (a) => a.name === addOn.name
+                    );
+
+                    return (
+                      <Pressable
+                        key={addOn.name}
+                        onPress={() => toggleAddOn(addOn)}
+                        className="flex-row items-center justify-between"
+                      >
+                        <View className="flex-row items-center gap-3">
+                          {/* Checkbox */}
+                          <View
+                            className={`w-5 h-5 rounded border flex items-center justify-center ${
+                              checked
+                                ? "bg-gray-900 border-gray-900"
+                                : "border-gray-300"
+                            }`}
+                          >
+                            {checked && (
+                              <Feather name="check" size={14} color="white" />
+                            )}
+                          </View>
+
+                          <View>
+                            <Text className="text-sm font-medium">
+                              {addOn.name}
+                            </Text>
+                            <Text className="text-xs text-gray-600">
+                              ₹{Number(addOn.price).toLocaleString("en-IN")}
+                            </Text>
+                          </View>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
 
             {/* Cancellation Policy */}
             <View className="pt-3 border-t border-gray-200">
@@ -511,6 +572,21 @@ export default function Booking() {
                     ₹{subtotal.toLocaleString("en-IN")}
                   </Text>
                 </View>
+                {selectedAddOns.length > 0 && (
+                  <View className="space-y-2">
+                    {selectedAddOns.map((addOn) => (
+                      <View
+                        key={addOn.name}
+                        className="flex-row justify-between"
+                      >
+                        <Text className="text-gray-700">{addOn.name}</Text>
+                        <Text className="text-gray-900">
+                          ₹{Number(addOn.price).toLocaleString("en-IN")}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
 
                 <View className="flex-row justify-between">
                   <Text className="text-gray-700">Taxes</Text>
@@ -682,6 +758,12 @@ export default function Booking() {
           subtotal={subtotal}
           datesLabel={dates}
           cancellationText="Free cancellation before 11 December"
+          // 👇 NEW
+          addOns={selectedAddOns.map((a) => ({
+            name: a.name,
+            price: Number(a.price),
+          }))}
+          addOnsTotal={addOnsTotal}
         />
       )}
     </ScrollView>
@@ -691,21 +773,6 @@ export default function Booking() {
 const isWeekend = (date: Date) => {
   const day = date.getDay(); // 0 = Sun, 6 = Sat
   return day === 0 || day === 6;
-};
-const toHour = (
-  value: string | number | null | undefined,
-  fallback: number
-) => {
-  if (typeof value === "number") return value;
-
-  if (typeof value === "string") {
-    // supports "09:00", "9", "21:30"
-    const [h] = value.split(":");
-    const hour = Number(h);
-    return isNaN(hour) ? fallback : hour;
-  }
-
-  return fallback;
 };
 const toMinutesFromString = (
   value: string | number | null | undefined,

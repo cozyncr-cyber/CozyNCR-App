@@ -1,5 +1,9 @@
 import React from "react";
 import { Modal, View, Text, Pressable, Dimensions } from "react-native";
+interface AddOn {
+  name: string;
+  price: number;
+}
 
 interface PriceModalProps {
   visible: boolean;
@@ -12,6 +16,10 @@ interface PriceModalProps {
   datesLabel: string;
   cancellationText: string;
   currencySymbol?: string;
+
+  // 👇 NEW
+  addOns?: AddOn[];
+  addOnsTotal?: number;
 }
 
 const PriceModal: React.FC<PriceModalProps> = ({
@@ -21,9 +29,15 @@ const PriceModal: React.FC<PriceModalProps> = ({
   pricePerNight,
   subtotal,
   currencySymbol = "₹",
+  addOns = [],
+  addOnsTotal = 0,
 }) => {
   const height = Dimensions.get("window").height;
   const taxes = 0.045;
+
+  const totalBeforeTax = subtotal + addOnsTotal;
+  const taxAmount = totalBeforeTax * taxes;
+  const total = totalBeforeTax + taxAmount;
 
   return (
     <Modal
@@ -62,21 +76,37 @@ const PriceModal: React.FC<PriceModalProps> = ({
               {subtotal?.toLocaleString("en-IN")}
             </Text>
           </View>
+          {/* Add-ons */}
+          {addOns.length > 0 && (
+            <View className="gap-2">
+              {addOns.map((addOn) => (
+                <View key={addOn.name} className="flex-row justify-between">
+                  <Text className="text-base text-gray-700">{addOn.name}</Text>
+                  <Text className="text-base font-semibold">
+                    {currencySymbol}
+                    {addOn.price.toLocaleString("en-IN")}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+          {/* Taxes */}
           <View className="flex-row justify-between">
             <Text className="text-gray-700 text-base">Taxes</Text>
             <Text className="text-base font-semibold">
-              ₹{(taxes * subtotal).toFixed(2)}
+              {currencySymbol}
+              {taxAmount.toFixed(2)}
             </Text>
           </View>
-        </View>
 
-        {/* Total */}
-        <View className="flex-row justify-between pt-3 border-t border-zinc-400">
-          <Text className="text-base font-semibold">Total</Text>
-          <Text className="text-base font-semibold">
-            {currencySymbol}
-            {(subtotal + taxes * subtotal).toFixed(2)}
-          </Text>
+          {/* Total */}
+          <View className="flex-row justify-between pt-3 border-t border-zinc-400 mt-3">
+            <Text className="text-base font-semibold">Total</Text>
+            <Text className="text-base font-semibold">
+              {currencySymbol}
+              {total.toFixed(2)}
+            </Text>
+          </View>
         </View>
       </View>
     </Modal>
