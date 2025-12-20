@@ -11,6 +11,7 @@ import TimeModal, { generateSlots } from "@/components/TimeModal";
 import { tablesDB, DATABASE_ID, BOOKINGS_TABLE_ID, ID } from "@/lib/appwrite";
 import { useUser } from "@/src/contexts/UserContext";
 import { payForBooking } from "@/lib/razorpay";
+import BookingTermsModal from "@/components/TermsModal";
 // also your auth context to get current userId
 // also you probably have current user somewhere, e.g. useAuth()
 
@@ -91,7 +92,7 @@ export default function Booking() {
     useProperty();
   const user = useUser();
   const router = useRouter();
-
+  const [showTerms, setShowTerms] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [guestModalOpen, setGuestModalOpen] = useState(false);
   const [timeModalOpen, setTimeModalOpen] = useState(false);
@@ -713,9 +714,9 @@ export default function Booking() {
 
           <Text className="text-center text-xs text-gray-600 mt-3">
             By selecting the button, I agree to the{" "}
-            <Link href={"/terms"}>
+            <Pressable onPress={() => setShowTerms(true)}>
               <Text className="underline font-semibold">booking terms</Text>
-            </Link>
+            </Pressable>
           </Text>
         </View>
       </View>
@@ -747,6 +748,14 @@ export default function Booking() {
           />
         </ScrollView>
       </Modal>
+      <BookingTermsModal
+        visible={showTerms}
+        onClose={() => setShowTerms(false)}
+        onAgree={() => {
+          setShowTerms(false);
+          // proceed to payment gateway
+        }}
+      />
 
       {/* Calendar Modal */}
       <Modal
