@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   tablesDB,
   DATABASE_ID,
@@ -14,8 +14,10 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
+  Platform,
 } from "react-native";
+import * as Linking from "expo-linking";
+
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 import Feather from "@expo/vector-icons/Feather";
 import Star from "@/components/SVGs/Star";
@@ -36,6 +38,9 @@ type Trip = {
   status?: string;
   host?: string;
   ownerId?: string;
+  latitude?: number;
+  longitude?: number;
+  phone?: string;
 
   // 🔥 NEW
   reviewed?: boolean;
@@ -74,11 +79,26 @@ const Trips = () => {
   );
   const router = useRouter();
   const user = useUser();
+  console.log(user);
   const userId = user?.current?.$id;
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const openMaps = (lat: number, lng: number) => {
+    const url =
+      Platform.OS === "ios"
+        ? `maps:0,0?q=${lat},${lng}`
+        : `geo:0,0?q=${lat},${lng}`;
+
+    Linking.openURL(url);
+  };
+
+  const makePhoneCall = (phoneNumber: string) => {
+    const url = `tel:${phoneNumber}`;
+    Linking.openURL(url);
+  };
 
   // 🔹 Fetch bookings + listing + host profile details from Appwrite
 
@@ -205,7 +225,6 @@ const Trips = () => {
         const hostLabel = hostName ? `Hosted by ${hostName}` : "Hosted by ...";
 
         const review = reviewMap[listing?.$id];
-
         return {
           id: row.$id,
           listingId: listing?.$id,
@@ -216,6 +235,9 @@ const Trips = () => {
           image: imageUrl,
           dates: formatDates(startTimeISO, endTimeISO),
           nights: diffNights(startTimeISO, endTimeISO),
+          latitude: listing?.latitude,
+          longitude: listing?.longitude,
+          phone: user.profile.phone,
 
           host: hostLabel,
           ownerId: listing?.ownerId,
@@ -228,7 +250,6 @@ const Trips = () => {
           raw: row,
         };
       });
-
       setTrips(mapped);
     } catch (err) {
       console.error("Error fetching trips", err);
@@ -236,7 +257,7 @@ const Trips = () => {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, user]);
   useFocusEffect(
     useCallback(() => {
       fetchTrips();
@@ -382,7 +403,15 @@ const Trips = () => {
               </Link>
             )
           ) : (
-            <TouchableOpacity className="flex-1 py-2 border rounded-lg items-center">
+            <TouchableOpacity
+              className="flex-1 py-2 border rounded-lg items-center"
+              onPress={() =>
+                openMaps(
+                  trip.latitude ? trip.latitude : 0,
+                  trip.longitude ? trip.longitude : 0
+                )
+              }
+            >
               <Text className="font-semibold">Get directions</Text>
             </TouchableOpacity>
           )}
@@ -396,10 +425,10 @@ const Trips = () => {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
-              onPress={() => router.push(`/property/${trip.listingId}`)}
+              onPress={() => makePhoneCall(trip.phone ? trip.phone : "")}
               className="flex-1 py-2 bg-gray-900 rounded-lg items-center"
             >
-              <Text className="font-semibold text-white">Message Host</Text>
+              <Text className="font-semibold text-white">Contact Host</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -465,7 +494,7 @@ const Trips = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       {/* Header */}
       <View className="border-b border-gray-200 px-6 pb-4">
         <Text className="text-3xl font-semibold mt-6 mb-4">Trips</Text>
@@ -516,7 +545,7 @@ const Trips = () => {
           renderEmptyState()
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

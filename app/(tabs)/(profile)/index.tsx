@@ -51,7 +51,7 @@ export default function Profile() {
           */}
           <Link href="/privacy">
             <View className="w-full h-12 text-zinc-700 flex flex-row items-center gap-4 px-2">
-              <MaterialIcons name="privacy-tip" size={24} color="#3f3f46" />
+              <MaterialIcons name="policy" size={24} color="#3f3f46" />
               <Text>Privacy Policy</Text>
             </View>
           </Link>

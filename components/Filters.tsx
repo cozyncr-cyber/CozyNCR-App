@@ -116,21 +116,23 @@ export const FiltersModal = ({
           </View>
 
           {/* Price range */}
-          <Text className="text-lg font-semibold mt-8 mb-1">Price range</Text>
-          <Text className="text-sm text-gray-500 mb-6">
-            Trip price, includes all fees
-          </Text>
+          <View className="px-4">
+            <Text className="text-lg font-semibold mt-8 mb-1">Price range</Text>
+            <Text className="text-sm text-gray-500 mb-6">
+              Trip price, includes all fees
+            </Text>
 
-          <DualRangeSlider
-            min={MIN_PRICE}
-            max={MAX_PRICE}
-            step={STEP}
-            values={[minPrice, maxPrice]}
-            onChange={([min, max]) => {
-              setMinPrice(min);
-              setMaxPrice(max);
-            }}
-          />
+            <DualRangeSlider
+              min={MIN_PRICE}
+              max={MAX_PRICE}
+              step={STEP}
+              values={[minPrice, maxPrice]}
+              onChange={([min, max]) => {
+                setMinPrice(min);
+                setMaxPrice(max);
+              }}
+            />
+          </View>
 
           <View className="flex-row justify-between mt-4">
             <Text className="text-sm font-medium">
@@ -151,7 +153,7 @@ export const FiltersModal = ({
           <View className="flex-row flex-wrap gap-2">
             {[
               { id: "pets", label: "Allow Pets" },
-              { id: "infants", label: "Allow Infants" },
+              { id: "infants", label: "Allow Infant" },
               { id: "children", label: "Allow Children" },
             ].map((option) => {
               const active = bookingOptions.includes(option.id);

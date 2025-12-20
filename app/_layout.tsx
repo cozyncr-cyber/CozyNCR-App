@@ -4,9 +4,14 @@ import "../global.css";
 
 import { SearchProvider } from "@/src/contexts/SearchContext";
 import { SafeAreaView } from "react-native-safe-area-context";
+import LaunchScreen from "./launch";
 
 export function Router() {
   const user = useUser();
+  // 🚀 App launch state
+  if (user.isInitializing) {
+    return <LaunchScreen />;
+  }
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={user.isLoggedIn}>

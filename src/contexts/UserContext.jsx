@@ -25,6 +25,7 @@ export function UserProvider(props) {
   const [profile, setProfile] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const router = useRouter();
 
@@ -82,6 +83,8 @@ export function UserProvider(props) {
       setProfile(null);
       setProfileImage(null);
       setIsLoggedIn(false);
+    } finally {
+      setIsInitializing(false);
     }
   }, [fetchProfile]);
 
@@ -98,6 +101,7 @@ export function UserProvider(props) {
         login,
         logout,
         isLoggedIn,
+        isInitializing,
       }}
     >
       {props.children}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, Pressable, Image, ScrollView, Modal } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import Star from "@/components/SVGs/Star";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useProperty } from "@/src/contexts/PropertyContext";
 import Calendar from "@/components/Calendar";
 import Guests from "@/components/Guests";
@@ -10,6 +10,7 @@ import PriceModal from "@/components/PriceModal";
 import TimeModal, { generateSlots } from "@/components/TimeModal";
 import { tablesDB, DATABASE_ID, BOOKINGS_TABLE_ID, ID } from "@/lib/appwrite";
 import { useUser } from "@/src/contexts/UserContext";
+import { payForBooking } from "@/lib/razorpay";
 // also your auth context to get current userId
 // also you probably have current user somewhere, e.g. useAuth()
 
@@ -315,7 +316,7 @@ export default function Booking() {
       const customerId = user.current.$id;
       const guestCount = guestCounts.adults + guestCounts.children;
 
-      await tablesDB.createRow({
+      const booking = await tablesDB.createRow({
         rowId: ID.unique(),
         databaseId: DATABASE_ID,
         tableId: BOOKINGS_TABLE_ID,
@@ -328,6 +329,7 @@ export default function Booking() {
           endTime: endTime.toISOString(),
 
           status: "pending",
+          paid: "pending",
           totalPrice: total,
           hostShare: hostShare,
           serviceType: isHourly ? "hourly" : "daily",
@@ -342,6 +344,8 @@ export default function Booking() {
           addOnsPrice: addOnsTotal,
         },
       });
+
+      await payForBooking(total, booking.$id);
 
       router.push("/property/success");
     } catch (err) {
@@ -621,8 +625,8 @@ export default function Booking() {
               </Text>
 
               <Text className="text-sm text-gray-700">
-                90% refund for cancellations made up to 24 hours before check-in{" "}
-                <Text className="underline font-semibold">Full policy</Text>
+                90% refund for cancellations made up to 24 hours before
+                check-in{" "}
               </Text>
             </View>
           </View>
@@ -709,7 +713,9 @@ export default function Booking() {
 
           <Text className="text-center text-xs text-gray-600 mt-3">
             By selecting the button, I agree to the{" "}
-            <Text className="underline font-semibold">booking terms</Text>.
+            <Link href={"/terms"}>
+              <Text className="underline font-semibold">booking terms</Text>
+            </Link>
           </Text>
         </View>
       </View>
