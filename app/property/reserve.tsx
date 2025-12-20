@@ -231,6 +231,7 @@ export default function Booking() {
   }, [selectedAddOns]);
   const baseTotal = useMemo(() => subtotal + taxes, [subtotal, taxes]);
   const total = baseTotal + addOnsTotal;
+  const hostShare = (subtotal + addOnsTotal) * 0.9;
 
   useEffect(() => {
     if (isHourly) return;
@@ -328,6 +329,7 @@ export default function Booking() {
 
           status: "pending",
           totalPrice: total,
+          hostShare: hostShare,
           serviceType: isHourly ? "hourly" : "daily",
           bookingType,
 
