@@ -1,30 +1,39 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import {
+  StyleSheet,
+  View,
+  Platform,
+  TouchableOpacity,
+  Text,
+} from "react-native";
+import * as Linking from "expo-linking";
 
-export default function Map() {
+export default function Map({
+  latitude,
+  longitude,
+}: {
+  latitude: number;
+  longitude: number;
+}) {
   // Replace these with your coordinates
-  const latitude = 26.9124;
-  const longitude = 75.7873;
+
+  const openMaps = (lat: number, lng: number) => {
+    const url =
+      Platform.OS === "ios"
+        ? `maps:0,0?q=${lat},${lng}`
+        : `geo:0,0?q=${lat},${lng}`;
+
+    Linking.openURL(url);
+  };
 
   return (
     <View style={styles.container} className="rounded-xl overflow-hidden">
-      <MapView
-        className="rounded-xl overflow-hidden"
-        style={styles.map}
-        initialRegion={{
-          latitude,
-          longitude,
-          latitudeDelta: 0.02, // zoom levels
-          longitudeDelta: 0.02,
-        }}
+      <TouchableOpacity
+        className="flex-1 py-2 border-2 rounded-lg items-center bg-gray-900 px-6"
+        onPress={() => openMaps((latitude = 0), (longitude = 0))}
       >
-        <Marker
-          coordinate={{ latitude, longitude }}
-          title="Your place"
-          description="This is where you'll be"
-        />
-      </MapView>
+        <Text className="font-semibold text-white">Get directions</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -36,11 +45,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
-  },
-  map: {
-    width: "100%",
-    height: 300, // like the Airbnb card screenshot
-    borderRadius: 16,
-    overflow: "hidden", // rounds the map corners
   },
 });

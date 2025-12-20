@@ -10,6 +10,7 @@ import {
   NativeScrollEvent,
   Modal,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -134,196 +135,198 @@ export default function CityDestinationSelector({
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      onRequestClose={onClose}
-      presentationStyle="pageSheet"
-    >
-      <View className="flex-1 bg-white">
-        {/* Header */}
-        <View className="border-b border-gray-200 px-4 py-3 flex-row justify-between items-center">
-          <Pressable onPress={handleClearAll}>
-            <Text className="text-red-500 font-medium">Clear all</Text>
-          </Pressable>
-          <Pressable onPress={onClose}>
-            <Feather name="x" size={24} color="black" />
-          </Pressable>
-        </View>
-
-        {/* Slides */}
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          scrollEventThrottle={16}
-          onScroll={onScroll}
-          nestedScrollEnabled // ✅ ADD THIS
-          directionalLockEnabled
-          contentContainerStyle={{ flexGrow: 1 }}
-        >
-          {/* Slide 0 */}
-          <View style={{ width }} className="px-6 py-8 flex-1">
-            <Text className="text-3xl font-bold mb-8">
-              Choose the city{"\n"}you&apos;re going to visit
-            </Text>
-
-            <View className="relative mb-8">
-              <Feather
-                name="search"
-                size={22}
-                color="#9CA3AF"
-                style={{ position: "absolute", left: 16, top: 14 }}
-              />
-              <TextInput
-                placeholder="Search destinations"
-                value={searchInput}
-                onChangeText={setSearchInput}
-                className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-full"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <SuggestedDestinations
-                selectedCity={draft.city}
-                onSelect={setCity}
-              />
-            </View>
+    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
+      <Modal
+        visible={visible}
+        animationType="slide"
+        onRequestClose={onClose}
+        presentationStyle="pageSheet"
+      >
+        <View className="flex-1 bg-white">
+          {/* Header */}
+          <View className="border-b border-gray-200 px-4 py-3 flex-row justify-between items-center">
+            <Pressable onPress={handleClearAll}>
+              <Text className="text-red-500 font-medium">Clear all</Text>
+            </Pressable>
+            <Pressable onPress={onClose}>
+              <Feather name="x" size={24} color="black" />
+            </Pressable>
           </View>
 
-          {/* Slide 1 */}
-          <View style={{ width, flex: 1 }}>
-            <ScrollView
-              style={{ flex: 1 }}
-              contentContainerStyle={{
-                paddingBottom: 120, // keep space so bottom bar doesn't overlap calendar content
-                backgroundColor: "white",
-              }}
-              showsVerticalScrollIndicator={false}
-              nestedScrollEnabled={true} // allow inner vertical scrolling on Android
-            >
-              <View className="flex-row items-center justify-between py-6 bg-white px-4">
-                <Text className="text-2xl font-semibold">Change dates</Text>
-              </View>
-              <Calendar
-                initialSelection={draft.calendar}
-                onSave={handleCalendarSave}
-                onClose={() => scrollToSlide(0)}
-              />
-            </ScrollView>
-          </View>
-
-          {/* Slide 2 */}
-          <View style={{ width }} className="px-6 py-8">
-            <View className="max-w-xl w-full self-center">
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-2xl font-semibold">Change guests</Text>
-              </View>
-
-              <Text className="text-sm text-gray-600 mb-6">
-                No limits set — this is for search. Increase or decrease as
-                needed.
+          {/* Slides */}
+          <ScrollView
+            ref={scrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onScroll={onScroll}
+            nestedScrollEnabled // ✅ ADD THIS
+            directionalLockEnabled
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
+            {/* Slide 0 */}
+            <View style={{ width }} className="px-6 py-8 flex-1">
+              <Text className="text-3xl font-bold mb-8">
+                Choose the city{"\n"}you&apos;re going to visit
               </Text>
 
-              {[
-                {
-                  key: "adults",
-                  title: "Adults",
-                  subtitle: "Age 13+",
-                  value: adults,
-                  min: 1,
-                },
-                {
-                  key: "children",
-                  title: "Children",
-                  subtitle: "Ages 2–12",
-                  value: children,
-                  min: 0,
-                },
-                {
-                  key: "infants",
-                  title: "Infants",
-                  subtitle: "Under 2",
-                  value: infants,
-                  min: 0,
-                },
-                {
-                  key: "pets",
-                  title: "Pets",
-                  subtitle: "Bringing a pet?",
-                  value: pets,
-                  min: 0,
-                },
-              ].map((row) => (
-                <View
-                  key={row.key}
-                  className="flex-row items-center justify-between py-6 border-b border-gray-200"
-                >
-                  <View className="flex-1">
-                    <Text className="text-base font-normal text-gray-900">
-                      {row.title}
-                    </Text>
-                    <Text className="text-sm text-gray-500 mt-0.5">
-                      {row.subtitle}
-                    </Text>
-                  </View>
-
-                  <View className="flex-row items-center gap-4">
-                    <Pressable
-                      onPress={() => decrement(row.key as any, row.min)}
-                      disabled={row.value <= row.min}
-                      className={`w-8 h-8 rounded-full border items-center justify-center ${row.value <= row.min ? "border-gray-200" : "border-gray-400"}`}
-                    >
-                      <AntDesign
-                        name="minus"
-                        size={14}
-                        color={row.value <= row.min ? "lightgray" : "gray"}
-                      />
-                    </Pressable>
-
-                    <Text className="w-8 text-center text-base text-gray-900">
-                      {row.value}
-                    </Text>
-
-                    <Pressable
-                      onPress={() => increment(row.key as any)}
-                      className="w-8 h-8 rounded-full border items-center justify-center border-gray-400"
-                    >
-                      <AntDesign name="plus" size={14} color="gray" />
-                    </Pressable>
-                  </View>
-                </View>
-              ))}
+              <View className="relative mb-8">
+                <Feather
+                  name="search"
+                  size={22}
+                  color="#9CA3AF"
+                  style={{ position: "absolute", left: 16, top: 14 }}
+                />
+                <TextInput
+                  placeholder="Search destinations"
+                  value={searchInput}
+                  onChangeText={setSearchInput}
+                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-full"
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <SuggestedDestinations
+                  selectedCity={draft.city}
+                  onSelect={setCity}
+                />
+              </View>
             </View>
-          </View>
-        </ScrollView>
 
-        {/* Footer */}
-        <View className="border-t border-gray-200 px-6 py-4 bg-white absolute w-full bottom-0">
-          <View className="flex-row items-center gap-3">
-            <Pressable
-              onPress={handleBack}
-              disabled={currentSlide === 0}
-              className={`flex-1 py-4 rounded-xl border ${currentSlide === 0 ? "border-gray-200" : "border-gray-400"}`}
-            >
-              <Text
-                className={`text-center font-semibold ${currentSlide === 0 ? "text-gray-300" : "text-gray-700"}`}
+            {/* Slide 1 */}
+            <View style={{ width, flex: 1 }}>
+              <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                  paddingBottom: 120, // keep space so bottom bar doesn't overlap calendar content
+                  backgroundColor: "white",
+                }}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled={true} // allow inner vertical scrolling on Android
               >
-                Back
-              </Text>
-            </Pressable>
+                <View className="flex-row items-center justify-between py-6 bg-white px-4">
+                  <Text className="text-2xl font-semibold">Change dates</Text>
+                </View>
+                <Calendar
+                  initialSelection={draft.calendar}
+                  onSave={handleCalendarSave}
+                  onClose={() => scrollToSlide(0)}
+                />
+              </ScrollView>
+            </View>
 
-            <Pressable
-              onPress={handleNext}
-              className="flex-1 py-4 rounded-xl items-center justify-center bg-gray-900"
-            >
-              <Text className="text-base font-semibold text-white">
-                {nextLabel}
-              </Text>
-            </Pressable>
+            {/* Slide 2 */}
+            <View style={{ width }} className="px-6 py-8">
+              <View className="max-w-xl w-full self-center">
+                <View className="flex-row items-center justify-between mb-4">
+                  <Text className="text-2xl font-semibold">Change guests</Text>
+                </View>
+
+                <Text className="text-sm text-gray-600 mb-6">
+                  No limits set — this is for search. Increase or decrease as
+                  needed.
+                </Text>
+
+                {[
+                  {
+                    key: "adults",
+                    title: "Adults",
+                    subtitle: "Age 13+",
+                    value: adults,
+                    min: 1,
+                  },
+                  {
+                    key: "children",
+                    title: "Children",
+                    subtitle: "Ages 2–12",
+                    value: children,
+                    min: 0,
+                  },
+                  {
+                    key: "infants",
+                    title: "Infants",
+                    subtitle: "Under 2",
+                    value: infants,
+                    min: 0,
+                  },
+                  {
+                    key: "pets",
+                    title: "Pets",
+                    subtitle: "Bringing a pet?",
+                    value: pets,
+                    min: 0,
+                  },
+                ].map((row) => (
+                  <View
+                    key={row.key}
+                    className="flex-row items-center justify-between py-6 border-b border-gray-200"
+                  >
+                    <View className="flex-1">
+                      <Text className="text-base font-normal text-gray-900">
+                        {row.title}
+                      </Text>
+                      <Text className="text-sm text-gray-500 mt-0.5">
+                        {row.subtitle}
+                      </Text>
+                    </View>
+
+                    <View className="flex-row items-center gap-4">
+                      <Pressable
+                        onPress={() => decrement(row.key as any, row.min)}
+                        disabled={row.value <= row.min}
+                        className={`w-8 h-8 rounded-full border items-center justify-center ${row.value <= row.min ? "border-gray-200" : "border-gray-400"}`}
+                      >
+                        <AntDesign
+                          name="minus"
+                          size={14}
+                          color={row.value <= row.min ? "lightgray" : "gray"}
+                        />
+                      </Pressable>
+
+                      <Text className="w-8 text-center text-base text-gray-900">
+                        {row.value}
+                      </Text>
+
+                      <Pressable
+                        onPress={() => increment(row.key as any)}
+                        className="w-8 h-8 rounded-full border items-center justify-center border-gray-400"
+                      >
+                        <AntDesign name="plus" size={14} color="gray" />
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </ScrollView>
+
+          {/* Footer */}
+          <View className="border-t border-gray-200 px-6 py-4 bg-white absolute w-full bottom-0">
+            <View className="flex-row items-center gap-3">
+              <Pressable
+                onPress={handleBack}
+                disabled={currentSlide === 0}
+                className={`flex-1 py-4 rounded-xl border ${currentSlide === 0 ? "border-gray-200" : "border-gray-400"}`}
+              >
+                <Text
+                  className={`text-center font-semibold ${currentSlide === 0 ? "text-gray-300" : "text-gray-700"}`}
+                >
+                  Back
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={handleNext}
+                className="flex-1 py-4 rounded-xl items-center justify-center bg-gray-900"
+              >
+                <Text className="text-base font-semibold text-white">
+                  {nextLabel}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </SafeAreaView>
   );
 }

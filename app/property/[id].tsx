@@ -55,7 +55,7 @@ export default function Details() {
   const { searchState } = useSearch();
 
   const { data, owner, loading } = useProperty();
-  const width = Dimensions.get("window").width;
+  const { width } = Dimensions.get("window");
   const [activeIndex, setActiveIndex] = useState(0);
   const [wishlisted, setWishlisted] = useState(false);
   const [loadingWishlist, setLoadingWishlist] = useState(false);
@@ -103,12 +103,17 @@ export default function Details() {
     const slide = Math.round(event.nativeEvent.contentOffset.x / width);
     setActiveIndex(slide);
   };
-  const addOnsArray = Array.isArray(data?.addOns)
-    ? data.addOns
-    : data?.addOns
-      ? [JSON.parse(data.addOns)]
-      : [];
+  let parsedAddOns = [];
 
+  try {
+    parsedAddOns = Array.isArray(data?.addOns)
+      ? data.addOns
+      : data?.addOns
+        ? [JSON.parse(data.addOns)]
+        : [];
+  } catch (e) {
+    parsedAddOns = [];
+  }
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -273,7 +278,7 @@ export default function Details() {
                 </View>
               </View>
               {/* Add-ons */}
-              {addOnsArray[0].length ? (
+              {parsedAddOns.length > 0 && Array.isArray(parsedAddOns[0]) ? (
                 <View className="py-8 border-b border-zinc-300">
                   <Text className="text-xl font-semibold">
                     Add-ons available
@@ -281,7 +286,7 @@ export default function Details() {
                   <Text className="text-sm text-gray-500 mb-6">
                     These can be added during checkout
                   </Text>
-                  {addOnsArray[0].map(
+                  {parsedAddOns[0].map(
                     (addOn: { name: string; price: string }, index: number) => (
                       <View
                         key={`${addOn.name}-${index}`}
@@ -313,7 +318,7 @@ export default function Details() {
                 <Text className="text-zinc-500 text-sm mb-6">
                   {data?.address}
                 </Text>
-                <Map />
+                <Map latitude={data?.latitude} longitude={data?.longitude} />
               </View>
 
               {/* Host */}
