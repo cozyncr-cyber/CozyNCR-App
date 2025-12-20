@@ -1,6 +1,7 @@
 import Feather from "@expo/vector-icons/Feather";
 import React, { useState, useMemo, useEffect } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface TimeModalProps {
   bookingType: "3hours" | "6hours" | "12hours";
@@ -113,35 +114,36 @@ export default function TimeModal({
   }, [slots, initialTime, unavailableSlots]);
 
   return (
-    <View className="flex-1 bg-gray-50 items-center justify-center pt-4">
-      <ScrollView
-        className="w-full h-full"
-        contentContainerStyle={{ alignItems: "center" }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View className="bg-white rounded-3xl h-full w-full p-6">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-semibold">Select time</Text>
-            <Pressable onPress={onClose}>
-              <Feather name="x" size={24} color="black" />
-            </Pressable>
-          </View>
+    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
+      <View className="flex-1 bg-gray-50 items-center justify-center pt-4">
+        <ScrollView
+          className="w-full h-full"
+          contentContainerStyle={{ alignItems: "center" }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="bg-white rounded-3xl h-full w-full p-6">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-lg font-semibold">Select time</Text>
+              <Pressable onPress={onClose}>
+                <Feather name="x" size={24} color="black" />
+              </Pressable>
+            </View>
 
-          <Text className="text-sm text-gray-600 mb-3">
-            Available slots ({bookingType})
-          </Text>
+            <Text className="text-sm text-gray-600 mb-3">
+              Available slots ({bookingType})
+            </Text>
 
-          <View className="flex-row flex-wrap gap-2 mb-6">
-            {slots.map((slot) => {
-              const active = selectedTime === slot;
-              const disabled = unavailableSlots.includes(slot);
+            <View className="flex-row flex-wrap gap-2 mb-6">
+              {slots.map((slot) => {
+                const active = selectedTime === slot;
+                const disabled = unavailableSlots.includes(slot);
 
-              return (
-                <Pressable
-                  key={slot}
-                  disabled={disabled}
-                  onPress={() => !disabled && setSelectedTime(slot)}
-                  className={`
+                return (
+                  <Pressable
+                    key={slot}
+                    disabled={disabled}
+                    onPress={() => !disabled && setSelectedTime(slot)}
+                    className={`
                     px-4 py-2.5 rounded-xl
                     ${
                       disabled
@@ -151,9 +153,9 @@ export default function TimeModal({
                           : "bg-gray-100"
                     }
                   `}
-                >
-                  <Text
-                    className={`
+                  >
+                    <Text
+                      className={`
                       text-sm font-medium
                       ${
                         disabled
@@ -163,41 +165,37 @@ export default function TimeModal({
                             : "text-gray-700"
                       }
                     `}
-                  >
-                    {slot}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+                    >
+                      {slot}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
 
-          <Pressable
-            disabled={!selectedTime}
-            onPress={() => selectedTime && onSave(selectedTime)}
-            className={`w-full py-4 rounded-xl ${
-              selectedTime ? "bg-gray-900" : "bg-gray-200"
-            }`}
-          >
-            <Text
-              className={`text-base font-semibold text-center ${
-                selectedTime ? "text-white" : "text-gray-400"
+            <Pressable
+              disabled={!selectedTime}
+              onPress={() => selectedTime && onSave(selectedTime)}
+              className={`w-full py-4 rounded-xl ${
+                selectedTime ? "bg-gray-900" : "bg-gray-200"
               }`}
             >
-              Continue
-            </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </View>
+              <Text
+                className={`text-base font-semibold text-center ${
+                  selectedTime ? "text-white" : "text-gray-400"
+                }`}
+              >
+                Continue
+              </Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 /* ---------------- HELPERS ---------------- */
-
-const toMinutes = (iso: string) => {
-  const d = new Date(iso);
-  return d.getHours() * 60 + d.getMinutes();
-};
 
 const labelToMinutes = (label: string) => {
   const [time, suffix] = label.split(" ");

@@ -111,7 +111,8 @@ export default function SignIn() {
             <View className="relative mb-3 gap-4 flex flex-row items-center bg-gray-100 px-4 py-3 rounded-xl">
               <Feather name="mail" size={20} color="gray" />
               <TextInput
-                className="w-full outline-none bg-transparent"
+                placeholderTextColor="#9CA3AF"
+                className="w-full outline-none bg-transparent text-black"
                 placeholder="john@example.com"
                 value={email}
                 onChangeText={setEmail}
@@ -130,6 +131,7 @@ export default function SignIn() {
                   <Feather name="lock" size={20} color="gray" />
 
                   <TextInput
+                    placeholderTextColor="#9CA3AF"
                     secureTextEntry={!showPassword}
                     className="flex-1 mx-3 bg-transparent"
                     placeholder="Enter Password"

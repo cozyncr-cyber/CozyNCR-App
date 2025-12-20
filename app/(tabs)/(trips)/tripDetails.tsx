@@ -1,6 +1,8 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { useEffect, useState } from "react";
+import * as Linking from "expo-linking";
+import { cancelBooking } from "@/lib/services/bookings";
 
 import {
   View,
@@ -17,14 +19,17 @@ import {
   Users,
   Star,
   MessageCircle,
-  FileText,
 } from "lucide-react-native";
 import { getTripDetailsByTripId } from "@/lib/services/trips";
+import { useUser } from "@/src/contexts/UserContext";
 type BookingTypeKey = "3hours" | "6hours" | "12hours" | "24hours";
+
+type BookingStatus = "confirmed" | "pending" | "rejected" | "cancelled";
 
 const BookingDetailsView: React.FC = () => {
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
   const router = useRouter();
+  const user = useUser();
 
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<any>(null);
@@ -36,7 +41,31 @@ const BookingDetailsView: React.FC = () => {
     "12hours": "12 Hours",
     "24hours": "Nightly",
   };
+  const [cancelLoading, setCancelLoading] = useState(false);
 
+  const handleCancelBooking = async () => {
+    if (!booking?.$id) return;
+
+    setCancelLoading(true);
+
+    const result = await cancelBooking(booking.$id);
+
+    setCancelLoading(false);
+
+    if (result.success) {
+      // update local state so UI refreshes
+      setBooking((prev: any) => ({
+        ...prev,
+        status: "rejected",
+      }));
+    } else {
+      alert(result.error);
+    }
+  };
+  const makePhoneCall = (phoneNumber: string) => {
+    const url = `tel:${phoneNumber}`;
+    Linking.openURL(url);
+  };
   useEffect(() => {
     if (!tripId) return;
 
@@ -80,6 +109,42 @@ const BookingDetailsView: React.FC = () => {
     : isDuringStay
       ? "Ongoing"
       : booking.status;
+
+  type StatusConfig = {
+    label: string;
+    container: string;
+    dot: string;
+    text: string;
+  };
+  const statusKey = booking.status as BookingStatus;
+
+  const STATUS_CONFIG: Record<BookingStatus, StatusConfig> = {
+    confirmed: {
+      label: derivedStatus,
+      container: "bg-green-50 border-green-200",
+      dot: "bg-green-500",
+      text: "text-green-700",
+    },
+    pending: {
+      label: "Pending",
+      container: "bg-yellow-50 border-yellow-200",
+      dot: "bg-yellow-500",
+      text: "text-yellow-700",
+    },
+    rejected: {
+      label: "Rejected",
+      container: "bg-red-50 border-red-200",
+      dot: "bg-red-500",
+      text: "text-red-700",
+    },
+    cancelled: {
+      label: "Cancelled",
+      container: "bg-red-50 border-red-200",
+      dot: "bg-red-500",
+      text: "text-red-700",
+    },
+  };
+  const status = STATUS_CONFIG[statusKey];
   return (
     <View className="flex-1 bg-white">
       {/* Header */}
@@ -103,12 +168,16 @@ const BookingDetailsView: React.FC = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Status Badge */}
         <View className="px-4 pt-4">
-          <View className="flex-row items-center gap-2 bg-green-50 border border-green-200 px-4 py-2 rounded-full self-start">
-            <View className="w-2 h-2 bg-green-500 rounded-full" />
-            <Text className="text-sm font-semibold text-green-700">
-              {derivedStatus}
-            </Text>
-          </View>
+          {status && (
+            <View
+              className={`flex-row items-center gap-2 px-4 py-2 rounded-full border self-start ${status.container}`}
+            >
+              <View className={`w-2 h-2 rounded-full ${status.dot}`} />
+              <Text className={`text-sm font-semibold ${status.text}`}>
+                {status.label}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Property Image */}
@@ -226,20 +295,24 @@ const BookingDetailsView: React.FC = () => {
         {/* Actions */}
         <View className="px-4 pb-6 space-y-3">
           {!isAfterCheckOut && (
-            <Pressable className="bg-gray-900 py-4 rounded-xl flex-row items-center justify-center gap-2">
+            <Pressable
+              onPress={() => makePhoneCall(user.profile.phone)}
+              className="bg-gray-900 py-4 rounded-xl flex-row items-center justify-center gap-2"
+            >
               <MessageCircle size={20} color="#fff" />
-              <Text className="text-white font-semibold">Message Host</Text>
+              <Text className="text-white font-semibold">Contact Host</Text>
             </Pressable>
           )}
-
-          <Pressable className="border-2 border-gray-900 py-4 rounded-xl flex-row items-center justify-center gap-2">
-            <FileText size={20} />
-            <Text className="font-semibold">View Receipt</Text>
-          </Pressable>
-          {isBeforeCheckIn && (
-            <Pressable>
-              <Text className="text-center text-sm font-semibold text-gray-600">
-                Cancel Booking
+          {isBeforeCheckIn && booking.status !== "rejected" && (
+            <Pressable
+              onPress={handleCancelBooking}
+              disabled={cancelLoading}
+              className={`border-2 border-gray-900 py-4 rounded-xl flex-row items-center justify-center gap-2 ${
+                cancelLoading ? "opacity-50" : ""
+              }`}
+            >
+              <Text className="font-semibold">
+                {cancelLoading ? "Cancelling..." : "Cancel Booking"}
               </Text>
             </Pressable>
           )}

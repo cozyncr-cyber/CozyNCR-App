@@ -1,6 +1,10 @@
 // Calendar.tsx\
 import React, { useEffect, useState } from "react";
 import { View, Text, Pressable } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 export interface CalendarOnSavePayload {
   label: string;
@@ -38,6 +42,7 @@ export default function Calendar({
   onMount,
   initialSelection = null,
 }: CalendarProps) {
+  const insets = useSafeAreaInsets();
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -366,39 +371,46 @@ export default function Calendar({
   }, [checkIn, checkOut, mode, onMount]);
 
   return (
-    <View className="flex-1 bg-gray-50 items-center justify-center relative">
-      <View className="bg-white w-full h-full px-6">
-        {renderCalendar(0)}
-        {renderCalendar(1)}
-        {renderCalendar(2)}
-        {renderCalendar(3)}
-        {renderCalendar(4)}
-        {renderCalendar(5)}
-
-        {/* Footer */}
-        <View className="flex-row items-center justify-between bg-white py-4 border-t sticky bottom-0">
-          <Pressable onPress={clearDates} className="px-4 py-2 rounded-lg">
-            <Text className="text-base font-semibold underline">
-              Clear dates
-            </Text>
-          </Pressable>
-          <Pressable
-            className="bg-gray-900 px-6 py-3 rounded-lg"
-            onPress={internalHandleSave}
+    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
+      <View className="flex-1 bg-gray-50 items-center justify-center relative">
+        <View className="bg-white w-full h-full px-6">
+          {renderCalendar(0)}
+          {renderCalendar(1)}
+          {renderCalendar(2)}
+          {renderCalendar(3)}
+          {renderCalendar(4)}
+          {renderCalendar(5)}
+          {/* Fixed Footer */}
+          <View
+            style={{ paddingBottom: insets.bottom }}
+            className="absolute bottom-0 left-0 right-0 bg-white border-t"
           >
-            <Text className="text-white font-semibold">Save</Text>
-          </Pressable>
+            <View className="flex-row items-center justify-between px-6 py-4">
+              <Pressable onPress={clearDates}>
+                <Text className="text-base font-semibold underline">
+                  Clear dates
+                </Text>
+              </Pressable>
+
+              <Pressable
+                className="bg-gray-900 px-6 py-3 rounded-lg"
+                onPress={internalHandleSave}
+              >
+                <Text className="text-white font-semibold">Save</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Toast */}
+          {toastMessage && (
+            <View className="absolute bottom-8 left-0 right-0 items-center">
+              <View className="bg-black/80 px-4 py-2 rounded-full">
+                <Text className="text-white text-xs">{toastMessage}</Text>
+              </View>
+            </View>
+          )}
         </View>
       </View>
-
-      {/* Toast */}
-      {toastMessage && (
-        <View className="absolute bottom-8 left-0 right-0 items-center">
-          <View className="bg-black/80 px-4 py-2 rounded-full">
-            <Text className="text-white text-xs">{toastMessage}</Text>
-          </View>
-        </View>
-      )}
-    </View>
+    </SafeAreaView>
   );
 }

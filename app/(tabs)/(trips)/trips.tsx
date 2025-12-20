@@ -235,6 +235,7 @@ const Trips = () => {
           image: imageUrl,
           dates: formatDates(startTimeISO, endTimeISO),
           nights: diffNights(startTimeISO, endTimeISO),
+          status: row.status,
           latitude: listing?.latitude,
           longitude: listing?.longitude,
           phone: user.profile.phone,
@@ -318,9 +319,28 @@ const Trips = () => {
               className="w-full h-48"
               resizeMode="cover"
             />
-            {trip.status === "Confirmed" && (
+            {trip.status === "confirmed" && (
               <View className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full">
                 <Text className="text-xs font-semibold">Confirmed</Text>
+              </View>
+            )}
+            {trip.status === "pending" && (
+              <View className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full">
+                <Text className="text-xs font-semibold">Pending</Text>
+              </View>
+            )}
+            {trip.status === "rejected" && (
+              <View className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full">
+                <Text className="text-xs font-semibold text-red-500">
+                  Rejected
+                </Text>
+              </View>
+            )}
+            {trip.status === "cancelled" && (
+              <View className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full">
+                <Text className="text-xs font-semibold text-red-500">
+                  Cancelled
+                </Text>
               </View>
             )}
           </View>
@@ -360,76 +380,83 @@ const Trips = () => {
 
         {/* ACTIONS (NOT pressable by card) */}
         <View className="flex-row mt-2 px-2 flex gap-2">
-          {isPast ? (
-            trip.reviewed ? (
-              <Link
-                href={{
-                  pathname: "/reviews",
-                  params: {
-                    mode: "create",
-                    listingId: trip.listingId,
-                    ownerId: trip.ownerId,
-                    name: trip.title,
-                    location: trip.location,
-                    image: trip.image,
-                    dates: trip.dates,
-                  },
-                }}
-                className="flex-1 flex py-2 border border-gray-900 rounded-lg items-center "
-              >
-                <Text className="font-semibold w-full text-center">
-                  Edit review
-                </Text>
-              </Link>
+          {trip.status === "confirmed" ? (
+            isPast ? (
+              trip.reviewed ? (
+                <Link
+                  href={{
+                    pathname: "/reviews",
+                    params: {
+                      mode: "create",
+                      listingId: trip.listingId,
+                      ownerId: trip.ownerId,
+                      name: trip.title,
+                      location: trip.location,
+                      image: trip.image,
+                      dates: trip.dates,
+                    },
+                  }}
+                  className="flex-1 flex py-2 border border-gray-900 rounded-lg items-center "
+                >
+                  <Text className="font-semibold w-full text-center">
+                    Edit review
+                  </Text>
+                </Link>
+              ) : (
+                <Link
+                  href={{
+                    pathname: "/reviews",
+                    params: {
+                      mode: "create",
+                      listingId: trip.listingId,
+                      ownerId: trip.ownerId,
+                      name: trip.title,
+                      location: trip.location,
+                      image: trip.image,
+                      dates: trip.dates,
+                    },
+                  }}
+                  className="flex-1 flex py-2 bg-gray-900 rounded-lg items-center "
+                >
+                  <Text className="font-semibold text-white w-full text-center">
+                    Write a review
+                  </Text>
+                </Link>
+              )
             ) : (
-              <Link
-                href={{
-                  pathname: "/reviews",
-                  params: {
-                    mode: "create",
-                    listingId: trip.listingId,
-                    ownerId: trip.ownerId,
-                    name: trip.title,
-                    location: trip.location,
-                    image: trip.image,
-                    dates: trip.dates,
-                  },
-                }}
-                className="flex-1 flex py-2 bg-gray-900 rounded-lg items-center "
+              <TouchableOpacity
+                className="flex-1 py-2 border rounded-lg items-center"
+                onPress={() =>
+                  openMaps(
+                    trip.latitude ? trip.latitude : 0,
+                    trip.longitude ? trip.longitude : 0
+                  )
+                }
               >
-                <Text className="font-semibold text-white w-full text-center">
-                  Write a review
-                </Text>
-              </Link>
+                <Text className="font-semibold">Get directions</Text>
+              </TouchableOpacity>
             )
           ) : (
-            <TouchableOpacity
-              className="flex-1 py-2 border rounded-lg items-center"
-              onPress={() =>
-                openMaps(
-                  trip.latitude ? trip.latitude : 0,
-                  trip.longitude ? trip.longitude : 0
-                )
-              }
-            >
-              <Text className="font-semibold">Get directions</Text>
-            </TouchableOpacity>
+            <></>
           )}
-
-          {isPast ? (
-            <TouchableOpacity
-              onPress={() => router.push(`/property/${trip.listingId}`)}
-              className="flex-1 py-2 border border-gray-900 rounded-lg items-center"
-            >
-              <Text className="font-semibold">Book again</Text>
-            </TouchableOpacity>
+          {trip.status === "confirmed" ? (
+            isPast ? (
+              <TouchableOpacity
+                onPress={() => router.push(`/property/${trip.listingId}`)}
+                className="flex-1 py-2 border border-gray-900 rounded-lg items-center"
+              >
+                <Text className="font-semibold">Book again</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={() => makePhoneCall(trip.phone ? trip.phone : "")}
+                className="flex-1 py-2 bg-gray-900 rounded-lg items-center"
+              >
+                <Text className="font-semibold text-white">Contact Host</Text>
+              </TouchableOpacity>
+            )
           ) : (
-            <TouchableOpacity
-              onPress={() => makePhoneCall(trip.phone ? trip.phone : "")}
-              className="flex-1 py-2 bg-gray-900 rounded-lg items-center"
-            >
-              <Text className="font-semibold text-white">Contact Host</Text>
-            </TouchableOpacity>
+            <></>
           )}
         </View>
       </View>

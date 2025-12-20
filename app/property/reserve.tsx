@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, Pressable, Image, ScrollView, Modal } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import Star from "@/components/SVGs/Star";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useProperty } from "@/src/contexts/PropertyContext";
 import Calendar from "@/components/Calendar";
 import Guests from "@/components/Guests";
@@ -12,6 +12,7 @@ import { tablesDB, DATABASE_ID, BOOKINGS_TABLE_ID, ID } from "@/lib/appwrite";
 import { useUser } from "@/src/contexts/UserContext";
 import { payForBooking } from "@/lib/razorpay";
 import BookingTermsModal from "@/components/TermsModal";
+import { SafeAreaView } from "react-native-safe-area-context";
 // also your auth context to get current userId
 // also you probably have current user somewhere, e.g. useAuth()
 
@@ -431,56 +432,59 @@ export default function Booking() {
   if (loading || !data) return null;
 
   return (
-    <ScrollView className="bg-white">
-      <View className="min-h-screen bg-white">
-        {/* Header */}
-        <View className="sticky z-[2] top-0 bg-white border-b border-gray-200 px-4 py-3 flex-row items-center justify-between">
-          <Text className="text-base font-semibold">Request to book</Text>
+    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
+      <ScrollView className="bg-white">
+        <View className="min-h-screen bg-white">
+          {/* Header */}
+          <View className="sticky z-[2] top-0 bg-white border-b border-gray-200 px-4 py-3 flex-row items-center justify-between">
+            <Text className="text-base font-semibold">Request to book</Text>
 
-          <Pressable onPress={() => router.back()} className="p-2 -mr-2">
-            <Feather name="x" size={24} color="black" />
-          </Pressable>
-        </View>
+            <Pressable onPress={() => router.back()} className="p-2 -mr-2">
+              <Feather name="x" size={24} color="black" />
+            </Pressable>
+          </View>
 
-        <View className="px-4 py-4">
-          {/* Property Card */}
-          <View className="border border-gray-200 rounded-xl p-4 mb-4">
-            <View className="flex-row gap-3 mb-4">
-              <Image
-                source={{ uri: data.images?.[0] }}
-                className="w-20 h-20 rounded-lg"
-              />
+          <View className="px-4 py-4">
+            {/* Property Card */}
+            <View className="border border-gray-200 rounded-xl p-4 mb-4">
+              <View className="flex-row gap-3 mb-4">
+                <Image
+                  source={{ uri: data.images?.[0] }}
+                  className="w-20 h-20 rounded-lg"
+                />
 
-              <View className="flex-1">
-                <Text className="text-sm font-semibold leading-tight mb-1">
-                  {data.title}
-                </Text>
+                <View className="flex-1">
+                  <Text className="text-sm font-semibold leading-tight mb-1">
+                    {data.title}
+                  </Text>
 
-                <View className="flex-row items-center gap-2 text-xs">
-                  <View className="flex-row items-center gap-1">
-                    <Star />
-                    <Text className="font-semibold">
-                      {data.avg_rating ? data.avg_rating : "NA"}
-                    </Text>
-                    <Text className="text-gray-600">
-                      ({data.review_count ? data.review_count : 0})
-                    </Text>
+                  <View className="flex-row items-center gap-2 text-xs">
+                    <View className="flex-row items-center gap-1">
+                      <Star />
+                      <Text className="font-semibold">
+                        {data.avg_rating ? data.avg_rating : "NA"}
+                      </Text>
+                      <Text className="text-gray-600">
+                        ({data.review_count ? data.review_count : 0})
+                      </Text>
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
 
-            {/* Booking Type Selector */}
-            {bookingTypes.length > 0 && (
-              <View className="mb-4  min-h-10 ">
-                <Text className="text-sm font-semibold mb-2">Booking type</Text>
+              {/* Booking Type Selector */}
+              {bookingTypes.length > 0 && (
+                <View className="mb-4  min-h-10 ">
+                  <Text className="text-sm font-semibold mb-2">
+                    Booking type
+                  </Text>
 
-                <View className="flex gap-2">
-                  {bookingTypes.map((type) => (
-                    <Pressable
-                      key={type.id}
-                      onPress={() => handleChangeBookingType(type.id)}
-                      className={`
+                  <View className="flex gap-2">
+                    {bookingTypes.map((type) => (
+                      <Pressable
+                        key={type.id}
+                        onPress={() => handleChangeBookingType(type.id)}
+                        className={`
                         flex-1 py-2 px-3 rounded-lg text-sm font-medium
                         ${
                           bookingType === type.id
@@ -488,387 +492,392 @@ export default function Booking() {
                             : "bg-gray-100"
                         }
                       `}
-                    >
-                      <Text
-                        className={`text-center ${
-                          bookingType === type.id
-                            ? "text-white"
-                            : "text-gray-700"
-                        }`}
                       >
-                        {type.label}
-                      </Text>
-                    </Pressable>
-                  ))}
+                        <Text
+                          className={`text-center ${
+                            bookingType === type.id
+                              ? "text-white"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {type.label}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
 
-            {/* Dates */}
-            <View className="flex-row items-center justify-between py-3 border-b border-gray-200">
-              <View>
-                <Text className="text-sm font-semibold mb-1">Date</Text>
-                <Text className="text-sm text-gray-700">{dates}</Text>
-              </View>
-
-              <Pressable
-                className="px-4 py-2 rounded-lg bg-gray-100"
-                onPress={() => setCalendarOpen(true)}
-              >
-                <Text className="text-sm font-semibold">Change</Text>
-              </Pressable>
-            </View>
-
-            {/* Hours – only for hourly bookings */}
-            {isHourly && (
+              {/* Dates */}
               <View className="flex-row items-center justify-between py-3 border-b border-gray-200">
                 <View>
-                  <Text className="text-sm font-semibold mb-1">Hours</Text>
-                  <Text className="text-sm text-gray-700">{hours}</Text>
+                  <Text className="text-sm font-semibold mb-1">Date</Text>
+                  <Text className="text-sm text-gray-700">{dates}</Text>
                 </View>
 
                 <Pressable
                   className="px-4 py-2 rounded-lg bg-gray-100"
-                  onPress={() => setTimeModalOpen(true)}
+                  onPress={() => setCalendarOpen(true)}
                 >
                   <Text className="text-sm font-semibold">Change</Text>
                 </Pressable>
               </View>
-            )}
 
-            {/* Guests */}
-            <View className="flex-row items-center justify-between py-3 border-b border-gray-200">
-              <View>
-                <Text className="text-sm font-semibold mb-1">Guests</Text>
-                <Text className="text-sm text-gray-700">{guests}</Text>
-              </View>
+              {/* Hours – only for hourly bookings */}
+              {isHourly && (
+                <View className="flex-row items-center justify-between py-3 border-b border-gray-200">
+                  <View>
+                    <Text className="text-sm font-semibold mb-1">Hours</Text>
+                    <Text className="text-sm text-gray-700">{hours}</Text>
+                  </View>
 
-              <Pressable
-                className="px-4 py-2 rounded-lg bg-gray-100"
-                onPress={() => setGuestModalOpen(true)}
-              >
-                <Text className="text-sm font-semibold">Change</Text>
-              </Pressable>
-            </View>
+                  <Pressable
+                    className="px-4 py-2 rounded-lg bg-gray-100"
+                    onPress={() => setTimeModalOpen(true)}
+                  >
+                    <Text className="text-sm font-semibold">Change</Text>
+                  </Pressable>
+                </View>
+              )}
 
-            {/* Total Price */}
-            {currentBooking && (
-              <View className="flex-row items-center justify-between py-3">
+              {/* Guests */}
+              <View className="flex-row items-center justify-between py-3 border-b border-gray-200">
                 <View>
-                  <Text className="text-sm font-semibold mb-1">
-                    Total price
-                  </Text>
-
-                  <Text className="text-sm text-gray-700">
-                    ₹{total.toLocaleString("en-IN")} including taxes{" "}
-                    <Text className="underline">INR</Text>
-                  </Text>
+                  <Text className="text-sm font-semibold mb-1">Guests</Text>
+                  <Text className="text-sm text-gray-700">{guests}</Text>
                 </View>
 
                 <Pressable
-                  onPress={() => setPriceOpen(true)}
                   className="px-4 py-2 rounded-lg bg-gray-100"
+                  onPress={() => setGuestModalOpen(true)}
                 >
-                  <Text className="text-sm font-semibold">Details</Text>
+                  <Text className="text-sm font-semibold">Change</Text>
                 </Pressable>
               </View>
-            )}
-            {addOns.length > 0 && (
-              <View className="py-4 border-b border-gray-200">
-                <Text className="text-sm font-semibold mb-3">Add-ons</Text>
+
+              {/* Total Price */}
+              {currentBooking && (
+                <View className="flex-row items-center justify-between py-3">
+                  <View>
+                    <Text className="text-sm font-semibold mb-1">
+                      Total price
+                    </Text>
+
+                    <Text className="text-sm text-gray-700">
+                      ₹{total.toLocaleString("en-IN")} including taxes{" "}
+                      <Text className="underline">INR</Text>
+                    </Text>
+                  </View>
+
+                  <Pressable
+                    onPress={() => setPriceOpen(true)}
+                    className="px-4 py-2 rounded-lg bg-gray-100"
+                  >
+                    <Text className="text-sm font-semibold">Details</Text>
+                  </Pressable>
+                </View>
+              )}
+              {addOns.length > 0 && (
+                <View className="py-4 border-b border-gray-200">
+                  <Text className="text-sm font-semibold mb-3">Add-ons</Text>
+
+                  <View className="space-y-3">
+                    {addOns.map((addOn) => {
+                      const checked = selectedAddOns.some(
+                        (a) => a.name === addOn.name
+                      );
+
+                      return (
+                        <Pressable
+                          key={addOn.name}
+                          onPress={() => toggleAddOn(addOn)}
+                          className="flex-row items-center justify-between"
+                        >
+                          <View className="flex-row items-center gap-3">
+                            {/* Checkbox */}
+                            <View
+                              className={`w-5 h-5 rounded border flex items-center justify-center ${
+                                checked
+                                  ? "bg-gray-900 border-gray-900"
+                                  : "border-gray-300"
+                              }`}
+                            >
+                              {checked && (
+                                <Feather name="check" size={14} color="white" />
+                              )}
+                            </View>
+
+                            <View>
+                              <Text className="text-sm font-medium">
+                                {addOn.name}
+                              </Text>
+                              <Text className="text-xs text-gray-600">
+                                ₹{Number(addOn.price).toLocaleString("en-IN")}
+                              </Text>
+                            </View>
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
+
+              {/* Cancellation Policy */}
+              <View className="pt-3 border-t border-gray-200">
+                <Text className="text-sm font-semibold mb-1">
+                  Cancellation Policy
+                </Text>
+
+                <Text className="text-sm text-gray-700">
+                  90% refund for cancellations made up to 24 hours before
+                  check-in{" "}
+                </Text>
+              </View>
+            </View>
+
+            {/* Price Details */}
+            {currentBooking && (
+              <View className="mb-4">
+                <Text className="text-lg font-semibold mb-3">
+                  Price details
+                </Text>
 
                 <View className="space-y-3">
-                  {addOns.map((addOn) => {
-                    const checked = selectedAddOns.some(
-                      (a) => a.name === addOn.name
-                    );
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-700">
+                      {bookingType === "daily"
+                        ? `${nights} nights`
+                        : "1 session"}{" "}
+                      × ₹{currentBooking.price.toLocaleString("en-IN")}
+                    </Text>
 
-                    return (
-                      <Pressable
-                        key={addOn.name}
-                        onPress={() => toggleAddOn(addOn)}
-                        className="flex-row items-center justify-between"
-                      >
-                        <View className="flex-row items-center gap-3">
-                          {/* Checkbox */}
-                          <View
-                            className={`w-5 h-5 rounded border flex items-center justify-center ${
-                              checked
-                                ? "bg-gray-900 border-gray-900"
-                                : "border-gray-300"
-                            }`}
-                          >
-                            {checked && (
-                              <Feather name="check" size={14} color="white" />
-                            )}
-                          </View>
-
-                          <View>
-                            <Text className="text-sm font-medium">
-                              {addOn.name}
-                            </Text>
-                            <Text className="text-xs text-gray-600">
-                              ₹{Number(addOn.price).toLocaleString("en-IN")}
-                            </Text>
-                          </View>
+                    <Text className="text-gray-900">
+                      ₹{subtotal.toLocaleString("en-IN")}
+                    </Text>
+                  </View>
+                  {selectedAddOns.length > 0 && (
+                    <View className="space-y-2">
+                      {selectedAddOns.map((addOn) => (
+                        <View
+                          key={addOn.name}
+                          className="flex-row justify-between"
+                        >
+                          <Text className="text-gray-700">{addOn.name}</Text>
+                          <Text className="text-gray-900">
+                            ₹{Number(addOn.price).toLocaleString("en-IN")}
+                          </Text>
                         </View>
-                      </Pressable>
-                    );
-                  })}
+                      ))}
+                    </View>
+                  )}
+
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-700">Taxes</Text>
+                    <Text className="text-gray-900">
+                      ₹{taxes.toLocaleString("en-IN")}
+                    </Text>
+                  </View>
+
+                  <View className="flex-row justify-between pt-3 border-t border-gray-200 font-semibold">
+                    <Text>
+                      Total <Text className="font-normal">INR</Text>
+                    </Text>
+                    <Text>₹{total.toLocaleString("en-IN")}</Text>
+                  </View>
+
+                  <Pressable onPress={() => setPriceOpen(true)}>
+                    <Text className="text-sm underline font-semibold">
+                      Price breakdown
+                    </Text>
+                  </Pressable>
                 </View>
               </View>
             )}
 
-            {/* Cancellation Policy */}
-            <View className="pt-3 border-t border-gray-200">
-              <Text className="text-sm font-semibold mb-1">
-                Cancellation Policy
-              </Text>
-
+            {/* Notice */}
+            <View className="bg-gray-50 rounded-xl p-4 mb-4">
               <Text className="text-sm text-gray-700">
-                90% refund for cancellations made up to 24 hours before
-                check-in{" "}
+                The host has 24 hours to accept your request. You&apos;ll pay
+                now, but get a full refund if the booking isn&apos;t confirmed.
               </Text>
             </View>
-          </View>
 
-          {/* Price Details */}
-          {currentBooking && (
-            <View className="mb-4">
-              <Text className="text-lg font-semibold mb-3">Price details</Text>
-
-              <View className="space-y-3">
-                <View className="flex-row justify-between">
-                  <Text className="text-gray-700">
-                    {bookingType === "daily" ? `${nights} nights` : "1 session"}{" "}
-                    × ₹{currentBooking.price.toLocaleString("en-IN")}
-                  </Text>
-
-                  <Text className="text-gray-900">
-                    ₹{subtotal.toLocaleString("en-IN")}
-                  </Text>
-                </View>
-                {selectedAddOns.length > 0 && (
-                  <View className="space-y-2">
-                    {selectedAddOns.map((addOn) => (
-                      <View
-                        key={addOn.name}
-                        className="flex-row justify-between"
-                      >
-                        <Text className="text-gray-700">{addOn.name}</Text>
-                        <Text className="text-gray-900">
-                          ₹{Number(addOn.price).toLocaleString("en-IN")}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-
-                <View className="flex-row justify-between">
-                  <Text className="text-gray-700">Taxes</Text>
-                  <Text className="text-gray-900">
-                    ₹{taxes.toLocaleString("en-IN")}
-                  </Text>
-                </View>
-
-                <View className="flex-row justify-between pt-3 border-t border-gray-200 font-semibold">
-                  <Text>
-                    Total <Text className="font-normal">INR</Text>
-                  </Text>
-                  <Text>₹{total.toLocaleString("en-IN")}</Text>
-                </View>
-
-                <Pressable onPress={() => setPriceOpen(true)}>
-                  <Text className="text-sm underline font-semibold">
-                    Price breakdown
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          )}
-
-          {/* Notice */}
-          <View className="bg-gray-50 rounded-xl p-4 mb-4">
-            <Text className="text-sm text-gray-700">
-              The host has 24 hours to accept your request. You&apos;ll pay now,
-              but get a full refund if the booking isn&apos;t confirmed.
+            <Text className="text-center text-sm text-gray-600 mb-4">
+              You&apos;ll be directed to Razorpay to complete payment.
             </Text>
-          </View>
 
-          <Text className="text-center text-sm text-gray-600 mb-4">
-            You&apos;ll be directed to Razorpay to complete payment.
-          </Text>
-
-          {/* Continue Button */}
-          <Pressable
-            className={`w-full py-4 rounded-xl flex-row items-center justify-center ${
-              submitting ? "bg-gray-400" : "bg-gray-900"
-            }`}
-            disabled={submitting}
-            onPress={handleContinueToRazorpay}
-          >
-            <Text className="text-white text-base font-semibold">
-              {submitting ? "Processing..." : "Continue to Razorpay"}
-            </Text>
-          </Pressable>
-
-          <Text className="text-center text-xs text-gray-600 mt-3">
-            By selecting the button, I agree to the{" "}
-            <Pressable onPress={() => setShowTerms(true)}>
-              <Text className="underline font-semibold">booking terms</Text>
+            {/* Continue Button */}
+            <Pressable
+              className={`w-full py-4 rounded-xl flex-row items-center justify-center ${
+                submitting ? "bg-gray-400" : "bg-gray-900"
+              }`}
+              disabled={submitting}
+              onPress={handleContinueToRazorpay}
+            >
+              <Text className="text-white text-base font-semibold">
+                {submitting ? "Processing..." : "Continue to Razorpay"}
+              </Text>
             </Pressable>
-          </Text>
+
+            <Text className="text-center text-xs text-gray-600 my-3">
+              By selecting the button, I agree to the{" "}
+              <Pressable onPress={() => setShowTerms(true)}>
+                <Text className="underline font-semibold">booking terms</Text>
+              </Pressable>
+            </Text>
+          </View>
         </View>
-      </View>
 
-      {/* Guests Modal */}
-      <Modal
-        visible={guestModalOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setGuestModalOpen(false)}
-      >
-        <Pressable
-          className="flex-1 bg-black/40"
-          onPress={() => setGuestModalOpen(false)}
-        />
-        <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
-          <Guests
-            onClose={() => setGuestModalOpen(false)}
-            onSave={(result) => {
-              setGuests(result.label);
-              setGuestCounts({
-                adults: result.adults,
-                children: result.children,
-                infants: result.infants,
-                pets: result.pets,
-              });
-              setGuestModalOpen(false);
-            }}
+        {/* Guests Modal */}
+        <Modal
+          visible={guestModalOpen}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setGuestModalOpen(false)}
+        >
+          <Pressable
+            className="flex-1 bg-black/40"
+            onPress={() => setGuestModalOpen(false)}
           />
-        </ScrollView>
-      </Modal>
-      <BookingTermsModal
-        visible={showTerms}
-        onClose={() => setShowTerms(false)}
-        onAgree={() => {
-          setShowTerms(false);
-          // proceed to payment gateway
-        }}
-      />
-
-      {/* Calendar Modal */}
-      <Modal
-        visible={calendarOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setCalendarOpen(false)}
-      >
-        <Pressable
-          className="flex-1 bg-black/40"
-          onPress={() => setCalendarOpen(false)}
-        />
-        <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
-          <View className="flex-row items-center justify-between py-6 sticky top-0 bg-white z-10 px-6">
-            <Text className="text-2xl font-semibold">
-              {isHourly ? "Select date" : "Change dates"}
-            </Text>
-            <Pressable onPress={() => setCalendarOpen(false)} className="p-2">
-              <Feather name="x" size={24} color="black" />
-            </Pressable>
-          </View>
-          <Calendar
-            mode={isHourly ? "single" : "range"}
-            blockedDates={
-              isHourly && timeWindow
-                ? blockedDates.concat(
-                    bookings
-                      .map((b) => new Date(b.startTime))
-                      .filter((d) =>
-                        isDateFullyBookedHourly({
-                          date: d,
-                          bookings,
-                          bookingType,
-                          timeWindow,
-                        })
-                      )
-                  )
-                : blockedDates
-            }
-            checkoutOnlyDates={isHourly ? [] : checkoutOnlyDates}
-            onSave={({ checkIn, checkOut }) => {
-              setCheckInDate(checkIn);
-              setCheckOutDate(checkOut);
-              setCalendarOpen(false);
-            }}
-            onClose={() => setCalendarOpen(false)}
-          />
-        </ScrollView>
-      </Modal>
-
-      {/* Time Modal */}
-      <Modal
-        visible={timeModalOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setTimeModalOpen(false)}
-      >
-        <Pressable
-          className="flex-1 bg-black/40"
-          onPress={() => setTimeModalOpen(false)}
-        />
-        <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
-          {timeWindow && (
-            <TimeModal
-              bookingType={bookingType as "3hours" | "6hours" | "12hours"}
-              openMinutes={timeWindow.openMinutes}
-              closeMinutes={timeWindow.closeMinutes}
-              selectedDate={checkInDate!}
-              bufferMinutes={timeWindow.bufferMinutes}
-              bookings={bookings}
-              initialTime={hours}
-              onClose={() => setTimeModalOpen(false)}
-              onSave={(slot) => {
-                setHours(slot);
-
-                const parsed = parseSlot(slot);
-                if (!parsed || !checkInDate) return;
-
-                const start = new Date(checkInDate);
-                start.setHours(parsed.startHour, parsed.startMinute, 0, 0);
-
-                const end = new Date(checkInDate);
-                if (parsed.overnight) end.setDate(end.getDate() + 1);
-                end.setHours(parsed.endHour, parsed.endMinute, 0, 0);
-
-                setStartTime(start);
-                setEndTime(end);
-                setTimeModalOpen(false);
+          <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
+            <Guests
+              onClose={() => setGuestModalOpen(false)}
+              onSave={(result) => {
+                setGuests(result.label);
+                setGuestCounts({
+                  adults: result.adults,
+                  children: result.children,
+                  infants: result.infants,
+                  pets: result.pets,
+                });
+                setGuestModalOpen(false);
               }}
             />
-          )}
-        </ScrollView>
-      </Modal>
-
-      {/* Price Modal */}
-      {currentBooking && (
-        <PriceModal
-          visible={priceOpen}
-          onClose={() => setPriceOpen(false)}
-          nights={nights}
-          pricePerNight={currentBooking.price}
-          subtotal={subtotal}
-          datesLabel={dates}
-          cancellationText="Free cancellation before 11 December"
-          // 👇 NEW
-          addOns={selectedAddOns.map((a) => ({
-            name: a.name,
-            price: Number(a.price),
-          }))}
-          addOnsTotal={addOnsTotal}
+          </ScrollView>
+        </Modal>
+        <BookingTermsModal
+          visible={showTerms}
+          onClose={() => setShowTerms(false)}
+          onAgree={() => {
+            setShowTerms(false);
+            // proceed to payment gateway
+          }}
         />
-      )}
-    </ScrollView>
+
+        {/* Calendar Modal */}
+        <Modal
+          visible={calendarOpen}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setCalendarOpen(false)}
+        >
+          <Pressable
+            className="flex-1 bg-black/40"
+            onPress={() => setCalendarOpen(false)}
+          />
+          <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
+            <View className="flex-row items-center justify-between py-6 sticky top-0 bg-white z-10 px-6">
+              <Text className="text-2xl font-semibold">
+                {isHourly ? "Select date" : "Change dates"}
+              </Text>
+              <Pressable onPress={() => setCalendarOpen(false)} className="p-2">
+                <Feather name="x" size={24} color="black" />
+              </Pressable>
+            </View>
+            <Calendar
+              mode={isHourly ? "single" : "range"}
+              blockedDates={
+                isHourly && timeWindow
+                  ? blockedDates.concat(
+                      bookings
+                        .map((b) => new Date(b.startTime))
+                        .filter((d) =>
+                          isDateFullyBookedHourly({
+                            date: d,
+                            bookings,
+                            bookingType,
+                            timeWindow,
+                          })
+                        )
+                    )
+                  : blockedDates
+              }
+              checkoutOnlyDates={isHourly ? [] : checkoutOnlyDates}
+              onSave={({ checkIn, checkOut }) => {
+                setCheckInDate(checkIn);
+                setCheckOutDate(checkOut);
+                setCalendarOpen(false);
+              }}
+              onClose={() => setCalendarOpen(false)}
+            />
+          </ScrollView>
+        </Modal>
+
+        {/* Time Modal */}
+        <Modal
+          visible={timeModalOpen}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setTimeModalOpen(false)}
+        >
+          <Pressable
+            className="flex-1 bg-black/40"
+            onPress={() => setTimeModalOpen(false)}
+          />
+          <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
+            {timeWindow && (
+              <TimeModal
+                bookingType={bookingType as "3hours" | "6hours" | "12hours"}
+                openMinutes={timeWindow.openMinutes}
+                closeMinutes={timeWindow.closeMinutes}
+                selectedDate={checkInDate!}
+                bufferMinutes={timeWindow.bufferMinutes}
+                bookings={bookings}
+                initialTime={hours}
+                onClose={() => setTimeModalOpen(false)}
+                onSave={(slot) => {
+                  setHours(slot);
+
+                  const parsed = parseSlot(slot);
+                  if (!parsed || !checkInDate) return;
+
+                  const start = new Date(checkInDate);
+                  start.setHours(parsed.startHour, parsed.startMinute, 0, 0);
+
+                  const end = new Date(checkInDate);
+                  if (parsed.overnight) end.setDate(end.getDate() + 1);
+                  end.setHours(parsed.endHour, parsed.endMinute, 0, 0);
+
+                  setStartTime(start);
+                  setEndTime(end);
+                  setTimeModalOpen(false);
+                }}
+              />
+            )}
+          </ScrollView>
+        </Modal>
+
+        {/* Price Modal */}
+        {currentBooking && (
+          <PriceModal
+            visible={priceOpen}
+            onClose={() => setPriceOpen(false)}
+            nights={nights}
+            pricePerNight={currentBooking.price}
+            subtotal={subtotal}
+            datesLabel={dates}
+            cancellationText="Free cancellation before 11 December"
+            // 👇 NEW
+            addOns={selectedAddOns.map((a) => ({
+              name: a.name,
+              price: Number(a.price),
+            }))}
+            addOnsTotal={addOnsTotal}
+          />
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

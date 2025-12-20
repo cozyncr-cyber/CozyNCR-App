@@ -135,14 +135,14 @@ export default function CityDestinationSelector({
   };
 
   return (
-    <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
-      <Modal
-        visible={visible}
-        animationType="slide"
-        onRequestClose={onClose}
-        presentationStyle="pageSheet"
-      >
-        <View className="flex-1 bg-white">
+    <Modal
+      visible={visible}
+      animationType="slide"
+      onRequestClose={onClose}
+      presentationStyle="pageSheet"
+    >
+      <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
+        <View className="flex-1 mt-4 bg-white">
           {/* Header */}
           <View className="border-b border-gray-200 px-4 py-3 flex-row justify-between items-center">
             <Pressable onPress={handleClearAll}>
@@ -326,7 +326,7 @@ export default function CityDestinationSelector({
             </View>
           </View>
         </View>
-      </Modal>
-    </SafeAreaView>
+      </SafeAreaView>
+    </Modal>
   );
 }

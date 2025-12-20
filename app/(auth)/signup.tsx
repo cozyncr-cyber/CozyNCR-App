@@ -164,7 +164,8 @@ export default function Signup() {
         {/* Name */}
         <Text className="font-medium mb-1">Full Name</Text>
         <TextInput
-          className="bg-white p-4 rounded-xl mb-1"
+          placeholderTextColor="#9CA3AF"
+          className="bg-white p-4 rounded-xl mb-1 text-black"
           placeholder="John Doe"
           onChangeText={(v) => handleChange("name", v)}
         />
@@ -176,7 +177,8 @@ export default function Signup() {
         <Text className="font-medium mb-1">Email</Text>
         <View className="flex-row gap-2">
           <TextInput
-            className="flex-1 bg-white p-4 rounded-xl"
+            placeholderTextColor="#9CA3AF"
+            className="flex-1 bg-white p-4 rounded-xl text-black"
             editable={!otpVerified}
             placeholder="email@example.com"
             onChangeText={(v) => handleChange("email", v)}
@@ -195,7 +197,8 @@ export default function Signup() {
         {otpSent && !otpVerified && (
           <View className="flex-row gap-2 mt-3">
             <TextInput
-              className="flex-1 bg-white p-4 rounded-xl text-center"
+              placeholderTextColor="#9CA3AF"
+              className="flex-1 bg-white p-4 rounded-xl text-center text-black"
               placeholder="OTP"
               onChangeText={(v) => handleChange("otp", v)}
             />
@@ -214,7 +217,8 @@ export default function Signup() {
         {/* Phone */}
         <Text className="font-medium mt-4 mb-1">Phone</Text>
         <TextInput
-          className="bg-white p-4 rounded-xl"
+          placeholderTextColor="#9CA3AF"
+          className="bg-white p-4 rounded-xl text-black"
           placeholder="+91..."
           onChangeText={(v) => handleChange("phone", v)}
         />
@@ -222,14 +226,16 @@ export default function Signup() {
         {/* City */}
         <Text className="font-medium mt-4 mb-1">City</Text>
         <TextInput
-          className="bg-white p-4 rounded-xl"
+          placeholderTextColor="#9CA3AF"
+          className="bg-white p-4 rounded-xl text-black"
           placeholder="Delhi"
           onChangeText={(v) => handleChange("location", v)}
         />
 
         {/* DOB */}
-        <Text className="font-medium mt-4 mb-1">Date of Birth</Text>
+        <Text className="font-medium mt-4 mb-1 text-black">Date of Birth</Text>
         <TextInput
+          placeholderTextColor="#9CA3AF"
           className="bg-white p-4 rounded-xl"
           placeholder="YYYY-MM-DD"
           onChangeText={(v) => handleChange("dob", v)}
@@ -240,8 +246,9 @@ export default function Signup() {
 
         {/* Password */}
         <Text className="font-medium mt-4 mb-1">Password</Text>
-        <View className="bg-white rounded-xl flex-row items-center px-4">
+        <View className="bg-white rounded-xl flex-row items-center px-4 text-black">
           <TextInput
+            placeholderTextColor="#9CA3AF"
             className="flex-1 py-4"
             secureTextEntry={!showPassword}
             placeholder="••••••••"
@@ -256,7 +263,8 @@ export default function Signup() {
         <Text className="font-medium mt-4 mb-1">Confirm Password</Text>
         <View className="bg-white rounded-xl flex-row items-center px-4">
           <TextInput
-            className="flex-1 py-4"
+            placeholderTextColor="#9CA3AF"
+            className="flex-1 py-4 text-black"
             secureTextEntry={!showConfirmPassword}
             placeholder="••••••••"
             onChangeText={(v) => handleChange("confirmPassword", v)}
