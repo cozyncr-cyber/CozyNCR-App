@@ -1,6 +1,7 @@
 import Feather from "@expo/vector-icons/Feather";
 import React, { useState, useMemo, useEffect } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
+
 interface TimeModalProps {
   bookingType: "3hours" | "6hours" | "12hours";
   openMinutes: number;
@@ -9,8 +10,18 @@ interface TimeModalProps {
   onSave: (slot: string) => void;
   onClose: () => void;
   initialTime?: string | null;
-  unavailableSlots?: string[];
+
+  bookings?: {
+    startTime: string;
+    endTime: string;
+    status: string;
+  }[];
+
+  // ✅ ADD THIS
+  selectedDate: Date;
 }
+/* ---------------- SLOT GENERATION ---------------- */
+
 export function generateSlots(
   bookingType: "3hours" | "6hours" | "12hours",
   openMinutes: number,
@@ -23,38 +34,18 @@ export function generateSlots(
   const slots: string[] = [];
   let cursor = openMinutes;
 
-  // 1️⃣ Normal forward slots
   while (cursor + durationMinutes <= closeMinutes) {
     const start = cursor;
     const end = cursor + durationMinutes;
-
     slots.push(formatRangeMinutes(start, end));
-
     cursor = end + bufferMinutes;
   }
 
-  // 2️⃣ LAST SLOT SNAP (minute-accurate + buffer-safe)
-  const lastStart = closeMinutes - durationMinutes;
-
-  if (lastStart >= openMinutes) {
-    const lastSlot = formatRangeMinutes(lastStart, closeMinutes);
-
-    const overlapsExisting = slots.some((slot) => slot === lastSlot);
-
-    // Ensure snapped slot does NOT violate buffer from previous slot
-    const violatesBuffer =
-      slots.length > 0 &&
-      lastStart <
-        openMinutes +
-          slots.length * (durationMinutes + bufferMinutes) -
-          bufferMinutes;
-
-    if (!overlapsExisting && !violatesBuffer) {
-      slots.push(lastSlot);
-    }
-  }
   return slots;
 }
+
+/* ---------------- COMPONENT ---------------- */
+
 export default function TimeModal({
   bookingType,
   openMinutes,
@@ -63,33 +54,64 @@ export default function TimeModal({
   onSave,
   onClose,
   initialTime,
-  unavailableSlots = [],
+  bookings = [],
+  selectedDate,
 }: TimeModalProps) {
   const slots = useMemo(
     () => generateSlots(bookingType, openMinutes, closeMinutes, bufferMinutes),
     [bookingType, openMinutes, closeMinutes, bufferMinutes]
   );
+
+  /* ✅ Compute unavailable slots safely */
+  const unavailableSlots = useMemo(() => {
+    if (!bookings.length) return [];
+
+    return slots.filter((slot) => {
+      const { start, end } = parseSlotRange(slot);
+
+      return bookings.some((b) => {
+        if (b.status !== "confirmed") return false;
+
+        const bookingStart = new Date(b.startTime);
+        const bookingEnd = new Date(b.endTime);
+
+        // ✅ CRITICAL FIX: only block slots for SAME DATE
+        if (bookingStart.toDateString() !== selectedDate.toDateString()) {
+          return false;
+        }
+
+        const bs = bookingStart.getHours() * 60 + bookingStart.getMinutes();
+        const be = bookingEnd.getHours() * 60 + bookingEnd.getMinutes();
+
+        return start < be && end > bs;
+      });
+    });
+  }, [slots, bookings, selectedDate]);
+
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
+  /* ✅ Selection logic */
   useEffect(() => {
     if (!slots.length) {
       setSelectedTime(null);
       return;
     }
 
-    const isUnavailable = (slot: string) => unavailableSlots.includes(slot);
-
     if (
       initialTime &&
       slots.includes(initialTime) &&
-      !isUnavailable(initialTime)
+      !unavailableSlots.includes(initialTime)
     ) {
       setSelectedTime(initialTime);
       return;
     }
 
-    setSelectedTime(slots.find((s) => !isUnavailable(s)) || null);
+    // ✅ AUTO-SELECT FIRST AVAILABLE SLOT
+    const firstAvailable = slots.find((s) => !unavailableSlots.includes(s));
+
+    setSelectedTime(firstAvailable || null);
   }, [slots, initialTime, unavailableSlots]);
+
   return (
     <View className="flex-1 bg-gray-50 items-center justify-center pt-4">
       <ScrollView
@@ -105,65 +127,61 @@ export default function TimeModal({
             </Pressable>
           </View>
 
-          <View className="mb-6">
-            <Text className="text-sm text-gray-600 mb-3">
-              Available slots ({bookingType})
-            </Text>
+          <Text className="text-sm text-gray-600 mb-3">
+            Available slots ({bookingType})
+          </Text>
 
-            <View className="flex-row flex-wrap gap-2">
-              {slots.map((slot) => {
-                const active = selectedTime === slot;
-                const disabled = unavailableSlots.includes(slot);
+          <View className="flex-row flex-wrap gap-2 mb-6">
+            {slots.map((slot) => {
+              const active = selectedTime === slot;
+              const disabled = unavailableSlots.includes(slot);
 
-                return (
-                  <Pressable
-                    key={slot}
-                    onPress={() => !disabled && setSelectedTime(slot)}
-                    disabled={disabled}
+              return (
+                <Pressable
+                  key={slot}
+                  disabled={disabled}
+                  onPress={() => !disabled && setSelectedTime(slot)}
+                  className={`
+                    px-4 py-2.5 rounded-xl
+                    ${
+                      disabled
+                        ? "bg-gray-100 opacity-40"
+                        : active
+                          ? "bg-gray-900"
+                          : "bg-gray-100"
+                    }
+                  `}
+                >
+                  <Text
                     className={`
-                      px-4 py-2.5 rounded-xl
+                      text-sm font-medium
                       ${
                         disabled
-                          ? "bg-gray-100 opacity-40"
+                          ? "text-gray-400"
                           : active
-                            ? "bg-gray-900"
-                            : "bg-gray-100"
+                            ? "text-white"
+                            : "text-gray-700"
                       }
                     `}
                   >
-                    <Text
-                      className={`
-                        text-sm font-medium
-                        ${
-                          disabled
-                            ? "text-gray-400"
-                            : active
-                              ? "text-white"
-                              : "text-gray-700"
-                        }
-                      `}
-                    >
-                      {slot}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+                    {slot}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
 
           <Pressable
             disabled={!selectedTime}
             onPress={() => selectedTime && onSave(selectedTime)}
-            className={`
-              w-full py-4 rounded-xl
-              ${selectedTime ? "bg-gray-900" : "bg-gray-200"}
-            `}
+            className={`w-full py-4 rounded-xl ${
+              selectedTime ? "bg-gray-900" : "bg-gray-200"
+            }`}
           >
             <Text
-              className={`
-                text-base font-semibold text-center
-                ${selectedTime ? "text-white" : "text-gray-400"}
-              `}
+              className={`text-base font-semibold text-center ${
+                selectedTime ? "text-white" : "text-gray-400"
+              }`}
             >
               Continue
             </Text>
@@ -173,6 +191,31 @@ export default function TimeModal({
     </View>
   );
 }
+
+/* ---------------- HELPERS ---------------- */
+
+const toMinutes = (iso: string) => {
+  const d = new Date(iso);
+  return d.getHours() * 60 + d.getMinutes();
+};
+
+const labelToMinutes = (label: string) => {
+  const [time, suffix] = label.split(" ");
+  let [h, m = "0"] = time.split(":").map(Number);
+
+  if (suffix === "PM" && h !== 12) h += 12;
+  if (suffix === "AM" && h === 12) h = 0;
+
+  return h * 60 + Number(m);
+};
+
+const parseSlotRange = (slot: string) => {
+  const [start, end] = slot.split(" - ");
+  return {
+    start: labelToMinutes(start),
+    end: labelToMinutes(end),
+  };
+};
 
 const minutesToLabel = (mins: number) => {
   const h24 = Math.floor(mins / 60) % 24;

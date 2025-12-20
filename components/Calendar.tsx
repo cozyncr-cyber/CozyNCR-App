@@ -12,7 +12,8 @@ interface CalendarProps {
   onSave: (payload: CalendarOnSavePayload) => void;
   onClose: () => void;
   mode?: "range" | "single";
-  checkoutOnlyDates?: Date[]; // optional; parent can pass
+  blockedDates?: Date[];
+  checkoutOnlyDates?: Date[];
   onMount?: (actions: {
     save: () => void;
     getSelection: () => CalendarOnSavePayload | null;
@@ -32,6 +33,7 @@ export default function Calendar({
   onSave,
   onClose,
   mode = "range",
+  blockedDates = [],
   checkoutOnlyDates = [],
   onMount,
   initialSelection = null,
@@ -41,13 +43,10 @@ export default function Calendar({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const minDate = new Date(2025, 10, 15);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const blockedDates = [
-    new Date(2025, 10, 20),
-    new Date(2025, 10, 22),
-    new Date(2025, 11, 5),
-  ];
+  const minDate = today;
 
   const months = [
     "January",
@@ -142,6 +141,26 @@ export default function Calendar({
 
     setCheckOut(date);
   };
+  useEffect(() => {
+    if (checkIn || initialSelection) return;
+
+    const MAX_LOOKAHEAD = 365;
+    const start = new Date(today);
+
+    for (let i = 0; i < MAX_LOOKAHEAD; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+
+      const isBlocked =
+        isBeforeMin(d) || isBlockedDate(d) || isCheckoutOnlyDate(d);
+
+      if (!isBlocked) {
+        setCheckIn(d);
+        setCurrentMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+        break;
+      }
+    }
+  }, []);
 
   const isInRange = (date: Date) => {
     if (mode === "single") return false;
@@ -351,6 +370,10 @@ export default function Calendar({
       <View className="bg-white w-full h-full px-6">
         {renderCalendar(0)}
         {renderCalendar(1)}
+        {renderCalendar(2)}
+        {renderCalendar(3)}
+        {renderCalendar(4)}
+        {renderCalendar(5)}
 
         {/* Footer */}
         <View className="flex-row items-center justify-between bg-white py-4 border-t sticky bottom-0">

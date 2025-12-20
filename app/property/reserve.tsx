@@ -86,7 +86,8 @@ const isHourlyType = (t: BookingTypeId) =>
   t === "3hours" || t === "6hours" || t === "12hours";
 
 export default function Booking() {
-  const { data, loading } = useProperty();
+  const { data, loading, bookings, blockedDates, checkoutOnlyDates } =
+    useProperty();
   const user = useUser();
   const router = useRouter();
 
@@ -108,17 +109,23 @@ export default function Booking() {
   const [hours, setHours] = useState("");
   const [guests, setGuests] = useState("1 adult");
 
-  // Initial dates (example: 7–12 Dec 2025)
-  const initialCheckIn = new Date(2025, 11, 7); // Dec is month 11 (0-based)
-  const initialCheckOut = new Date(2025, 11, 12);
+  const [checkInDate, setCheckInDate] = useState<Date | null>(null);
+  const [checkOutDate, setCheckOutDate] = useState<Date | null>(null);
 
-  const [checkInDate, setCheckInDate] = useState<Date | null>(initialCheckIn);
-  const [checkOutDate, setCheckOutDate] = useState<Date | null>(
-    initialCheckOut
-  );
-  const [dates, setDates] = useState<string>(
-    formatRange(initialCheckIn, initialCheckOut)
-  );
+  useEffect(() => {
+    if (checkInDate) return;
+
+    const closest = findClosestAvailableDate(
+      new Date(),
+      blockedDates,
+      checkoutOnlyDates
+    );
+
+    if (closest) {
+      setCheckInDate(closest);
+    }
+  }, [blockedDates, checkoutOnlyDates]);
+
   const [selectedAddOns, setSelectedAddOns] = useState<AddOn[]>([]);
 
   type AddOn = {
@@ -144,6 +151,26 @@ export default function Booking() {
   };
 
   const isHourly = isHourlyType(bookingType);
+  useEffect(() => {
+    if (isHourly) return;
+    if (!checkInDate) return;
+
+    const next = new Date(checkInDate);
+    next.setDate(next.getDate() + 1);
+
+    setCheckOutDate(next);
+  }, [checkInDate, isHourly]);
+
+  const dates = useMemo(() => {
+    if (!checkInDate) return "Select date";
+
+    if (isHourly) {
+      return formatSingle(checkInDate);
+    }
+
+    const end = checkOutDate || checkInDate;
+    return formatRange(checkInDate, end);
+  }, [checkInDate, checkOutDate, isHourly]);
 
   // Build booking types dynamically based on data.price_* values
   const bookingTypes: BookingType[] = useMemo(() => {
@@ -205,18 +232,6 @@ export default function Booking() {
   const baseTotal = useMemo(() => subtotal + taxes, [subtotal, taxes]);
   const total = baseTotal + addOnsTotal;
 
-  // Keep date label in sync with booking type + selected dates
-  useEffect(() => {
-    if (!checkInDate) return;
-
-    if (isHourly) {
-      setDates(formatSingle(checkInDate));
-    } else {
-      const end = checkOutDate || checkInDate;
-      setDates(formatRange(checkInDate, end));
-    }
-  }, [bookingType, checkInDate, checkOutDate, isHourly]);
-
   useEffect(() => {
     if (isHourly) return;
     if (!checkInDate) return;
@@ -258,17 +273,45 @@ export default function Booking() {
   const handleContinueToRazorpay = async () => {
     console.log("Continue to Razorpay clicked", { startTime, endTime });
 
+    // 🛑 HARD VALIDATION
+    if (!data?.$id) {
+      console.warn("Missing listingId");
+      return;
+    }
+
+    if (!user?.current?.$id) {
+      console.warn("Missing customerId");
+      return;
+    }
+
     if (!startTime || !endTime) {
       console.warn("Missing start/end time");
+      return;
+    }
+
+    if (endTime <= startTime) {
+      console.warn("Invalid time range");
+      return;
+    }
+
+    // 🛑 FINAL SLOT AVAILABILITY CHECK (race-condition safe)
+    const slotStillAvailable = isSlotAvailable(
+      startTime,
+      endTime,
+      bookings ?? []
+    );
+
+    if (!slotStillAvailable) {
+      console.warn("Selected slot is no longer available");
+      alert("This time slot was just booked. Please choose another one.");
       return;
     }
 
     try {
       setSubmitting(true);
 
-      const customerName = "John Doe";
+      const customerName = user.profile.name;
       const customerId = user.current.$id;
-
       const guestCount = guestCounts.adults + guestCounts.children;
 
       await tablesDB.createRow({
@@ -276,32 +319,37 @@ export default function Booking() {
         databaseId: DATABASE_ID,
         tableId: BOOKINGS_TABLE_ID,
         data: {
-          listingId: data!.$id,
+          listingId: data.$id,
           customerName,
           customerId,
-          startTime: startTime.toISOString(), // 👈 Date column
-          endTime: endTime.toISOString(), // 👈 Date column
+
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+
           status: "pending",
           totalPrice: total,
           serviceType: isHourly ? "hourly" : "daily",
           bookingType,
+
           guestCount,
           childrenCount: guestCounts.children,
           infantCount: guestCounts.infants,
           petCount: guestCounts.pets,
 
           addOns: JSON.stringify(selectedAddOns),
-          addOnsTotal,
+          addOnsPrice: addOnsTotal,
         },
       });
 
       router.push("/property/success");
     } catch (err) {
       console.error("Error creating booking:", err);
+      alert("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
+
   const timeWindow = useMemo(() => {
     if (!isHourly || !checkInDate || !data) return null;
 
@@ -326,7 +374,8 @@ export default function Booking() {
     };
   }, [isHourly, checkInDate, data]);
   useEffect(() => {
-    if (!timeWindow || !checkInDate || !isHourly) return;
+    if (!isHourly) return;
+    if (!timeWindow || !checkInDate) return;
 
     const slots = generateSlots(
       bookingType as "3hours" | "6hours" | "12hours",
@@ -337,22 +386,40 @@ export default function Booking() {
 
     if (!slots.length) return;
 
-    const first = slots[0];
-    setHours(first);
+    // ⬇️ Find first AVAILABLE slot (respects bookings)
+    const availableSlot =
+      slots.find((slot) => {
+        const parsed = parseSlot(slot);
+        if (!parsed) return false;
 
-    const parsed = parseSlot(first);
-    if (!parsed) return;
+        return !bookings?.some((b) => {
+          if (b.status !== "confirmed") return false;
 
-    const start = new Date(checkInDate);
-    start.setHours(parsed.startHour, parsed.startMinute, 0, 0);
+          const bookingStart = new Date(b.startTime);
+          const bookingEnd = new Date(b.endTime);
 
-    const end = new Date(checkInDate);
-    if (parsed.overnight) end.setDate(end.getDate() + 1);
-    end.setHours(parsed.endHour, parsed.endMinute, 0, 0);
+          const bs = bookingStart.getHours() * 60 + bookingStart.getMinutes();
+          const be = bookingEnd.getHours() * 60 + bookingEnd.getMinutes();
 
-    setStartTime(start);
-    setEndTime(end);
-  }, [timeWindow, bookingType, checkInDate, isHourly]);
+          const slotStart = parsed.startHour * 60 + parsed.startMinute;
+          const slotEnd = parsed.endHour * 60 + parsed.endMinute;
+          const sameDay =
+            bookingStart.toDateString() === checkInDate.toDateString();
+
+          if (!sameDay) return false;
+
+          return slotStart < be && slotEnd > bs;
+        });
+      }) ?? slots[0]; // fallback
+
+    setHours(availableSlot);
+
+    const applied = applySlotToDate(availableSlot, checkInDate);
+    if (!applied) return;
+
+    setStartTime(applied.start);
+    setEndTime(applied.end);
+  }, [checkInDate, bookingType, timeWindow, isHourly, bookings]);
 
   if (loading || !data) return null;
 
@@ -685,7 +752,7 @@ export default function Booking() {
           onPress={() => setCalendarOpen(false)}
         />
         <ScrollView className="absolute bottom-0 w-full h-full bg-white rounded-t-3xl">
-          <View className="flex-row items-center justify-between py-6 sticky top-0 bg-white z-10">
+          <View className="flex-row items-center justify-between py-6 sticky top-0 bg-white z-10 px-6">
             <Text className="text-2xl font-semibold">
               {isHourly ? "Select date" : "Change dates"}
             </Text>
@@ -695,11 +762,26 @@ export default function Booking() {
           </View>
           <Calendar
             mode={isHourly ? "single" : "range"}
-            checkoutOnlyDates={[new Date(2025, 10, 25), new Date(2025, 10, 27)]}
-            onSave={({ label, checkIn, checkOut }) => {
+            blockedDates={
+              isHourly && timeWindow
+                ? blockedDates.concat(
+                    bookings
+                      .map((b) => new Date(b.startTime))
+                      .filter((d) =>
+                        isDateFullyBookedHourly({
+                          date: d,
+                          bookings,
+                          bookingType,
+                          timeWindow,
+                        })
+                      )
+                  )
+                : blockedDates
+            }
+            checkoutOnlyDates={isHourly ? [] : checkoutOnlyDates}
+            onSave={({ checkIn, checkOut }) => {
               setCheckInDate(checkIn);
               setCheckOutDate(checkOut);
-              setDates(label);
               setCalendarOpen(false);
             }}
             onClose={() => setCalendarOpen(false)}
@@ -724,9 +806,10 @@ export default function Booking() {
               bookingType={bookingType as "3hours" | "6hours" | "12hours"}
               openMinutes={timeWindow.openMinutes}
               closeMinutes={timeWindow.closeMinutes}
+              selectedDate={checkInDate!}
               bufferMinutes={timeWindow.bufferMinutes}
+              bookings={bookings}
               initialTime={hours}
-              unavailableSlots={[]}
               onClose={() => setTimeModalOpen(false)}
               onSave={(slot) => {
                 setHours(slot);
@@ -799,3 +882,113 @@ const toMinutesFromString = (
 
   return fallbackHour * 60;
 };
+
+function findClosestAvailableDate(
+  startDate: Date,
+  blockedDates: Date[],
+  checkoutOnlyDates: Date[] = []
+) {
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+
+    const isBlocked = blockedDates.some(
+      (b) => b.toDateString() === d.toDateString()
+    );
+
+    const isCheckoutOnly = checkoutOnlyDates.some(
+      (c) => c.toDateString() === d.toDateString()
+    );
+
+    if (!isBlocked && !isCheckoutOnly) {
+      return d;
+    }
+  }
+
+  return null;
+}
+
+function applySlotToDate(slot: string, date: Date) {
+  const parsed = parseSlot(slot);
+  if (!parsed) return null;
+
+  const start = new Date(date);
+  start.setHours(parsed.startHour, parsed.startMinute, 0, 0);
+
+  const end = new Date(date);
+  if (parsed.overnight) end.setDate(end.getDate() + 1);
+  end.setHours(parsed.endHour, parsed.endMinute, 0, 0);
+
+  return { start, end };
+}
+
+function isDateFullyBookedHourly({
+  date,
+  bookings,
+  bookingType,
+  timeWindow,
+}: {
+  date: Date;
+  bookings: any[];
+  bookingType: "3hours" | "6hours" | "12hours";
+  timeWindow: {
+    openMinutes: number;
+    closeMinutes: number;
+    bufferMinutes: number;
+  };
+}) {
+  const slots = generateSlots(
+    bookingType,
+    timeWindow.openMinutes,
+    timeWindow.closeMinutes,
+    timeWindow.bufferMinutes
+  );
+
+  if (!slots.length) return true;
+
+  return slots.every((slot) => {
+    const parsed = parseSlot(slot);
+    if (!parsed) return true;
+
+    const slotStart = parsed.startHour * 60 + parsed.startMinute;
+    const slotEnd = parsed.endHour * 60 + parsed.endMinute;
+
+    return bookings.some((b) => {
+      if (b.status !== "confirmed") return false;
+
+      const bs = new Date(b.startTime);
+      const be = new Date(b.endTime);
+
+      // 🔑 SAME DATE ONLY
+      if (bs.toDateString() !== date.toDateString()) return false;
+
+      const bStart = bs.getHours() * 60 + bs.getMinutes();
+      const bEnd = be.getHours() * 60 + be.getMinutes();
+
+      return slotStart < bEnd && slotEnd > bStart;
+    });
+  });
+}
+
+function isSlotAvailable(
+  start: Date,
+  end: Date,
+  bookings: {
+    startTime: string;
+    endTime: string;
+    status: string;
+  }[]
+) {
+  return !bookings.some((b) => {
+    if (b.status !== "confirmed") return false;
+
+    const bs = new Date(b.startTime).getTime();
+    const be = new Date(b.endTime).getTime();
+
+    // overlap check
+    return start.getTime() < be && end.getTime() > bs;
+  });
+}
