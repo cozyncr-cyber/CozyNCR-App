@@ -307,7 +307,7 @@ const BookingDetailsView: React.FC = () => {
             <Pressable
               onPress={handleCancelBooking}
               disabled={cancelLoading}
-              className={`border-2 border-gray-900 py-4 rounded-xl flex-row items-center justify-center gap-2 ${
+              className={`border-2 border-gray-900 py-4 mt-2 rounded-xl flex-row items-center justify-center gap-2 ${
                 cancelLoading ? "opacity-50" : ""
               }`}
             >

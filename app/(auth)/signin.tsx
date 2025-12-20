@@ -133,7 +133,7 @@ export default function SignIn() {
                   <TextInput
                     placeholderTextColor="#9CA3AF"
                     secureTextEntry={!showPassword}
-                    className="flex-1 mx-3 bg-transparent"
+                    className="flex-1 mx-3 bg-transparent text-black"
                     placeholder="Enter Password"
                     value={password}
                     onChangeText={setPassword}
@@ -172,7 +172,7 @@ export default function SignIn() {
               >
                 <Text className="text-white text-lg font-medium">
                   {isLoading
-                    ? "Loading..."
+                    ? "Loading"
                     : view === "signin"
                       ? "Sign In"
                       : "Send Recovery Link"}

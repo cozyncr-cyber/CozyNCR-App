@@ -142,9 +142,9 @@ export default function CityDestinationSelector({
       presentationStyle="pageSheet"
     >
       <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
-        <View className="flex-1 mt-4 bg-white">
+        <View className="flex-1 bg-white">
           {/* Header */}
-          <View className="border-b border-gray-200 px-4 py-3 flex-row justify-between items-center">
+          <View className="border-b border-gray-200 h-20 px-4 py-3 flex-row justify-between items-center">
             <Pressable onPress={handleClearAll}>
               <Text className="text-red-500 font-medium">Clear all</Text>
             </Pressable>
