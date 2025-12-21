@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { View, Text, Pressable, Image, ScrollView, Modal } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  Image,
+  ScrollView,
+  Modal,
+  Platform,
+} from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import Star from "@/components/SVGs/Star";
 import { useRouter } from "expo-router";
@@ -347,9 +355,11 @@ export default function Booking() {
         },
       });
 
+      if (Platform.OS === "web") {
+        alert("Payments are supported only on the mobile app.");
+        return;
+      }
       await payForBooking(total, booking.$id);
-
-      router.push("/property/success");
     } catch (err) {
       console.error("Error creating booking:", err);
       alert("Something went wrong. Please try again.");

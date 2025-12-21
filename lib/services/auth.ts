@@ -57,25 +57,23 @@ export async function verifyEmailOtp(userId: string, otp: string) {
 
 /**
  * Complete signup after OTP verification
- */
-export async function completeSignup(formData: any) {
+ */ export async function completeSignup(formData: any) {
   try {
     const user = await account.get();
 
-    await databases.createDocument(
-      DATABASE_ID,
-      PROFILES_TABLE_ID,
-      ID.unique(),
-      {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        location: formData.location,
-        kycStatus: "unverified",
-        dob: formData.dob,
-        role: "host",
-      }
-    );
+    // Set password after OTP login
+    await account.updatePassword(formData.password);
+
+    // Create profile linked to user
+    await databases.createDocument(DATABASE_ID, PROFILES_TABLE_ID, user.$id, {
+      name: formData.name,
+      email: user.email,
+      phone: formData.phone,
+      location: formData.location,
+      kycStatus: "unverified",
+      dob: formData.dob,
+      role: "host",
+    });
 
     return { success: true };
   } catch (error: any) {

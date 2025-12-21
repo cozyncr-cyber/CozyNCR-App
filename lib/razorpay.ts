@@ -1,79 +1,51 @@
-import RazorpayCheckout from "react-native-razorpay";
-import {
-  functions,
-  RAZORPAY_CREATE_ORDER_FUNCTION_ID,
-  RAZORPAY_VERIFY_PAYMENT_FUNCTION_ID,
-} from "./appwrite";
+import { functions, RAZORPAY_CREATE_ORDER_FUNCTION_ID } from "./appwrite";
+import { router } from "expo-router";
+type RazorpayOrderResponse = {
+  orderId: string;
+  amount: number;
+  currency: string;
+  key: string;
+};
 
-/**
- * Create Razorpay Order via Appwrite Function
- */
 export const createRazorpayOrder = async (
   amount: number,
   bookingId: string
-) => {
+): Promise<RazorpayOrderResponse> => {
   const execution = await functions.createExecution(
     RAZORPAY_CREATE_ORDER_FUNCTION_ID,
     JSON.stringify({ amount, bookingId })
   );
 
-  console.log("Create order response:", execution.responseBody);
-
   if (!execution.responseBody) {
     throw new Error("Empty response from create-order function");
   }
 
-  return JSON.parse(execution.responseBody);
-};
+  const data = JSON.parse(execution.responseBody);
 
-/**
- * Open Razorpay Checkout UI
- */ export const openRazorpayCheckout = async (order: any) => {
-  try {
-    return await RazorpayCheckout.open({
-      key: order.key,
-      order_id: order.orderId,
-      amount: order.amount,
-      currency: order.currency,
-      name: "CozyNCR",
-      description: "Booking Payment",
-      theme: { color: "#000000" },
-    });
-  } catch (err) {
-    console.log(err);
-    throw new Error("PAYMENT_CANCELLED");
-  }
-};
-
-/**
- * Verify payment via Appwrite Function
- */ export const verifyRazorpayPayment = async (paymentResult: any) => {
-  const execution = await functions.createExecution(
-    RAZORPAY_VERIFY_PAYMENT_FUNCTION_ID,
-    JSON.stringify(paymentResult)
-  );
-
-  console.log("Verify payment response:", execution.responseBody);
-
-  if (!execution.responseBody) {
-    throw new Error("Empty response from verify-payment function");
+  // 🚨 Hard validation (prevents silent Razorpay failure)
+  if (!data.orderId || !data.amount || !data.key) {
+    throw new Error("Invalid create-order response");
   }
 
-  return JSON.parse(execution.responseBody);
+  return data;
 };
+export const payForBooking = async (amount: number, bookingId: string) => {
+  // amount MUST be in paise
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw new Error("Amount must be a positive integer (paise)");
+  }
 
-/**
- * One-step helper (recommended)
- */ export const payForBooking = async (amount: number, bookingId: string) => {
-  // 1️⃣ Create order
   const order = await createRazorpayOrder(amount, bookingId);
 
-  // 2️⃣ Open checkout
-  const paymentResult = await openRazorpayCheckout(order);
+  console.log("Razorpay order:", order);
 
-  // 3️⃣ Verify payment (FIXED)
-  return await verifyRazorpayPayment({
-    ...paymentResult,
-    bookingId,
+  router.push({
+    pathname: "/property/razorpay-webview",
+    params: {
+      orderId: order.orderId,
+      amount: String(order.amount * 100), // paise
+      razorpayKey: order.key, // ✅ guaranteed
+      bookingId,
+    },
   });
 };

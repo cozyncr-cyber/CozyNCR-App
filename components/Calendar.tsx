@@ -373,6 +373,22 @@ export default function Calendar({
   return (
     <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
       <View className="flex-1 bg-gray-50 items-center justify-center relative">
+        <View className="w-full bg-white mt-12">
+          <View className="flex-row items-center justify-between px-6 py-4">
+            <Pressable onPress={clearDates}>
+              <Text className="text-base font-semibold underline">
+                Clear dates
+              </Text>
+            </Pressable>
+
+            <Pressable
+              className="bg-gray-900 px-6 py-3 rounded-lg"
+              onPress={internalHandleSave}
+            >
+              <Text className="text-white font-semibold">Save</Text>
+            </Pressable>
+          </View>
+        </View>
         <View className="bg-white w-full h-full px-6">
           {renderCalendar(0)}
           {renderCalendar(1)}
@@ -381,25 +397,6 @@ export default function Calendar({
           {renderCalendar(4)}
           {renderCalendar(5)}
           {/* Fixed Footer */}
-          <View
-            style={{ paddingBottom: insets.bottom }}
-            className="absolute bottom-0 left-0 right-0 bg-white border-t"
-          >
-            <View className="flex-row items-center justify-between px-6 py-4">
-              <Pressable onPress={clearDates}>
-                <Text className="text-base font-semibold underline">
-                  Clear dates
-                </Text>
-              </Pressable>
-
-              <Pressable
-                className="bg-gray-900 px-6 py-3 rounded-lg"
-                onPress={internalHandleSave}
-              >
-                <Text className="text-white font-semibold">Save</Text>
-              </Pressable>
-            </View>
-          </View>
 
           {/* Toast */}
           {toastMessage && (

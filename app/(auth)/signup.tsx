@@ -6,6 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -68,8 +72,11 @@ export default function Signup() {
 
     if (!formData.password || formData.password.length < 8)
       newErrors.password = "Password must be 8+ characters";
-
-    if (formData.password !== formData.confirmPassword)
+    if (
+      formData.password &&
+      formData.confirmPassword &&
+      formData.password !== formData.confirmPassword
+    )
       newErrors.confirmPassword = "Passwords do not match";
 
     setErrors(newErrors);
@@ -156,153 +163,173 @@ export default function Signup() {
      Form
   ─────────────────────── */
   return (
-    <ScrollView className="flex-1 bg-gray-100">
-      <View className="m-8 p-4 rounded-xl shadow-sm py-8 bg-white">
-        <Text className="text-3xl font-bold mb-2">Create Account</Text>
-        <Text className="text-gray-500 mb-6">Join as a host</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView
+          className="flex-1 bg-gray-100"
+          contentContainerStyle={{ paddingBottom: 40 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="m-8 p-4 rounded-xl shadow-sm py-8 bg-white">
+            <Text className="text-3xl font-bold mb-2">Create Account</Text>
+            <Text className="text-gray-500 mb-6">Join as a host</Text>
 
-        {/* Name */}
-        <Text className="font-medium mb-1">Full Name</Text>
-        <TextInput
-          placeholderTextColor="#9CA3AF"
-          className="border border-zinc-500 bg-white p-4 rounded-xl mb-1 text-black"
-          placeholder="John Doe"
-          onChangeText={(v) => handleChange("name", v)}
-        />
-        {errors.name && (
-          <Text className="text-red-500 text-xs mb-2">{errors.name}</Text>
-        )}
-
-        {/* Email */}
-        <Text className="font-medium mb-1">Email</Text>
-        <View className="flex-row gap-2">
-          <TextInput
-            placeholderTextColor="#9CA3AF"
-            className="border border-zinc-500 flex-1 bg-white p-4 rounded-xl text-black"
-            editable={!otpVerified}
-            placeholder="email@example.com"
-            onChangeText={(v) => handleChange("email", v)}
-          />
-          {!otpVerified && (
-            <TouchableOpacity
-              onPress={handleSendOtp}
-              className="bg-black px-5 rounded-xl justify-center"
-            >
-              <Text className="text-white">{otpSent ? "Sent" : "Verify"}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* OTP */}
-        {otpSent && !otpVerified && (
-          <View className="flex-row gap-2 mt-3">
+            {/* Name */}
+            <Text className="font-medium mb-1">Full Name</Text>
             <TextInput
               placeholderTextColor="#9CA3AF"
-              className="flex-1 border border-zinc-500  bg-white p-4 rounded-xl text-center text-black"
-              placeholder="OTP"
-              onChangeText={(v) => handleChange("otp", v)}
+              className="border border-zinc-500 bg-white p-4 rounded-xl mb-1 text-black"
+              placeholder="John Doe"
+              onChangeText={(v) => handleChange("name", v)}
             />
+            {errors.name && (
+              <Text className="text-red-500 text-xs mb-2">{errors.name}</Text>
+            )}
+
+            {/* Email */}
+            <Text className="font-medium mb-1">Email</Text>
+            <View className="flex-row gap-2">
+              <TextInput
+                placeholderTextColor="#9CA3AF"
+                className="border border-zinc-500 flex-1 bg-white p-4 rounded-xl text-black"
+                editable={!otpVerified}
+                placeholder="email@example.com"
+                onChangeText={(v) => handleChange("email", v)}
+              />
+              {!otpVerified && (
+                <TouchableOpacity
+                  onPress={handleSendOtp}
+                  className="bg-black px-5 rounded-xl justify-center"
+                >
+                  <Text className="text-white">
+                    {otpSent ? "Sent" : "Verify"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* OTP */}
+            {otpSent && !otpVerified && (
+              <View className="flex-row gap-2 mt-3">
+                <TextInput
+                  placeholderTextColor="#9CA3AF"
+                  className="flex-1 border border-zinc-500  bg-white p-4 rounded-xl text-center text-black"
+                  placeholder="OTP"
+                  onChangeText={(v) => handleChange("otp", v)}
+                />
+                <TouchableOpacity
+                  onPress={handleVerifyOtp}
+                  className="bg-black px-6 rounded-xl justify-center"
+                >
+                  <Text className="text-white">Confirm</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            {errors.otp && (
+              <Text className="text-red-500 text-xs mt-1">{errors.otp}</Text>
+            )}
+
+            {/* Phone */}
+            <Text className="font-medium mt-4 mb-1">Phone</Text>
+            <TextInput
+              placeholderTextColor="#9CA3AF"
+              className="border border-zinc-500 bg-white p-4 rounded-xl text-black"
+              placeholder="+91..."
+              onChangeText={(v) => handleChange("phone", v)}
+            />
+
+            {/* City */}
+            <Text className="font-medium mt-4 mb-1">City</Text>
+            <TextInput
+              placeholderTextColor="#9CA3AF"
+              className="border border-zinc-500 bg-white p-4 rounded-xl text-black"
+              placeholder="Delhi"
+              onChangeText={(v) => handleChange("location", v)}
+            />
+
+            {/* DOB */}
+            <Text className="font-medium mt-4 mb-1 text-black">
+              Date of Birth
+            </Text>
+            <TextInput
+              placeholderTextColor="#9CA3AF"
+              className="border border-zinc-500 bg-white p-4 rounded-xl text-black"
+              placeholder="YYYY-MM-DD"
+              onChangeText={(v) => handleChange("dob", v)}
+            />
+            {errors.dob && (
+              <Text className="text-red-500 text-xs mt-1">{errors.dob}</Text>
+            )}
+
+            {/* Password */}
+            <Text className="font-medium mt-4 mb-1">Password</Text>
+            <View className="bg-white border border-zinc-500  rounded-xl flex-row items-center px-4 text-black">
+              <TextInput
+                placeholderTextColor="#9CA3AF"
+                className="flex-1 text-black py-4"
+                secureTextEntry={!showPassword}
+                placeholder="••••••••"
+                onChangeText={(v) => handleChange("password", v)}
+              />
+              <Pressable onPress={() => setShowPassword(!showPassword)}>
+                <Feather name={showPassword ? "eye" : "eye-off"} size={18} />
+              </Pressable>
+            </View>
+
+            {/* Confirm Password */}
+            <Text className="font-medium mt-4 mb-1">Confirm Password</Text>
+            <View className="bg-white border border-zinc-500  rounded-xl flex-row items-center px-4">
+              <TextInput
+                placeholderTextColor="#9CA3AF"
+                className="flex-1 py-4 text-black"
+                secureTextEntry={!showConfirmPassword}
+                placeholder="••••••••"
+                onChangeText={(v) => handleChange("confirmPassword", v)}
+              />
+              <Pressable
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                <Feather
+                  name={showConfirmPassword ? "eye" : "eye-off"}
+                  size={18}
+                />
+              </Pressable>
+            </View>
+            {errors.confirmPassword && (
+              <Text className="text-red-500 text-xs mt-1">
+                {errors.confirmPassword}
+              </Text>
+            )}
+
+            {/* Submit */}
             <TouchableOpacity
-              onPress={handleVerifyOtp}
-              className="bg-black px-6 rounded-xl justify-center"
+              onPress={handleSubmit}
+              disabled={loading}
+              className="bg-black py-4 rounded-xl mt-8 items-center"
             >
-              <Text className="text-white">Confirm</Text>
+              <Text className="text-white font-bold text-lg">
+                {loading ? "Loading..." : "Create Account"}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Footer */}
+            <TouchableOpacity
+              onPress={() => router.replace("/signin")}
+              className="mt-4 items-center"
+            >
+              <Text className="text-gray-500">
+                Already have an account?{" "}
+                <Text className="text-black font-bold underline">Sign In</Text>
+              </Text>
             </TouchableOpacity>
           </View>
-        )}
-        {errors.otp && (
-          <Text className="text-red-500 text-xs mt-1">{errors.otp}</Text>
-        )}
-
-        {/* Phone */}
-        <Text className="font-medium mt-4 mb-1">Phone</Text>
-        <TextInput
-          placeholderTextColor="#9CA3AF"
-          className="border border-zinc-500 bg-white p-4 rounded-xl text-black"
-          placeholder="+91..."
-          onChangeText={(v) => handleChange("phone", v)}
-        />
-
-        {/* City */}
-        <Text className="font-medium mt-4 mb-1">City</Text>
-        <TextInput
-          placeholderTextColor="#9CA3AF"
-          className="border border-zinc-500 bg-white p-4 rounded-xl text-black"
-          placeholder="Delhi"
-          onChangeText={(v) => handleChange("location", v)}
-        />
-
-        {/* DOB */}
-        <Text className="font-medium mt-4 mb-1 text-black">Date of Birth</Text>
-        <TextInput
-          placeholderTextColor="#9CA3AF"
-          className="border border-zinc-500 bg-white p-4 rounded-xl text-black"
-          placeholder="YYYY-MM-DD"
-          onChangeText={(v) => handleChange("dob", v)}
-        />
-        {errors.dob && (
-          <Text className="text-red-500 text-xs mt-1">{errors.dob}</Text>
-        )}
-
-        {/* Password */}
-        <Text className="font-medium mt-4 mb-1">Password</Text>
-        <View className="bg-white border border-zinc-500  rounded-xl flex-row items-center px-4 text-black">
-          <TextInput
-            placeholderTextColor="#9CA3AF"
-            className="flex-1 text-black py-4"
-            secureTextEntry={!showPassword}
-            placeholder="••••••••"
-            onChangeText={(v) => handleChange("password", v)}
-          />
-          <Pressable onPress={() => setShowPassword(!showPassword)}>
-            <Feather name={showPassword ? "eye" : "eye-off"} size={18} />
-          </Pressable>
-        </View>
-
-        {/* Confirm Password */}
-        <Text className="font-medium mt-4 mb-1">Confirm Password</Text>
-        <View className="bg-white border border-zinc-500  rounded-xl flex-row items-center px-4">
-          <TextInput
-            placeholderTextColor="#9CA3AF"
-            className="flex-1 py-4 text-black"
-            secureTextEntry={!showConfirmPassword}
-            placeholder="••••••••"
-            onChangeText={(v) => handleChange("confirmPassword", v)}
-          />
-          <Pressable
-            onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-          >
-            <Feather name={showConfirmPassword ? "eye" : "eye-off"} size={18} />
-          </Pressable>
-        </View>
-        {errors.confirmPassword && (
-          <Text className="text-red-500 text-xs mt-1">
-            {errors.confirmPassword}
-          </Text>
-        )}
-
-        {/* Submit */}
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={loading}
-          className="bg-black py-4 rounded-xl mt-8 items-center"
-        >
-          <Text className="text-white font-bold text-lg">
-            {loading ? "Loading..." : "Create Account"}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Footer */}
-        <TouchableOpacity
-          onPress={() => router.replace("/signin")}
-          className="mt-4 items-center"
-        >
-          <Text className="text-gray-500">
-            Already have an account?{" "}
-            <Text className="text-black font-bold underline">Sign In</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
