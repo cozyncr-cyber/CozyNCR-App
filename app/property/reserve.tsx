@@ -165,12 +165,12 @@ export default function Booking() {
   useEffect(() => {
     if (isHourly) return;
     if (!checkInDate) return;
+    if (checkOutDate) return; // 👈 IMPORTANT
 
     const next = new Date(checkInDate);
     next.setDate(next.getDate() + 1);
-
     setCheckOutDate(next);
-  }, [checkInDate, isHourly]);
+  }, [checkInDate, isHourly, checkOutDate]);
 
   const dates = useMemo(() => {
     if (!checkInDate) return "Select date";
@@ -797,6 +797,16 @@ export default function Booking() {
             </View>
             <Calendar
               mode={isHourly ? "single" : "range"}
+              initialSelection={
+                checkInDate
+                  ? {
+                      label: dates,
+                      checkIn: checkInDate,
+                      checkOut: isHourly ? null : checkOutDate,
+                      mode: isHourly ? "single" : "range",
+                    }
+                  : null
+              }
               blockedDates={
                 isHourly && timeWindow
                   ? blockedDates.concat(

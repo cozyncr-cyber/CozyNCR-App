@@ -18,9 +18,11 @@ import {
   completeSignup,
 } from "@/lib/services/auth";
 import Feather from "@expo/vector-icons/Feather";
+import { useUser } from "@/src/contexts/UserContext";
 
 export default function Signup() {
   const router = useRouter();
+  const user = useUser();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -149,7 +151,10 @@ export default function Signup() {
           </Text>
 
           <TouchableOpacity
-            onPress={() => router.replace("/signin")}
+            onPress={() => {
+              user.logout();
+              router.replace("/signin");
+            }}
             className="bg-black py-4 rounded-xl mt-6 w-full items-center"
           >
             <Text className="text-white font-bold text-lg">Go to Sign In</Text>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TouchableOpacity,
   View,
@@ -10,14 +10,16 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   ScrollView,
+  Image,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { useUser } from "../../src/contexts/UserContext";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { sendPasswordRecovery } from "@/lib/services/auth";
 export default function SignIn() {
   const { login } = useUser();
+  const router = useRouter();
 
   const [view, setView] = useState<"signin" | "forgot_password">("signin");
   const [email, setEmail] = useState("");
@@ -70,6 +72,13 @@ export default function SignIn() {
       setIsLoading(false);
     }
   };
+  const { isLoggedIn, isInitializing } = useUser();
+
+  useEffect(() => {
+    if (!isInitializing && isLoggedIn) {
+      router.replace("/");
+    }
+  }, [isLoggedIn, isInitializing]);
 
   return (
     <KeyboardAvoidingView
@@ -77,13 +86,22 @@ export default function SignIn() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardDismissWrapper>
         <ScrollView
           className="flex-1 bg-gray-100"
           contentContainerStyle={{ paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <Image
+            source={require("../../components/SVGs/cozncr_t.png")} // 👈 your image path
+            style={{
+              width: 220,
+              height: 120,
+              resizeMode: "contain",
+            }}
+            className="mx-auto mt-8 "
+          />
           <View className="items-center justify-center p-6 w-full h-full bg-gray-100">
             <View className="bg-white w-full max-w-md rounded-3xl shadow-xl p-8">
               {/* HEADER */}
@@ -234,9 +252,19 @@ export default function SignIn() {
                 </View>
               )}
             </View>
-          </View>{" "}
+          </View>
         </ScrollView>
-      </TouchableWithoutFeedback>
+      </KeyboardDismissWrapper>
     </KeyboardAvoidingView>
+  );
+}
+
+function KeyboardDismissWrapper({ children }: any) {
+  if (Platform.OS === "web") return children;
+
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      {children}
+    </TouchableWithoutFeedback>
   );
 }

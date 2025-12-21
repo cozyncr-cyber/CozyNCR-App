@@ -22,13 +22,7 @@ export default function ListingCard({ data }: { data?: any }) {
   };
 
   return (
-    <Pressable
-      onPress={() =>
-        router.push({
-          pathname: "/property/[id]",
-          params: { id: String(data.$id) },
-        })
-      }
+    <View
       style={{ width: width, marginBottom: 16 }} // FIXES INVISIBLE CARD ISSUE
       className="rounded-2xl bg-white shadow-sm overflow-hidden mx-auto"
     >
@@ -76,7 +70,16 @@ export default function ListingCard({ data }: { data?: any }) {
       </View>
 
       {/* CONTENT */}
-      <View className="p-4">
+
+      <Pressable
+        className="p-4"
+        onPress={() =>
+          router.push({
+            pathname: "/property/[id]",
+            params: { id: String(data.$id) },
+          })
+        }
+      >
         <View className="flex-row justify-between items-start mb-1">
           <Text className="font-semibold text-gray-900" numberOfLines={1}>
             {data.title}
@@ -104,8 +107,8 @@ export default function ListingCard({ data }: { data?: any }) {
           <Text className="font-semibold">₹{best?.price}</Text>
           <Text className="text-gray-600 text-sm"> per {best?.duration}</Text>
         </Text>
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   );
 }
 
