@@ -4,9 +4,9 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Link } from "expo-router";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import * as Linking from "expo-linking";
 export default function Profile() {
   const user = useUser();
-  console.log("User in Profile:", user);
   return (
     <ScrollView>
       <View className="min-h-screen p-4 flex flex-col gap-6">
@@ -41,14 +41,22 @@ export default function Profile() {
               </View>
             </View>
           </View>
+          <Pressable
+            onPress={() => Linking.openURL("https://cozyncr.com")}
+            className="bg-white rounded-3xl shadow-sm overflow-hidden py-6"
+          >
+            {/* Content */}
+            <View className="">
+              <View className="flex flex-col items-start px-10">
+                <Text className="text-lg text-gray-900">Become a host</Text>
+                <Text className="text-gray-600 text-xs">
+                  It&apos;s easy to start hosting and earn extra income.
+                </Text>
+              </View>
+            </View>
+          </Pressable>
         </View>
         <View className="w-full flex flex-col  border-b border-zinc-300">
-          {/*<View className="w-full h-12 text-zinc-700 flex flex-row items-center gap-4 px-2">
-            <Ionicons name="settings-outline" size={24} color="#3f3f46" />
-            <Text className="w-full">Settings</Text>
-            <Entypo name="chevron-thin-right" size={16} color="#3f3f46" />
-          </View>
-          */}
           <Link href="/privacy">
             <View className="w-full h-12 text-zinc-700 flex flex-row items-center gap-4 px-2">
               <MaterialIcons name="policy" size={24} color="#3f3f46" />

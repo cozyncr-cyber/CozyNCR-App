@@ -72,11 +72,11 @@ function buildQueries({
       // price_xh must exist
       queries.push(Query.isNotNull(priceField));
 
-      if (filters.minPrice !== null) {
+      if (filters.minPrice != null) {
         queries.push(Query.greaterThanEqual(priceField, filters.minPrice));
       }
 
-      if (filters.maxPrice !== null) {
+      if (filters.maxPrice != null) {
         queries.push(Query.lessThanEqual(priceField, filters.maxPrice));
       }
     }

@@ -13,6 +13,7 @@ import {
 export default function ListingCard({ data }: { data?: any }) {
   const width = Dimensions.get("window").width * 0.9;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
   const router = useRouter();
   const best = getBestPrice(data);
 
@@ -34,18 +35,31 @@ export default function ListingCard({ data }: { data?: any }) {
           showsHorizontalScrollIndicator={false}
           onScroll={handleScroll}
           scrollEventThrottle={16}
+          onScrollBeginDrag={() => setIsSwiping(true)}
+          onMomentumScrollEnd={() => setIsSwiping(false)}
           style={{ width, height: width, borderRadius: 16 }}
         >
           {data.images.map((src: string, index: number) => (
-            <Image
+            <Pressable
               key={index}
-              source={{ uri: src }}
-              style={{
-                width,
-                height: width,
+              style={({ pressed }) => ({
+                opacity: pressed ? 0.95 : 1,
+              })}
+              onPress={() => {
+                if (isSwiping) return;
+
+                router.push({
+                  pathname: "/property/[id]",
+                  params: { id: String(data.$id) },
+                });
               }}
-              resizeMode="cover" // FIX
-            />
+            >
+              <Image
+                source={{ uri: src }}
+                style={{ width, height: width }}
+                resizeMode="cover"
+              />
+            </Pressable>
           ))}
         </ScrollView>
 
