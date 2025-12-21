@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const MIN_PRICE = 100;
 const MAX_PRICE = 50000;
 const STEP = 100;
+const MIN_GAP = 500;
 
 export interface FiltersState {
   minPrice: number;
@@ -127,13 +128,14 @@ export const FiltersModal = ({
               <Text className="text-sm text-gray-500 mb-6">
                 Trip price, includes all fees
               </Text>
-
               <DualRangeSlider
                 min={MIN_PRICE}
                 max={MAX_PRICE}
                 step={STEP}
                 values={[minPrice, maxPrice]}
                 onChange={([min, max]) => {
+                  if (max - min < MIN_GAP) return;
+
                   setMinPrice(min);
                   setMaxPrice(max);
                 }}
@@ -158,7 +160,7 @@ export const FiltersModal = ({
 
             <View className="flex-row flex-wrap gap-2">
               {[
-                { id: "pets", label: "Allow Pets" },
+                { id: "pets", label: "Allow Pet" },
                 { id: "infants", label: "Allow Infant" },
                 { id: "children", label: "Allow Children" },
               ].map((option) => {

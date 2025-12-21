@@ -108,7 +108,8 @@ function processListings(
   cityLat: number | null,
   cityLong: number | null,
   guests: Guests | null,
-  sortByDistance: boolean
+  sortByDistance: boolean,
+  filters: FiltersState | null
 ) {
   console.log("GUEST FILTER INPUT:", guests);
   let processed = rows.map((l) => ({
@@ -158,6 +159,21 @@ function processListings(
       return true;
     });
   }
+  if (filters && (filters.minPrice || filters.maxPrice)) {
+    processed = processed.filter((l) => {
+      const prices = [l.price_3h, l.price_6h, l.price_12h, l.price_24h].filter(
+        (p) => typeof p === "number"
+      );
+
+      if (!prices.length) return false;
+
+      const min = filters.minPrice ?? 0;
+      const max = filters.maxPrice ?? Infinity;
+
+      return prices.some((p) => p >= min && p <= max);
+    });
+  }
+
   return processed;
 }
 
@@ -208,13 +224,13 @@ export function useListings({
                   queries,
                 })
               ).rows;
-
         const processed = processListings(
           rows,
           cityLat,
           cityLong,
           guests,
-          initial && mode === "FEED"
+          initial && mode === "FEED",
+          filters // ✅ THIS WAS MISSING
         );
 
         // 🛑 Ignore stale responses
