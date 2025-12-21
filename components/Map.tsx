@@ -10,7 +10,6 @@ import * as Linking from "expo-linking";
 
 export default function Map(data: any) {
   // Replace these with your coordinates
-  console.log(data);
   const openMaps = (lat: number, lng: number) => {
     const url =
       Platform.OS === "ios"
@@ -24,7 +23,7 @@ export default function Map(data: any) {
     <View style={styles.container} className="rounded-xl overflow-hidden">
       <TouchableOpacity
         className="flex-1 py-2 border-2 rounded-lg items-center bg-gray-900 px-6"
-        onPress={() => openMaps(data?.latitude, data?.longitude)}
+        onPress={() => openMaps(data.data.latitude, data.data.longitude)}
       >
         <Text className="font-semibold text-white">Get directions</Text>
       </TouchableOpacity>
