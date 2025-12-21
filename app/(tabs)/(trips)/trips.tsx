@@ -111,9 +111,11 @@ const Trips = () => {
       const bookingRes = await tablesDB.listRows({
         databaseId: DATABASE_ID,
         tableId: BOOKINGS_TABLE_ID,
-        queries: [Query.orderDesc("$createdAt")],
+        queries: [
+          Query.equal("customerId", userId), // ✅ THIS WAS MISSING
+          Query.orderDesc("$createdAt"),
+        ],
       });
-
       const rows = bookingRes.rows ?? [];
 
       // 2) Collect unique listingIds from bookings

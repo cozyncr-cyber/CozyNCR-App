@@ -318,7 +318,7 @@ export default function Details() {
                 <Text className="text-zinc-500 text-sm mb-6">
                   {data?.address}
                 </Text>
-                <Map latitude={data?.latitude} longitude={data?.longitude} />
+                <Map data={data} />
               </View>
 
               {/* Host */}

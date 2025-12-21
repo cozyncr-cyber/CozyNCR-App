@@ -49,19 +49,41 @@ function buildQueries({
   }
 
   if (filters) {
-    if (filters.placeTypes.length)
+    if (filters.placeTypes.length) {
       queries.push(Query.equal("category", filters.placeTypes));
-    if (filters.bookingOptions.includes("pets"))
+    }
+
+    if (filters.bookingOptions.includes("pets")) {
       queries.push(Query.greaterThan("maxPets", 0));
-    if (filters.bookingOptions.includes("infants"))
+    }
+
+    if (filters.bookingOptions.includes("infants")) {
       queries.push(Query.greaterThan("maxInfants", 0));
-    if (filters.bookingOptions.includes("children"))
+    }
+
+    if (filters.bookingOptions.includes("children")) {
       queries.push(Query.equal("allowChildren", true));
+    }
+
+    // ✅ DURATION + PRICE
+    if (filters.duration) {
+      const priceField = DURATION_PRICE_FIELD[filters.duration];
+
+      // price_xh must exist
+      queries.push(Query.isNotNull(priceField));
+
+      if (filters.minPrice !== null) {
+        queries.push(Query.greaterThanEqual(priceField, filters.minPrice));
+      }
+
+      if (filters.maxPrice !== null) {
+        queries.push(Query.lessThanEqual(priceField, filters.maxPrice));
+      }
+    }
   }
 
   return queries;
 }
-
 async function fetchSearchRows(queries: any[], searchText: string) {
   const fields = ["title", "city", "address"];
 
@@ -248,3 +270,10 @@ function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
       Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
+
+const DURATION_PRICE_FIELD: Record<"3h" | "6h" | "12h" | "24h", string> = {
+  "3h": "price_3h",
+  "6h": "price_6h",
+  "12h": "price_12h",
+  "24h": "price_24h",
+};

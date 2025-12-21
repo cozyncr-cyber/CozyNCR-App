@@ -32,7 +32,7 @@ export default function Profile() {
               <View className="">
                 <View className="flex flex-col items-center">
                   <Text className="text-xl font-semibold text-gray-900">
-                    {user?.current?.name || "Guest User"}
+                    {user?.profile?.name || "Guest User"}
                   </Text>
                   <Text className="text-gray-600 text-sm">
                     {user?.profile?.kycStatus == "verified" ? "Host" : "Guest"}
