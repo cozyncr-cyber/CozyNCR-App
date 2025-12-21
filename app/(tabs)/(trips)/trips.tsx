@@ -240,7 +240,7 @@ const Trips = () => {
           status: row.status,
           latitude: listing?.latitude,
           longitude: listing?.longitude,
-          phone: user.profile.phone,
+          phone: hostProfile.phone,
 
           host: hostLabel,
           ownerId: listing?.ownerId,
