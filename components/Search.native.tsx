@@ -41,8 +41,76 @@ export default function CityDestinationSelector({
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
   const [pets, setPets] = useState(0);
+  const [typedQuery, setTypedQuery] = useState("");
 
   const scrollRef = useRef<ScrollView | null>(null);
+
+  async function resolveFirstPlace(query: string) {
+    if (!query.trim()) return null;
+
+    const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
+      query
+    )}&types=(cities)&components=country:in&key=${GOOGLE_KEY}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.predictions?.length) return null;
+
+    const placeId = data.predictions[0].place_id;
+
+    const detailUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_KEY}`;
+
+    const detailRes = await fetch(detailUrl);
+    const detailData = await detailRes.json();
+
+    return detailData.result;
+  }
+
+  useEffect(() => {
+    async function maybeResolve() {
+      // only auto-resolve on CITY slide
+      if (currentSlide !== 0) return;
+
+      // nothing typed → ignore
+      if (!typedQuery.trim()) return;
+
+      // city already selected → ignore
+      if (draft.city) return;
+
+      try {
+        const place = await resolveFirstPlace(typedQuery);
+
+        if (!place) return;
+
+        const city =
+          place.address_components?.find((c: any) =>
+            c.types.includes("locality")
+          )?.long_name ?? place.name;
+
+        const country =
+          place.address_components?.find((c: any) =>
+            c.types.includes("country")
+          )?.long_name ?? "";
+
+        const { lat, lng } = place.geometry.location;
+
+        setCity({
+          label: `${city}, ${country}`,
+          name: city,
+          country,
+          lat,
+          long: lng,
+        });
+
+        setSearchInput(`${city}, ${country}`);
+      } catch (e) {
+        console.log("auto resolve failed", e);
+      }
+    }
+
+    maybeResolve();
+  }, [typedQuery, currentSlide]);
 
   const scrollToSlide = (index: number) => {
     setCurrentSlide(index);
@@ -207,14 +275,19 @@ export default function CityDestinationSelector({
                     language: "en",
                     components: "country:in",
                     types: "geocode",
-                    location: "28.6139,77.2090", // Delhi
-                    radius: 100000, // 100km
+                    location: "28.6139,77.2090",
+                    radius: 100000,
+                  }}
+                  textInputProps={{
+                    onChangeText: (text) => {
+                      setTypedQuery(text);
+                      setSearchInput(text);
+                    },
                   }}
                   debounce={300}
                   styles={{
-                    container: {
-                      flex: 0,
-                    },
+                    container: { flex: 0 },
+
                     textInput: {
                       borderWidth: 2,
                       borderColor: "#D1D5DB",
@@ -222,9 +295,43 @@ export default function CityDestinationSelector({
                       paddingLeft: 40,
                       height: 48,
                     },
+
                     listView: {
-                      marginTop: 6,
-                      borderRadius: 12,
+                      marginTop: 10,
+                      paddingHorizontal: 4,
+                    },
+
+                    row: {
+                      backgroundColor: "#FFFFFF",
+                      paddingVertical: 14,
+                      paddingHorizontal: 14,
+                      borderRadius: 14,
+                      marginVertical: 6,
+
+                      // subtle border and shadow
+                      borderWidth: 1,
+                      borderColor: "#E5E7EB",
+
+                      shadowColor: "#000",
+                      shadowOpacity: 0.06,
+                      shadowRadius: 6,
+                      shadowOffset: { width: 0, height: 3 },
+
+                      elevation: 2,
+                    },
+
+                    separator: {
+                      height: 0,
+                    },
+
+                    description: {
+                      fontSize: 15,
+                      color: "#111827",
+                      fontWeight: "500",
+                    },
+
+                    predefinedPlacesDescription: {
+                      color: "#6B7280",
                     },
                   }}
                 />

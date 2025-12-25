@@ -148,7 +148,6 @@ async function processListings(
   }));
 
   processed = await filterDeletedOwners(processed);
-  console.log("LISTING CONTEXT LOCATION:", { cityLat, cityLong });
 
   // -------- PRICE FILTERS --------
   if (filters && (filters.minPrice || filters.maxPrice)) {
