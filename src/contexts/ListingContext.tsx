@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Query } from "react-native-appwrite";
-import { tablesDB, getFileUrl } from "@/lib/appwrite";
+import { tablesDB, getFileUrl, getImagePreviewUrl } from "@/lib/appwrite";
 import type { FiltersState } from "@/components/Filters";
 
 const PAGE_SIZE = 10;
@@ -31,11 +31,13 @@ const TABLE_ID = process.env.EXPO_PUBLIC_APPWRITE_LISTING_TABLE_ID!;
 function buildQueries({
   mode,
   filters,
+  guests, // ✅ ADD THIS
   lastId,
   initial,
 }: {
   mode: Mode;
   filters: FiltersState | null;
+  guests: Guests | null; // ✅ ADD THIS
   lastId: string | null;
   initial: boolean;
 }) {
@@ -46,6 +48,24 @@ function buildQueries({
 
   if (mode === "FEED" && !initial && lastId) {
     queries.push(Query.cursorAfter(lastId));
+  }
+
+  if (guests) {
+    const totalGuests = guests.adults + guests.children;
+
+    queries.push(Query.greaterThanEqual("maxGuests", totalGuests));
+
+    if (guests.children > 0) {
+      queries.push(Query.equal("allowChildren", true));
+    }
+
+    if (guests.infants > 0) {
+      queries.push(Query.greaterThanEqual("maxInfants", guests.infants));
+    }
+
+    if (guests.pets > 0) {
+      queries.push(Query.greaterThanEqual("maxPets", guests.pets));
+    }
   }
 
   if (filters) {
@@ -115,7 +135,7 @@ function processListings(
   let processed = rows.map((l) => ({
     ...l,
     images: (Array.isArray(l.imageIds) ? l.imageIds : [l.imageId]).map(
-      getFileUrl
+      getCachedFileUrl
     ),
   }));
 
@@ -138,27 +158,6 @@ function processListings(
       .sort((a: any, b: any) => a.distance - b.distance);
   }
 
-  if (guests) {
-    const { adults, children, infants, pets } = guests;
-
-    processed = processed.filter((l) => {
-      const totalGuests = adults + children;
-
-      // 1️⃣ Total guests (adults + children)
-      if (totalGuests > l.maxGuests) return false;
-
-      // 2️⃣ Children policy
-      if (children > 0 && !l.allowChildren) return false;
-
-      // 3️⃣ Infants
-      if (infants > l.maxInfants) return false;
-
-      // 4️⃣ Pets
-      if (pets > l.maxPets) return false;
-
-      return true;
-    });
-  }
   if (filters && (filters.minPrice || filters.maxPrice)) {
     processed = processed.filter((l) => {
       const prices = [l.price_3h, l.price_6h, l.price_12h, l.price_24h].filter(
@@ -210,6 +209,7 @@ export function useListings({
         const queries = buildQueries({
           mode,
           filters,
+          guests, // ✅ PASS IT HERE
           lastId,
           initial,
         });
@@ -293,3 +293,26 @@ const DURATION_PRICE_FIELD: Record<"3h" | "6h" | "12h" | "24h", string> = {
   "12h": "price_12h",
   "24h": "price_24h",
 };
+const imageUrlCache = new Map<string, string>();
+
+export function getCachedFileUrl(fileId: string) {
+  if (!imageUrlCache.has(fileId)) {
+    imageUrlCache.set(fileId, getFileUrl(fileId));
+  }
+  return imageUrlCache.get(fileId)!;
+}
+
+export function getCachedListingImageUrl(fileId: string) {
+  if (!imageUrlCache.has(fileId)) {
+    imageUrlCache.set(
+      fileId,
+
+      getImagePreviewUrl(fileId, {
+        width: 900,
+        height: 900,
+        quality: 75,
+      })
+    );
+  }
+  return imageUrlCache.get(fileId)!;
+}

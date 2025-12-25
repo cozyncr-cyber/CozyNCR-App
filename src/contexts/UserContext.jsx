@@ -30,20 +30,46 @@ export function UserProvider(props) {
   const router = useRouter();
 
   async function login(email, password) {
+    // 1️⃣ create session
     await account.createEmailPasswordSession({ email, password });
-    const user = await account.get();
+
+    // 2️⃣ get user (wrap to avoid crashing)
+    let user = null;
+
+    try {
+      user = await account.get();
+    } catch (e) {
+      console.log("Failed to fetch user after login", e);
+    }
+
+    if (!user) {
+      // if we somehow fail, still treat as logged out
+      setUser(null);
+      setIsLoggedIn(false);
+      return;
+    }
+
     setUser(user);
     setIsLoggedIn(true);
+
+    // 3️⃣ fetch profile (will block deleted users safely)
     await fetchProfile(user.$id);
+
     router.replace("/");
   }
 
   async function logout() {
-    await account.deleteSession({ sessionId: "current" });
+    try {
+      await account.deleteSession({ sessionId: "current" });
+    } catch {
+      // guest or session already gone — ignore
+    }
+
     setUser(null);
     setProfile(null);
     setProfileImage(null);
     setIsLoggedIn(false);
+
     router.replace("/signin");
   }
 
@@ -54,6 +80,16 @@ export function UserProvider(props) {
         PROFILES_TABLE_ID,
         userId
       );
+      if (result?.isDeleted) {
+        setUser(null);
+        setProfile(null);
+        setProfileImage(null);
+        setIsLoggedIn(false);
+
+        alert("This account has been deleted and can no longer be used.");
+
+        return;
+      }
 
       setProfile(result);
 
@@ -64,6 +100,13 @@ export function UserProvider(props) {
         setProfileImage(null);
       }
     } catch (err) {
+      // If unauthorized because session was deleted, treat as logged out
+      if (err?.code === 401 || err?.type === "user_unauthorized") {
+        setUser(null);
+        setIsLoggedIn(false);
+        return;
+      }
+
       console.log("Profile fetch failed", err);
       setProfile(null);
       setProfileImage(null);
@@ -72,13 +115,19 @@ export function UserProvider(props) {
 
   const init = useCallback(async () => {
     try {
-      await account.getSession("current");
+      const session = await account.getSession("current");
+
+      // If no session -> treat as guest
+      if (!session) throw new Error("No session");
+
       const user = await account.get();
+
       setUser(user);
       setIsLoggedIn(true);
+
       await fetchProfile(user.$id);
     } catch (err) {
-      console.log("No active session", err);
+      // 👇 guests will land here instead of throwing appwide error
       setUser(null);
       setProfile(null);
       setProfileImage(null);

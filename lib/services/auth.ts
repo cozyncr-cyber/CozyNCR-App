@@ -83,3 +83,22 @@ export async function verifyEmailOtp(userId: string, otp: string) {
     };
   }
 }
+
+export async function requestAccountDeletion(userId: string) {
+  try {
+    // 1) mark as deleted in profile
+    await databases.updateDocument(DATABASE_ID, PROFILES_TABLE_ID, userId, {
+      isDeleted: true,
+    });
+
+    // 2) delete all active sessions → disables access immediately
+    await account.deleteSessions();
+
+    return { success: true };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message ?? "Failed to delete account",
+    };
+  }
+}

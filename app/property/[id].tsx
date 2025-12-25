@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   ScrollView,
   Image,
@@ -7,11 +7,11 @@ import {
   View,
   Text,
   ActivityIndicator,
+  Share,
 } from "react-native";
 import { useRouter } from "expo-router";
 import Entypo from "@expo/vector-icons/Entypo";
 import Feather from "@expo/vector-icons/Feather";
-
 import ExpandableText from "@/components/Expandable";
 import ReviewCarousel from "@/components/Reviews";
 import Star from "@/components/SVGs/Star";
@@ -23,9 +23,8 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { amenityIcons } from "@/components/AmenityIcon";
 import { useProperty } from "@/src/contexts/PropertyContext";
 import PriceModal from "@/components/PriceModal";
-import { isWishlisted, toggleWishlist } from "@/lib/services/wishlist";
-import { useUser } from "@/src/contexts/UserContext";
 import { useSearch } from "@/src/contexts/SearchContext";
+import { useWishlist } from "@/src/hooks/useWishlist";
 
 export function useNights() {
   const { searchState } = useSearch();
@@ -49,55 +48,39 @@ export function useNights() {
 }
 
 export default function Details() {
-  const user = useUser();
-
   const nights = useNights();
   const { searchState } = useSearch();
 
   const { data, owner, loading } = useProperty();
   const { width } = Dimensions.get("window");
   const [activeIndex, setActiveIndex] = useState(0);
-  const [wishlisted, setWishlisted] = useState(false);
-  const [loadingWishlist, setLoadingWishlist] = useState(false);
   const router = useRouter();
   const [priceOpen, setPriceOpen] = useState(false);
-  const userId = user?.current?.$id;
   const listingId = data?.$id;
   const minimumPrice = useMemo(() => getMinimumBookingPrice(data), [data]);
-  useEffect(() => {
-    if (!userId || !listingId) return;
 
-    let mounted = true;
-
-    const checkWishlist = async () => {
-      const exists = await isWishlisted(userId, listingId);
-      if (mounted) setWishlisted(exists);
-    };
-
-    checkWishlist();
-
-    return () => {
-      mounted = false;
-    };
-  }, [userId, listingId]);
-  const handleToggleWishlist = async () => {
-    if (!user?.current?.$id) return;
-
-    setLoadingWishlist(true);
-
-    // Optimistic UI
-    setWishlisted((prev) => !prev);
+  const handleShare = async () => {
+    if (!listingId || !data) return;
 
     try {
-      await toggleWishlist(user.current.$id, data.$id);
-    } catch (err) {
-      // rollback on failure
-      setWishlisted((prev) => !prev);
-      console.error("Wishlist toggle failed", err);
-    } finally {
-      setLoadingWishlist(false);
+      const url = `https://yourapp.com/property/${listingId}`;
+      // 👆 replace with your real deep link / web URL
+
+      await Share.share({
+        title: data.title,
+        message: `${data.title}\n\nCheck out this property:\n${url}`,
+        url, // iOS prefers this
+      });
+    } catch (error) {
+      console.error("Error sharing listing", error);
     }
   };
+
+  const {
+    wishlisted,
+    loading: loadingWishlist,
+    toggle: handleToggleWishlist,
+  } = useWishlist(listingId);
 
   const handleScroll = (event: any) => {
     const slide = Math.round(event.nativeEvent.contentOffset.x / width);
@@ -149,18 +132,31 @@ export default function Details() {
               <MaterialIcons name="arrow-back" size={22} />
             </Pressable>
           </View>
-          <View className="w-12 h-12 absolute z-10 rounded-full top-6 right-4 shadow-lg items-center justify-center">
-            <Pressable
-              onPress={handleToggleWishlist}
-              disabled={loadingWishlist}
-              className="w-full h-full rounded-full items-center justify-center"
-            >
-              <Entypo
-                name={wishlisted ? "heart" : "heart-outlined"}
-                size={24}
-                color={wishlisted ? "red" : "white"}
-              />
-            </Pressable>
+          <View className="absolute z-10 top-6 right-4 flex-row gap-2">
+            {/* SHARE */}
+            <View className="w-12 h-12 rounded-full bg-white shadow-lg items-center justify-center">
+              <Pressable
+                onPress={handleShare}
+                className="w-full h-full rounded-full items-center justify-center"
+              >
+                <Feather name="share-2" size={20} color="black" />
+              </Pressable>
+            </View>
+
+            {/* WISHLIST */}
+            <View className="w-12 h-12 rounded-full bg-white shadow-lg items-center justify-center">
+              <Pressable
+                onPress={handleToggleWishlist}
+                disabled={loadingWishlist}
+                className="w-full h-full rounded-full items-center justify-center"
+              >
+                <Entypo
+                  name={wishlisted ? "heart" : "heart-outlined"}
+                  size={24}
+                  color={wishlisted ? "red" : "black"}
+                />
+              </Pressable>
+            </View>
           </View>
 
           {/* Image Carousel */}

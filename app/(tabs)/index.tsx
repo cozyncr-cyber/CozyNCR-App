@@ -1,5 +1,9 @@
 import ListingCard from "@/components/ListingCard";
 import SkeletonCard from "@/components/SkeletonCard";
+import {
+  BookingDurationSelector,
+  type BookingDuration,
+} from "@/components/BookingDuration";
 
 import { useState } from "react";
 import { View, Pressable, Text, FlatList } from "react-native";
@@ -36,6 +40,16 @@ export default function HomeScreen() {
 
   const isSearchActive = !!searchText;
 
+  const setDuration = (duration: BookingDuration) => {
+    setFilters((prev) => ({
+      minPrice: prev?.minPrice ?? 100,
+      maxPrice: prev?.maxPrice ?? 50000,
+      placeTypes: prev?.placeTypes ?? [],
+      bookingOptions: prev?.bookingOptions ?? [],
+      duration, // 👈 SAME NAME
+    }));
+  };
+
   return (
     <>
       {/* ---------------- SEARCH BAR ---------------- */}
@@ -52,7 +66,7 @@ export default function HomeScreen() {
               >
                 {/* Title */}
                 <Text className="font-medium" numberOfLines={1}>
-                  {searchState.search || "Where To?"}
+                  {searchState.search || "Search"}
                 </Text>
 
                 {/* Calendar + Guests */}
@@ -92,6 +106,12 @@ export default function HomeScreen() {
           </View>
         </Pressable>
       </View>
+      <View className="px-[5vw] mb-2">
+        <BookingDurationSelector
+          value={filters?.duration ?? null}
+          onChange={setDuration}
+        />
+      </View>
 
       {/* ---------------- LIST ---------------- */}
       <FlatList
@@ -106,6 +126,11 @@ export default function HomeScreen() {
         }}
         refreshing={loading}
         onRefresh={refresh}
+        removeClippedSubviews
+        initialNumToRender={5}
+        maxToRenderPerBatch={5}
+        windowSize={7}
+        updateCellsBatchingPeriod={50}
         ListFooterComponent={
           loading ? (
             <View className="px-[5vw]">

@@ -1,21 +1,19 @@
 import Star from "@/components/SVGs/Star";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import {
-  ScrollView,
-  Image,
-  Dimensions,
-  Pressable,
-  View,
-  Text,
-} from "react-native";
+import { useState, memo } from "react";
+import { ScrollView, Dimensions, Pressable, View, Text } from "react-native";
+import { Image } from "expo-image";
+import Entypo from "@expo/vector-icons/Entypo";
+import { useWishlist } from "@/src/hooks/useWishlist";
 
-export default function ListingCard({ data }: { data?: any }) {
+const ListingCard = memo(function ListingCard({ data }: { data: any }) {
   const width = Dimensions.get("window").width * 0.9;
   const [activeIndex, setActiveIndex] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const { wishlisted, toggle } = useWishlist(data?.$id);
   const router = useRouter();
   const best = getBestPrice(data);
+  const hasMultipleImages = data.images.length > 1;
 
   const handleScroll = (event: any) => {
     const slide = Math.round(event.nativeEvent.contentOffset.x / width);
@@ -29,9 +27,23 @@ export default function ListingCard({ data }: { data?: any }) {
     >
       {/* IMAGE CAROUSEL */}
       <View>
+        <View className="absolute top-3 right-3 z-10">
+          <Pressable
+            onPress={toggle}
+            hitSlop={10}
+            className="w-9 h-9 rounded-full bg-white/90 items-center justify-center"
+          >
+            <Entypo
+              name={wishlisted ? "heart" : "heart-outlined"}
+              size={18}
+              color={wishlisted ? "red" : "black"}
+            />
+          </Pressable>
+        </View>
         <ScrollView
-          horizontal
-          pagingEnabled
+          horizontal={hasMultipleImages}
+          pagingEnabled={hasMultipleImages}
+          scrollEnabled={hasMultipleImages}
           showsHorizontalScrollIndicator={false}
           onScroll={handleScroll}
           scrollEventThrottle={16}
@@ -57,7 +69,9 @@ export default function ListingCard({ data }: { data?: any }) {
               <Image
                 source={{ uri: src }}
                 style={{ width, height: width }}
-                resizeMode="cover"
+                contentFit="cover"
+                transition={200}
+                cachePolicy="memory-disk"
               />
             </Pressable>
           ))}
@@ -124,7 +138,7 @@ export default function ListingCard({ data }: { data?: any }) {
       </Pressable>
     </View>
   );
-}
+});
 
 function getBestPrice(listing: any) {
   if (listing.price_24h != null) {
@@ -152,3 +166,5 @@ function getBestPrice(listing: any) {
     price: entries[0][1],
   };
 }
+
+export default ListingCard;

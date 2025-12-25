@@ -22,7 +22,7 @@ client
 
 const endpoint = process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT!;
 const projectId = process.env.EXPO_PUBLIC_APPWRITE_PROJECT!;
-const bucketId = process.env.EXPO_PUBLIC_APPWRITE_BUCKET_ID!;
+export const bucketId = process.env.EXPO_PUBLIC_APPWRITE_BUCKET_ID!;
 
 // 👇 NEW: database + tables
 export const DATABASE_ID = process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID!;
@@ -49,7 +49,23 @@ export const functions = new Functions(client);
 
 // re-export helpers for convenience
 export { ID, Permission, Role };
-
+type ImageOptions = {
+  width?: number;
+  height?: number;
+  quality?: number;
+};
 export const getFileUrl = (fileId: string) => {
   return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/view?project=${projectId}`;
+};
+
+export const getImagePreviewUrl = (fileId: string, options?: ImageOptions) => {
+  const params = new URLSearchParams({
+    project: projectId,
+  });
+
+  if (options?.width) params.append("width", String(options.width));
+  if (options?.height) params.append("height", String(options.height));
+  if (options?.quality) params.append("quality", String(options.quality));
+
+  return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/preview?${params.toString()}`;
 };

@@ -20,9 +20,24 @@ export default function ProfileLayout() {
           }}
         />
         <Stack.Screen
+          name="account"
+          options={{
+            headerShown: false,
+            headerTitle: "Account Settings",
+            headerTitleAlign: "center",
+          }}
+        />
+        <Stack.Screen
           name="terms"
           options={{
             headerTitle: "Terms & Conditions",
+            headerTitleAlign: "center",
+          }}
+        />
+        <Stack.Screen
+          name="customer"
+          options={{
+            headerTitle: "Customer Support",
             headerTitleAlign: "center",
           }}
         />

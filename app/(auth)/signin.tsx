@@ -102,6 +102,7 @@ export default function SignIn() {
             }}
             className="mx-auto mt-8 "
           />
+
           <View className="items-center justify-center p-6 w-full h-full bg-gray-100">
             <View className="bg-white w-full max-w-md rounded-3xl shadow-xl p-8">
               {/* HEADER */}
