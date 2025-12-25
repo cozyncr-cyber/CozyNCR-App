@@ -23,6 +23,7 @@ client
 const endpoint = process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT!;
 const projectId = process.env.EXPO_PUBLIC_APPWRITE_PROJECT!;
 export const bucketId = process.env.EXPO_PUBLIC_APPWRITE_BUCKET_ID!;
+export const GOOGLE_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_KEY!;
 
 // 👇 NEW: database + tables
 export const DATABASE_ID = process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID!;

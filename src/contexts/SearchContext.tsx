@@ -22,18 +22,16 @@ export type GeoCity = {
   lat: number | null;
   long: number | null;
 };
-
 export type SelectedCity = {
-  id: number;
   name: string;
-  country?: string;
-  image?: string;
+  label: string;
+  country: string;
+  lat: number | null;
+  long: number | null;
 };
-
 export type SearchPayload = {
   search: string;
-  selectedCity: SelectedCity | null;
-  city: GeoCity | null;
+  city: SelectedCity | null;
   calendar: CalendarPayload | null;
   guests: GuestsResult | null;
 };
@@ -52,7 +50,6 @@ type SearchContextType = {
 
 const defaultState: SearchPayload = {
   search: "",
-  selectedCity: null,
   city: null,
   calendar: null,
   guests: null,

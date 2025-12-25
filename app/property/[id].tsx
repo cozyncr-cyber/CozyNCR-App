@@ -109,8 +109,13 @@ export default function Details() {
 
   if (!data) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <Text>No property found.</Text>
+      <View className="flex-1 justify-center items-center px-6">
+        <Text className="text-lg font-semibold mb-2">
+          This listing no longer exists
+        </Text>
+        <Text className="text-gray-500 text-center">
+          The owner has deleted their account or removed this property.
+        </Text>
       </View>
     );
   }

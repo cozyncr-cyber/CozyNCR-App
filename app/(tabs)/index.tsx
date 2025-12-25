@@ -5,39 +5,76 @@ import {
   type BookingDuration,
 } from "@/components/BookingDuration";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Pressable, Text, FlatList } from "react-native";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
-
-import CityDestinationSelector from "@/components/Search";
+import Component from "@/components/Search";
 import { FiltersModal } from "@/components/Filters";
 import type { FiltersState } from "@/components/Filters";
 
 import { useSearch } from "@/src/contexts/SearchContext";
 import { useListings } from "@/src/contexts/ListingContext";
+import * as Location from "expo-location";
 
 export default function HomeScreen() {
   const { searchState } = useSearch();
+  const [userLat, setUserLat] = useState<number | null>(null);
+  const [userLong, setUserLong] = useState<number | null>(null);
+  const [locationReady, setLocationReady] = useState(false);
 
   const [openSearch, setOpenSearch] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FiltersState | null>(null);
 
   const searchText = searchState.search?.trim() ?? "";
-  const cityLat = searchState.city?.lat ?? null;
-  const cityLong = searchState.city?.long ?? null;
+  const cityLat = searchState.city?.lat ?? userLat ?? null;
+  const cityLong = searchState.city?.long ?? userLong ?? null;
+
   const guests = searchState.guests ?? null;
+  useEffect(() => {
+    async function getLocation() {
+      // If user already chose something → skip
+      if (searchState.city || searchState.search) {
+        setLocationReady(true);
+        return;
+      }
 
-  const { listings, loading, hasMore, refresh, loadMore } = useListings({
-    searchText,
-    cityLat,
-    cityLong,
-    guests,
-    filters,
-  });
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
 
+        if (status !== "granted") {
+          setLocationReady(true); // ➜ fallback to newest
+          return;
+        }
+
+        const loc = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+        setUserLat(loc.coords.latitude);
+        setUserLong(loc.coords.longitude);
+      } catch (err) {
+        console.log("Location error:", err);
+      } finally {
+        setLocationReady(true); // important
+      }
+    }
+
+    getLocation();
+  }, [searchState.city, searchState.search]);
+
+  const { listings, loading, hasMore, refresh, loadMore } = useListings(
+    {
+      searchText,
+      cityLat,
+      cityLong,
+      guests,
+      filters,
+    },
+    locationReady
+  );
   const isSearchActive = !!searchText;
 
   const setDuration = (duration: BookingDuration) => {
@@ -66,7 +103,9 @@ export default function HomeScreen() {
               >
                 {/* Title */}
                 <Text className="font-medium" numberOfLines={1}>
-                  {searchState.search || "Search"}
+                  {searchState.city?.name === "Nearby"
+                    ? "Nearby"
+                    : searchState.search || "Search"}
                 </Text>
 
                 {/* Calendar + Guests */}
@@ -154,10 +193,7 @@ export default function HomeScreen() {
         onApply={setFilters}
       />
 
-      <CityDestinationSelector
-        visible={openSearch}
-        onClose={() => setOpenSearch(false)}
-      />
+      <Component visible={openSearch} onClose={() => setOpenSearch(false)} />
     </>
   );
 }

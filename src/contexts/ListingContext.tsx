@@ -4,7 +4,7 @@ import { tablesDB, getFileUrl, getImagePreviewUrl } from "@/lib/appwrite";
 import type { FiltersState } from "@/components/Filters";
 
 const PAGE_SIZE = 10;
-const SEARCH_PAGE_SIZE = 50;
+const SEARCH_PAGE_SIZE = 120;
 
 type Guests = {
   adults: number;
@@ -104,7 +104,18 @@ function buildQueries({
 
   return queries;
 }
+
 async function fetchSearchRows(queries: any[], searchText: string) {
+  if (!searchText) {
+    return (
+      await tablesDB.listRows({
+        databaseId: DB_ID,
+        tableId: TABLE_ID,
+        queries,
+      })
+    ).rows;
+  }
+
   const fields = ["title", "city", "address"];
 
   const results = await Promise.all(
@@ -122,16 +133,13 @@ async function fetchSearchRows(queries: any[], searchText: string) {
 
   return Array.from(map.values());
 }
-
-function processListings(
+async function processListings(
   rows: any[],
   cityLat: number | null,
   cityLong: number | null,
   guests: Guests | null,
-  sortByDistance: boolean,
   filters: FiltersState | null
 ) {
-  console.log("GUEST FILTER INPUT:", guests);
   let processed = rows.map((l) => ({
     ...l,
     images: (Array.isArray(l.imageIds) ? l.imageIds : [l.imageId]).map(
@@ -139,25 +147,10 @@ function processListings(
     ),
   }));
 
-  if (sortByDistance && cityLat && cityLong) {
-    processed = processed
-      .map((l) =>
-        l.latitude && l.longitude
-          ? {
-              ...l,
-              distance: getDistanceKm(
-                cityLat,
-                cityLong,
-                l.latitude,
-                l.longitude
-              ),
-            }
-          : null
-      )
-      .filter(Boolean)
-      .sort((a: any, b: any) => a.distance - b.distance);
-  }
+  processed = await filterDeletedOwners(processed);
+  console.log("LISTING CONTEXT LOCATION:", { cityLat, cityLong });
 
+  // -------- PRICE FILTERS --------
   if (filters && (filters.minPrice || filters.maxPrice)) {
     processed = processed.filter((l) => {
       const prices = [l.price_3h, l.price_6h, l.price_12h, l.price_24h].filter(
@@ -173,20 +166,40 @@ function processListings(
     });
   }
 
+  // -------- DISTANCE SORT ALWAYS WHEN COORDS EXIST --------
+  if (cityLat && cityLong) {
+    processed = processed
+      .map((l) =>
+        l.latitude && l.longitude
+          ? {
+              ...l,
+              distance: getDistanceKm(
+                cityLat,
+                cityLong,
+                l.latitude,
+                l.longitude
+              ),
+            }
+          : { ...l, distance: Infinity }
+      )
+      .sort((a, b) => a.distance - b.distance);
+  }
+
   return processed;
 }
 
 /* ---------------- HOOK ---------------- */
-
-export function useListings({
-  searchText,
-  cityLat,
-  cityLong,
-  guests,
-  filters,
-}: Params) {
+export function useListings(
+  { searchText, cityLat, cityLong, guests, filters }: Params,
+  locationReady: boolean
+) {
   const requestIdRef = useRef(0);
-  const mode: Mode = searchText ? "SEARCH" : "FEED";
+  const mode: Mode =
+    cityLat && cityLong
+      ? "SEARCH" // force wide fetch so sorting works across ALL
+      : searchText
+        ? "SEARCH"
+        : "FEED";
 
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -224,13 +237,12 @@ export function useListings({
                   queries,
                 })
               ).rows;
-        const processed = processListings(
+        const processed = await processListings(
           rows,
           cityLat,
           cityLong,
           guests,
-          initial && mode === "FEED",
-          filters // ✅ THIS WAS MISSING
+          filters
         );
 
         // 🛑 Ignore stale responses
@@ -241,9 +253,14 @@ export function useListings({
           setHasMore(false);
           setLastId(null);
         } else {
-          setListings((prev) =>
-            initial ? processed : [...prev, ...processed]
-          );
+          setListings((prev) => {
+            const combined = initial ? processed : [...prev, ...processed];
+
+            const map = new Map<string, any>();
+            combined.forEach((l) => map.set(l.$id, l));
+
+            return Array.from(map.values());
+          });
           setLastId(processed.at(-1)?.$id ?? null);
           setHasMore(processed.length === PAGE_SIZE);
         }
@@ -258,13 +275,14 @@ export function useListings({
     [mode, filters, searchText, cityLat, cityLong, guests, lastId, hasMore]
   );
 
-  /* Reset & refetch on inputs change */
-  useEffect(() => {
+  /* Reset & refetch on inputs change */ useEffect(() => {
+    if (!locationReady) return; // ⏸ wait…
+
     setListings([]);
     setLastId(null);
     setHasMore(true);
     fetchListings(true);
-  }, [mode, filters, searchText, cityLat, cityLong, guests]);
+  }, [mode, filters, searchText, cityLat, cityLong, guests, locationReady]);
 
   return {
     listings,
@@ -315,4 +333,24 @@ export function getCachedListingImageUrl(fileId: string) {
     );
   }
   return imageUrlCache.get(fileId)!;
+}
+
+async function filterDeletedOwners(listings: any[]) {
+  const ownerIds = Array.from(
+    new Set(listings.map((l) => l.ownerId).filter(Boolean))
+  );
+
+  if (!ownerIds.length) return listings;
+
+  const profiles = await tablesDB.listRows({
+    databaseId: DB_ID,
+    tableId: process.env.EXPO_PUBLIC_APPWRITE_PROFILES_TABLE_ID!,
+    queries: [Query.equal("$id", ownerIds)],
+  });
+
+  const deletedUsers = new Set(
+    profiles.rows.filter((p: any) => p.isDeleted).map((p: any) => p.$id)
+  );
+
+  return listings.filter((l) => !deletedUsers.has(l.ownerId));
 }

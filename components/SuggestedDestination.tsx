@@ -18,18 +18,11 @@ import {
   Landmark,
 } from "lucide-react-native";
 import { destinations, Destination } from "@/src/data/destinations";
+import type { SelectedCity } from "@/src/contexts/SearchContext";
 
 type Props = {
-  selectedCity: {
-    name: string;
-    lat: number | null;
-    long: number | null;
-  } | null;
-  onSelect: (city: {
-    name: string;
-    lat: number | null;
-    long: number | null;
-  }) => void;
+  selectedCity: SelectedCity | null;
+  onSelect: (city: SelectedCity) => void;
 };
 
 type IconName =
@@ -61,6 +54,15 @@ const SuggestedDestinations: React.FC<Props> = ({ selectedCity, onSelect }) => {
     try {
       setLoadingNearby(true);
 
+      // 1) Optimistically set "Nearby" immediately
+      onSelect({
+        name: "Nearby",
+        label: "Nearby",
+        country: "",
+        lat: null,
+        long: null,
+      });
+
       const { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
@@ -71,14 +73,26 @@ const SuggestedDestinations: React.FC<Props> = ({ selectedCity, onSelect }) => {
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+      const locationPromise = Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Lowest,
       });
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Location timeout")), 6000)
+      );
+
+      const location: any = await Promise.race([
+        locationPromise,
+        timeoutPromise,
+      ]);
 
       const { latitude, longitude } = location.coords;
 
+      // 2) Update when we actually have coords
       onSelect({
         name: "Nearby",
+        label: "Nearby",
+        country: "",
         lat: latitude,
         long: longitude,
       });
@@ -103,6 +117,8 @@ const SuggestedDestinations: React.FC<Props> = ({ selectedCity, onSelect }) => {
             ? handleNearbyPress()
             : onSelect({
                 name: item.name,
+                label: item.name,
+                country: "India",
                 lat: item.lat,
                 long: item.long,
               })

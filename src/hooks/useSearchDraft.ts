@@ -8,9 +8,10 @@ export type GuestsResult = {
   infants: number;
   pets: number;
 };
-
 export type SelectedCity = {
   name: string;
+  label: string;
+  country: string;
   lat: number | null;
   long: number | null;
 };
@@ -23,7 +24,17 @@ export type DraftSearchState = {
 };
 
 /* ---------------- DEBOUNCE ---------------- */
+function normalizeCity(city: any): SelectedCity | null {
+  if (!city) return null;
 
+  return {
+    name: city.name ?? city.label ?? "",
+    label: city.label ?? city.name ?? "",
+    country: city.country ?? "India",
+    lat: city.lat ?? null,
+    long: city.long ?? null,
+  };
+}
 function useDebouncedValue<T>(value: T, delay = 300) {
   const [debounced, setDebounced] = useState(value);
 
@@ -57,7 +68,7 @@ export function useSearchDraft(visible: boolean) {
 
     setDraft({
       search: searchState.search ?? "",
-      city: searchState.city ?? null,
+      city: normalizeCity(searchState.city),
       calendar: searchState.calendar ?? null,
       guests: searchState.guests ?? null,
     });
@@ -72,8 +83,8 @@ export function useSearchDraft(visible: boolean) {
 
   /* ---------- helpers ---------- */
 
-  const setCity = useCallback((city: SelectedCity | null) => {
-    setDraft((d) => ({ ...d, city }));
+  const setCity = useCallback((city: any | null) => {
+    setDraft((d) => ({ ...d, city: normalizeCity(city) }));
   }, []);
 
   const setCalendar = useCallback((calendar: any | null) => {

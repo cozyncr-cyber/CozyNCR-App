@@ -80,6 +80,7 @@ export function PropertyProvider({ children }: any) {
       setData({ ...listing, images });
 
       /* 2) Fetch owner */
+      /* 2) Fetch owner */
       if (listing.ownerId) {
         const ownerRes = await tablesDB.listRows({
           databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID!,
@@ -87,7 +88,19 @@ export function PropertyProvider({ children }: any) {
           queries: [Query.equal("$id", listing.ownerId)],
         });
 
-        setOwner(ownerRes.rows[0] ?? null);
+        const ownerDoc = ownerRes.rows[0] ?? null;
+
+        // 🚫 if owner deleted → treat listing as gone
+        if (ownerDoc?.isDeleted) {
+          setOwner(ownerDoc);
+          setData(null);
+          setBookings([]);
+          setBlockedDates([]);
+          setCheckoutOnlyDates([]);
+          return;
+        }
+
+        setOwner(ownerDoc);
       } else {
         setOwner(null);
       }

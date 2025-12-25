@@ -1,6 +1,8 @@
 export type Destination = {
   id: number;
-  name: string;
+  name: string; // raw city name
+  label: string; // display label
+  country: string; // country name
   subtitle: string;
   icon:
     | "navigation"
@@ -19,6 +21,8 @@ export const destinations: Destination[] = [
   {
     id: 1,
     name: "Nearby",
+    label: "Near you",
+    country: "India",
     subtitle: "Find what's around you",
     icon: "navigation",
     iconColor: "bg-blue-50",
@@ -27,7 +31,9 @@ export const destinations: Destination[] = [
   },
   {
     id: 2,
-    name: "Noida, Uttar Pradesh",
+    name: "Noida",
+    label: "Noida, Uttar Pradesh",
+    country: "India",
     subtitle: "National Capital Region",
     icon: "building",
     iconColor: "bg-pink-50",
@@ -36,7 +42,9 @@ export const destinations: Destination[] = [
   },
   {
     id: 3,
-    name: "Greater Noida, Uttar Pradesh",
+    name: "Greater Noida",
+    label: "Greater Noida, Uttar Pradesh",
+    country: "India",
     subtitle: "National Capital Region",
     icon: "building",
     iconColor: "bg-red-50",
@@ -46,6 +54,8 @@ export const destinations: Destination[] = [
   {
     id: 4,
     name: "Delhi",
+    label: "Delhi, India",
+    country: "India",
     subtitle: "Capital city of India",
     icon: "building",
     iconColor: "bg-blue-50",
@@ -54,7 +64,9 @@ export const destinations: Destination[] = [
   },
   {
     id: 5,
-    name: "Gurugram, Haryana",
+    name: "Gurugram",
+    label: "Gurugram, Haryana",
+    country: "India",
     subtitle: "National Capital Region",
     icon: "building",
     iconColor: "bg-gray-50",
@@ -63,7 +75,9 @@ export const destinations: Destination[] = [
   },
   {
     id: 6,
-    name: "Faridabad, Haryana",
+    name: "Faridabad",
+    label: "Faridabad, Haryana",
+    country: "India",
     subtitle: "National Capital Region",
     icon: "building",
     iconColor: "bg-green-50",
@@ -72,7 +86,9 @@ export const destinations: Destination[] = [
   },
   {
     id: 7,
-    name: "Ghaziabad, Uttar Pradesh",
+    name: "Ghaziabad",
+    label: "Ghaziabad, Uttar Pradesh",
+    country: "India",
     subtitle: "National Capital Region",
     icon: "building",
     iconColor: "bg-indigo-50",
@@ -81,7 +97,9 @@ export const destinations: Destination[] = [
   },
   {
     id: 8,
-    name: "Jaipur, Rajasthan",
+    name: "Jaipur",
+    label: "Jaipur, Rajasthan",
+    country: "India",
     subtitle: "Great for a weekend getaway",
     icon: "castle",
     iconColor: "bg-purple-50",
@@ -91,6 +109,8 @@ export const destinations: Destination[] = [
   {
     id: 9,
     name: "Chandigarh",
+    label: "Chandigarh",
+    country: "India",
     subtitle: "Popular with travellers nearby",
     icon: "building",
     iconColor: "bg-emerald-50",
