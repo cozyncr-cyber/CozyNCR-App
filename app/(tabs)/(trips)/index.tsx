@@ -6,6 +6,7 @@ import {
   LISTINGS_TABLE_ID,
   PROFILES_TABLE_ID,
   getFileUrl,
+  getImagePreviewUrl,
 } from "@/lib/appwrite";
 import { Query } from "react-native-appwrite";
 import {
@@ -209,16 +210,24 @@ const Trips = () => {
           listing?.ownerId && profileMap[listing.ownerId]
             ? profileMap[listing.ownerId]
             : undefined;
-
         // Images from Appwrite (using imageIds field on listing)
         let imageUrl: string | undefined;
+
         if (
           listing?.imageIds &&
           Array.isArray(listing.imageIds) &&
           listing.imageIds.length
         ) {
           const fileIds = listing.imageIds as string[];
-          const images = fileIds.map((fileId) => getFileUrl(fileId));
+
+          const images = fileIds.map((fileId) =>
+            getImagePreviewUrl(fileId, {
+              width: 400,
+              height: 400,
+              quality: 50,
+            })
+          );
+
           imageUrl = images[0]; // use first as cover
         }
 

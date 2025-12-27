@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.cozyncr.cozyncr",
+      "sha256_cert_fingerprints": [
+        "Y92:14:A8:B7:7C:CB:A1:D9:3E:F5:29:A0:B4:A5:6C:BB:95:31:71:70:86:93:39:53:14:B4:E2:AB:A9:C8:AE:08"
+      ]
+    }
+  }
+]

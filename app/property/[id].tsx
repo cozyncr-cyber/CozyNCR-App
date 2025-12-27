@@ -63,7 +63,7 @@ export default function Details() {
     if (!listingId || !data) return;
 
     try {
-      const url = `cozyncr://property/${listingId}`;
+      const url = `https://cozyncr.com/property/${listingId}`;
       // 👆 replace with your real deep link / web URL
 
       await Share.share({

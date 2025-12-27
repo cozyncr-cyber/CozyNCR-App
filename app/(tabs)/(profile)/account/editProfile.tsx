@@ -208,6 +208,7 @@ const EditProfile: React.FC = () => {
             <TextInput
               value={profileForm.fullName}
               onChangeText={(text) => handleChange("fullName", text)}
+              placeholderTextColor="#9CA3AF"
               placeholder="Enter your full name"
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-2xl"
             />
@@ -220,6 +221,7 @@ const EditProfile: React.FC = () => {
             <TextInput
               value={profileForm.city}
               onChangeText={(text) => handleChange("city", text)}
+              placeholderTextColor="#9CA3AF"
               placeholder="Enter your city"
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-2xl"
             />
@@ -232,6 +234,7 @@ const EditProfile: React.FC = () => {
             <TextInput
               value={profileForm.dob}
               onChangeText={(text) => handleChange("dob", text)}
+              placeholderTextColor="#9CA3AF"
               placeholder="YYYY-MM-DD"
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-2xl"
             />
@@ -245,6 +248,7 @@ const EditProfile: React.FC = () => {
               keyboardType="phone-pad"
               value={profileForm.phone}
               onChangeText={(text) => handleChange("phone", text)}
+              placeholderTextColor="#9CA3AF"
               placeholder="Enter your phone number"
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-2xl"
             />

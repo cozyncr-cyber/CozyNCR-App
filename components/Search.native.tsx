@@ -279,6 +279,7 @@ export default function CityDestinationSelector({
                     radius: 100000,
                   }}
                   textInputProps={{
+                    placeholderTextColor: "#9CA3AF",
                     onChangeText: (text) => {
                       setTypedQuery(text);
                       setSearchInput(text);

@@ -147,6 +147,7 @@ export default function RequestPersonalData() {
               <TextInput
                 value={formData.additionalInfo}
                 onChangeText={(v) => handleChange("additionalInfo", v)}
+                placeholderTextColor="#9CA3AF"
                 placeholder="Provide any additional details..."
                 multiline
                 numberOfLines={4}

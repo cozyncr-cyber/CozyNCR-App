@@ -3,7 +3,7 @@ import {
   DATABASE_ID,
   BOOKINGS_TABLE_ID,
   LISTINGS_TABLE_ID,
-  getFileUrl,
+  getImagePreviewUrl,
 } from "@/lib/appwrite";
 
 import { getProfileByUserId } from "@/lib/services/profiles";
@@ -53,11 +53,22 @@ export const getTripDetailsByTripId = async (tripId: string) => {
       customerProfilePromise,
     ]);
 
-    /* 4️⃣ Resolve images */
-    const images = listing.imageIds?.map((id: string) => getFileUrl(id)) ?? [];
+    /* 4️⃣ Resolve images */ /* 4️⃣ Resolve images */
+    const images =
+      listing.imageIds?.map((id: string) =>
+        getImagePreviewUrl(id, {
+          width: 500,
+          height: 500,
+          quality: 75,
+        })
+      ) ?? [];
 
     const thumbnailUrl = listing.thumbnail
-      ? getFileUrl(listing.thumbnail)
+      ? getImagePreviewUrl(listing.thumbnail, {
+          width: 400,
+          height: 400,
+          quality: 60,
+        })
       : null;
 
     /* 5️⃣ Return combined data */

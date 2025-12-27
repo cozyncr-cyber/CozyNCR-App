@@ -64,6 +64,7 @@ export default function ChangeEmail() {
         <TextInput
           value={email}
           onChangeText={setEmail}
+          placeholderTextColor="#9CA3AF"
           placeholder="Enter new email"
           keyboardType="email-address"
           autoCapitalize="none"
@@ -79,6 +80,7 @@ export default function ChangeEmail() {
         <TextInput
           value={password}
           onChangeText={setPassword}
+          placeholderTextColor="#9CA3AF"
           placeholder="Enter current password"
           secureTextEntry
           className="border rounded-xl px-4 py-3"

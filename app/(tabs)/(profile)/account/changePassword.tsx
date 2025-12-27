@@ -54,7 +54,6 @@ export default function ChangePassword() {
 
   return (
     <View className="flex-1 p-4 gap-y-4 bg-white">
-      <Text className="text-lg font-semibold">Change Password</Text>
       {success && (
         <View className="p-3 rounded-xl bg-green-50 border border-green-200">
           <Text className="text-green-700 font-semibold">
@@ -66,6 +65,7 @@ export default function ChangePassword() {
       <TextInput
         value={oldPassword}
         onChangeText={setOldPassword}
+        placeholderTextColor="#9CA3AF"
         placeholder="Current password"
         secureTextEntry
         className="border rounded-xl px-4 py-3"
@@ -73,6 +73,7 @@ export default function ChangePassword() {
       <TextInput
         value={newPassword}
         onChangeText={setNewPassword}
+        placeholderTextColor="#9CA3AF"
         placeholder="New password"
         secureTextEntry
         className="border rounded-xl px-4 py-3"
@@ -84,6 +85,7 @@ export default function ChangePassword() {
       <TextInput
         value={confirm}
         onChangeText={setConfirm}
+        placeholderTextColor="#9CA3AF"
         placeholder="Confirm password"
         secureTextEntry
         className="border rounded-xl px-4 py-3"

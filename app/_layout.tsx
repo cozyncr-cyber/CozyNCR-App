@@ -1,5 +1,7 @@
 import { UserProvider, useUser } from "@/src/contexts/UserContext";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import * as Linking from "expo-linking";
+import { useEffect } from "react";
 import "../global.css";
 
 import { SearchProvider } from "@/src/contexts/SearchContext";
@@ -8,6 +10,20 @@ import LaunchScreen from "./launch";
 
 export function Router() {
   const user = useUser();
+  const router = useRouter();
+  useEffect(() => {
+    const sub = Linking.addEventListener("url", ({ url }) => {
+      const { path } = Linking.parse(url);
+
+      // cozyncr://property/123 or https://cozyncr.com/property/123
+      if (path?.startsWith("property/")) {
+        const id = path.split("/")[1];
+        router.push(`/property/${id}`);
+      }
+    });
+
+    return () => sub.remove();
+  }, []);
   // 🚀 App launch state
   if (user.isInitializing) {
     return <LaunchScreen />;

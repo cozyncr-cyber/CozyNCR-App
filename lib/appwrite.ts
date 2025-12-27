@@ -88,7 +88,7 @@ export async function registerPush() {
   const token = await Notifications.getExpoPushTokenAsync();
 
   await databases.createDocument(
-    "main", // databaseId
+    DATABASE_ID, // databaseId
     "push_tokens", // collectionId
     ID.unique(),
     {
