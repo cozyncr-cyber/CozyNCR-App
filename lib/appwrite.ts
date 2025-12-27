@@ -11,6 +11,9 @@ import {
   Role,
 } from "react-native-appwrite";
 
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
+
 const client = new Client();
 
 client
@@ -70,3 +73,27 @@ export const getImagePreviewUrl = (fileId: string, options?: ImageOptions) => {
 
   return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/preview?${params.toString()}`;
 };
+
+export async function registerPush() {
+  if (!Device.isDevice) return;
+
+  let { status } = await Notifications.getPermissionsAsync();
+  if (status !== "granted") {
+    const res = await Notifications.requestPermissionsAsync();
+    status = res.status;
+  }
+
+  if (status !== "granted") return;
+
+  const token = await Notifications.getExpoPushTokenAsync();
+
+  await databases.createDocument(
+    "main", // databaseId
+    "push_tokens", // collectionId
+    ID.unique(),
+    {
+      token: token.data,
+      platform: Platform.OS,
+    }
+  );
+}

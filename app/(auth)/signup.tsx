@@ -173,22 +173,25 @@ export default function Signup() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardDismissWrapper>
         <ScrollView
           className="flex-1 bg-gray-100"
           contentContainerStyle={{ paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View className="m-8 p-4 rounded-xl shadow-sm py-8 bg-white">
-            <Text className="text-3xl font-bold mb-2">Create Account</Text>
-            <Text className="text-gray-500 mb-6">Join as a host</Text>
+          <View className="m-8 p-6 rounded-3xl shadow-xl bg-white">
+            <Text className="text-3xl font-medium text-gray-900 mb-2">
+              Create Account
+            </Text>
+
+            <Text className="text-gray-500 text-sm mb-6">Join as a host</Text>
 
             {/* Name */}
             <Text className="font-medium mb-1">Full Name</Text>
             <TextInput
               placeholderTextColor="#9CA3AF"
-              className="border border-zinc-500 bg-white p-4 rounded-xl mb-1 text-black"
+              className="bg-gray-100 px-4 py-3 rounded-xl mb-1 text-black"
               placeholder="John Doe"
               onChangeText={(v) => handleChange("name", v)}
             />
@@ -197,15 +200,16 @@ export default function Signup() {
             )}
 
             {/* Email */}
-            <Text className="font-medium mb-1">Email</Text>
+            <Text className="font-medium mb-1 mt-3">Email</Text>
             <View className="flex-row gap-2">
               <TextInput
                 placeholderTextColor="#9CA3AF"
-                className="border border-zinc-500 flex-1 bg-white p-4 rounded-xl text-black"
+                className="flex-1 bg-gray-100 px-4 py-3 rounded-xl text-black"
                 editable={!otpVerified}
                 placeholder="email@example.com"
                 onChangeText={(v) => handleChange("email", v)}
               />
+
               {!otpVerified && (
                 <TouchableOpacity
                   onPress={handleSendOtp}
@@ -223,10 +227,11 @@ export default function Signup() {
               <View className="flex-row gap-2 mt-3">
                 <TextInput
                   placeholderTextColor="#9CA3AF"
-                  className="flex-1 border border-zinc-500  bg-white p-4 rounded-xl text-center text-black"
+                  className="flex-1 bg-gray-100 px-4 py-3 rounded-xl text-center text-black"
                   placeholder="OTP"
                   onChangeText={(v) => handleChange("otp", v)}
                 />
+
                 <TouchableOpacity
                   onPress={handleVerifyOtp}
                   className="bg-black px-6 rounded-xl justify-center"
@@ -243,7 +248,7 @@ export default function Signup() {
             <Text className="font-medium mt-4 mb-1">Phone</Text>
             <TextInput
               placeholderTextColor="#9CA3AF"
-              className="border border-zinc-500 bg-white p-4 rounded-xl text-black"
+              className="bg-gray-100 px-4 py-3 rounded-xl text-black"
               placeholder="+91..."
               onChangeText={(v) => handleChange("phone", v)}
             />
@@ -252,7 +257,7 @@ export default function Signup() {
             <Text className="font-medium mt-4 mb-1">City</Text>
             <TextInput
               placeholderTextColor="#9CA3AF"
-              className="border border-zinc-500 bg-white p-4 rounded-xl text-black"
+              className="bg-gray-100 px-4 py-3 rounded-xl text-black"
               placeholder="Delhi"
               onChangeText={(v) => handleChange("location", v)}
             />
@@ -263,7 +268,7 @@ export default function Signup() {
             </Text>
             <TextInput
               placeholderTextColor="#9CA3AF"
-              className="border border-zinc-500 bg-white p-4 rounded-xl text-black"
+              className="bg-gray-100 px-4 py-3 rounded-xl text-black"
               placeholder="YYYY-MM-DD"
               onChangeText={(v) => handleChange("dob", v)}
             />
@@ -273,10 +278,10 @@ export default function Signup() {
 
             {/* Password */}
             <Text className="font-medium mt-4 mb-1">Password</Text>
-            <View className="bg-white border border-zinc-500  rounded-xl flex-row items-center px-4 text-black">
+            <View className="bg-gray-100 rounded-xl flex-row items-center px-4">
               <TextInput
                 placeholderTextColor="#9CA3AF"
-                className="flex-1 text-black py-4"
+                className="flex-1 py-4 text-black"
                 secureTextEntry={!showPassword}
                 placeholder="••••••••"
                 onChangeText={(v) => handleChange("password", v)}
@@ -288,7 +293,7 @@ export default function Signup() {
 
             {/* Confirm Password */}
             <Text className="font-medium mt-4 mb-1">Confirm Password</Text>
-            <View className="bg-white border border-zinc-500  rounded-xl flex-row items-center px-4">
+            <View className="bg-gray-100 rounded-xl flex-row items-center px-4">
               <TextInput
                 placeholderTextColor="#9CA3AF"
                 className="flex-1 py-4 text-black"
@@ -305,6 +310,7 @@ export default function Signup() {
                 />
               </Pressable>
             </View>
+
             {errors.confirmPassword && (
               <Text className="text-red-500 text-xs mt-1">
                 {errors.confirmPassword}
@@ -315,9 +321,9 @@ export default function Signup() {
             <TouchableOpacity
               onPress={handleSubmit}
               disabled={loading}
-              className="bg-black py-4 rounded-xl mt-8 items-center"
+              className="bg-black py-4 rounded-2xl mt-8 items-center"
             >
-              <Text className="text-white font-bold text-lg">
+              <Text className="text-white font-medium text-lg">
                 {loading ? "Loading..." : "Create Account"}
               </Text>
             </TouchableOpacity>
@@ -329,12 +335,24 @@ export default function Signup() {
             >
               <Text className="text-gray-500">
                 Already have an account?{" "}
-                <Text className="text-black font-bold underline">Sign In</Text>
+                <Text className="text-black font-medium underline">
+                  Sign In
+                </Text>
               </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </TouchableWithoutFeedback>
+      </KeyboardDismissWrapper>
     </KeyboardAvoidingView>
+  );
+}
+
+function KeyboardDismissWrapper({ children }: any) {
+  if (Platform.OS === "web") return children;
+
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      {children}
+    </TouchableWithoutFeedback>
   );
 }

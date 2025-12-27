@@ -3,7 +3,7 @@ export default function TripsLayout() {
   return (
     <Stack>
       <Stack.Screen
-        name="trips"
+        name="index"
         options={{
           headerShown: false,
         }}

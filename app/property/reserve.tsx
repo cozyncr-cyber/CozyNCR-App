@@ -644,6 +644,12 @@ export default function Booking() {
                   check-in{" "}
                 </Text>
               </View>
+              <View className="pt-3 border-t border-gray-200 mt-3">
+                <Text className="text-sm text-gray-700">
+                  Phone number of host will be avialable once booking is
+                  confirmed.
+                </Text>
+              </View>
             </View>
 
             {/* Price Details */}

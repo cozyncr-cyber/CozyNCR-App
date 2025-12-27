@@ -156,7 +156,9 @@ export default function HomeScreen() {
       <FlatList
         data={listings}
         keyExtractor={(item) => item.$id}
-        renderItem={({ item }) => <ListingCard data={item} />}
+        renderItem={({ item }) => (
+          <ListingCard data={item} duration={filters?.duration ?? null} />
+        )}
         onEndReachedThreshold={0.5}
         onEndReached={() => {
           if (!loading && hasMore && !isSearchActive) {

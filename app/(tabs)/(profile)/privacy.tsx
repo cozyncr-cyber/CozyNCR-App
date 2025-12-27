@@ -90,8 +90,18 @@ const sections: SectionData[] = [
           "Referring URLs",
         ],
       },
+      {
+        subtitle: "Permissions",
+        items: [
+          "Location — to show nearby listings and relevant search results",
+          "Camera & Photos — only if users upload profile or property photos",
+          "Notifications — booking alerts, account updates and security messages",
+          "Permissions are optional and features continue where possible",
+        ],
+      },
     ],
   },
+
   {
     id: 2,
     title: "How We Use Your Information",
@@ -111,6 +121,7 @@ const sections: SectionData[] = [
       },
     ],
   },
+
   {
     id: 3,
     title: "Legal Bases for Processing",
@@ -125,6 +136,7 @@ const sections: SectionData[] = [
       },
     ],
   },
+
   {
     id: 4,
     title: "Sharing of Information",
@@ -155,10 +167,14 @@ const sections: SectionData[] = [
         ],
       },
       {
-        items: ["We DO NOT sell user data to third parties."],
+        items: [
+          "We DO NOT sell user data to third parties.",
+          "We do not share data with third parties for their own marketing purposes.",
+        ],
       },
     ],
   },
+
   {
     id: 5,
     title: "Data Security Measures",
@@ -177,6 +193,7 @@ const sections: SectionData[] = [
       },
     ],
   },
+
   {
     id: 6,
     title: "Data Retention",
@@ -193,6 +210,7 @@ const sections: SectionData[] = [
       },
     ],
   },
+
   {
     id: 7,
     title: "International Data Transfers",
@@ -202,6 +220,7 @@ const sections: SectionData[] = [
       },
     ],
   },
+
   {
     id: 8,
     title: "User Rights",
@@ -218,8 +237,16 @@ const sections: SectionData[] = [
           "Requests can be made via ncrcozy@gmail.com",
         ],
       },
+      {
+        subtitle: "Account Deletion",
+        items: [
+          "Users may permanently delete their account and data from within the app or by contacting support",
+          "Some booking and financial information may be retained where legally required (fraud prevention, disputes, tax records)",
+        ],
+      },
     ],
   },
+
   {
     id: 9,
     title: "Cookies & Tracking",
@@ -237,6 +264,7 @@ const sections: SectionData[] = [
       },
     ],
   },
+
   {
     id: 10,
     title: "Children's Privacy",
@@ -246,6 +274,7 @@ const sections: SectionData[] = [
       },
     ],
   },
+
   {
     id: 11,
     title: "Third-Party Links",
@@ -255,6 +284,7 @@ const sections: SectionData[] = [
       },
     ],
   },
+
   {
     id: 12,
     title: "Fraud Prevention & Safety",
@@ -271,6 +301,7 @@ const sections: SectionData[] = [
       },
     ],
   },
+
   {
     id: 13,
     title: "Notifications & Communication",
@@ -287,8 +318,33 @@ const sections: SectionData[] = [
       },
     ],
   },
+
   {
     id: 14,
+    title: "Tracking & Advertising",
+    content: [
+      {
+        text: "We do not track users across other apps or websites for advertising purposes.",
+        items: [
+          "If we ever introduce tracking in the future, we will first request consent through Apple’s App Tracking Transparency (ATT) framework.",
+          "Users may change tracking preferences anytime from device settings.",
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 15,
+    title: "Payments",
+    content: [
+      {
+        text: "All payments processed through the app relate to real-world accommodation and services. Digital goods are not sold within the app. Payments are handled securely by third-party payment gateways, and we do not store full card details.",
+      },
+    ],
+  },
+
+  {
+    id: 16,
     title: "Dispute Resolution",
     content: [
       {
@@ -296,8 +352,19 @@ const sections: SectionData[] = [
       },
     ],
   },
+
   {
-    id: 15,
+    id: 17,
+    title: "Data Controller & Contact",
+    content: [
+      {
+        text: "CozyNCR acts as the data controller for all personal information collected through the Platform. For privacy-related questions, email ncrcozy@gmail.com.",
+      },
+    ],
+  },
+
+  {
+    id: 18,
     title: "Changes to This Policy",
     content: [
       {

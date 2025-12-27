@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { Query } from "react-native-appwrite";
-import { tablesDB, getFileUrl } from "../../lib/appwrite";
+import { tablesDB, getImagePreviewUrl } from "../../lib/appwrite";
 type PropertyContextType = {
   data: any;
   owner: any;
@@ -75,8 +75,14 @@ export function PropertyProvider({ children }: any) {
         : listing.imageId
           ? [listing.imageId]
           : [];
+      const images = fileIds.map((id: string) =>
+        getImagePreviewUrl(id, {
+          width: 400,
+          height: 400,
+          quality: 65,
+        })
+      );
 
-      const images = fileIds.map(getFileUrl);
       setData({ ...listing, images });
 
       /* 2) Fetch owner */

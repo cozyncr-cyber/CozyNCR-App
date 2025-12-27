@@ -143,7 +143,7 @@ async function processListings(
   let processed = rows.map((l) => ({
     ...l,
     images: (Array.isArray(l.imageIds) ? l.imageIds : [l.imageId]).map(
-      getCachedFileUrl
+      getCachedListingImageUrl
     ),
   }));
 
@@ -325,9 +325,9 @@ export function getCachedListingImageUrl(fileId: string) {
       fileId,
 
       getImagePreviewUrl(fileId, {
-        width: 900,
-        height: 900,
-        quality: 75,
+        width: 400,
+        height: 400,
+        quality: 50,
       })
     );
   }

@@ -5,14 +5,19 @@ import { ScrollView, Dimensions, Pressable, View, Text } from "react-native";
 import { Image } from "expo-image";
 import Entypo from "@expo/vector-icons/Entypo";
 import { useWishlist } from "@/src/hooks/useWishlist";
-
-const ListingCard = memo(function ListingCard({ data }: { data: any }) {
+const ListingCard = memo(function ListingCard({
+  data,
+  duration,
+}: {
+  data: any;
+  duration: "3h" | "6h" | "12h" | "24h" | null;
+}) {
   const width = Dimensions.get("window").width * 0.9;
   const [activeIndex, setActiveIndex] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const { wishlisted, toggle } = useWishlist(data?.$id);
   const router = useRouter();
-  const best = getBestPrice(data);
+  const best = getBestPrice(data, duration);
   const hasMultipleImages = data.images.length > 1;
 
   const handleScroll = (event: any) => {
@@ -140,12 +145,34 @@ const ListingCard = memo(function ListingCard({ data }: { data: any }) {
   );
 });
 
-function getBestPrice(listing: any) {
-  if (listing.price_24h != null) {
-    return {
-      duration: "night",
-      price: listing.price_24h,
+export default ListingCard;
+
+function getBestPrice(
+  listing: any,
+  duration: "3h" | "6h" | "12h" | "24h" | null
+) {
+  // If user selected a duration — show exactly that price (if exists)
+  if (duration) {
+    const map: any = {
+      "3h": { label: "3 hours", price: listing.price_3h },
+      "6h": { label: "6 hours", price: listing.price_6h },
+      "12h": { label: "12 hours", price: listing.price_12h },
+      "24h": { label: "night", price: listing.price_24h },
     };
+
+    const entry = map[duration];
+
+    if (entry?.price != null) {
+      return {
+        duration: entry.label,
+        price: entry.price,
+      };
+    }
+  }
+
+  // otherwise — fallback to cheapest available
+  if (listing.price_24h != null) {
+    return { duration: "night", price: listing.price_24h };
   }
 
   const map = {
@@ -156,15 +183,13 @@ function getBestPrice(listing: any) {
   };
 
   const entries = Object.entries(map)
-    .filter(([_, value]) => value != null)
-    .sort((a, b) => a[1] - b[1]);
+    .filter(([_, v]) => v != null)
+    .sort((a, b) => Number(a[1]) - Number(b[1]));
 
-  if (entries.length === 0) return null;
+  if (!entries.length) return null;
 
   return {
     duration: entries[0][0],
     price: entries[0][1],
   };
 }
-
-export default ListingCard;

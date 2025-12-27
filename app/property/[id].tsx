@@ -63,7 +63,7 @@ export default function Details() {
     if (!listingId || !data) return;
 
     try {
-      const url = `https://yourapp.com/property/${listingId}`;
+      const url = `cozyncr://property/${listingId}`;
       // 👆 replace with your real deep link / web URL
 
       await Share.share({
@@ -435,8 +435,8 @@ export default function Details() {
         </View>
 
         <Pressable onPress={() => router.push(`/property/reserve`)}>
-          <View className="bg-pink-600 rounded-full px-6 py-2 min-w-10">
-            <Text className="text-white font-medium text-center">Reserve</Text>
+          <View className="bg-blue-600 rounded-full px-6 py-2 min-w-10">
+            <Text className="text-white font-medium text-center">Book Now</Text>
           </View>
         </Pressable>
       </View>

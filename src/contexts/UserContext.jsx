@@ -11,6 +11,7 @@ import {
   DATABASE_ID,
   PROFILES_TABLE_ID,
   getFileUrl,
+  registerPush,
 } from "../../lib/appwrite";
 import { useRouter } from "expo-router";
 
@@ -54,6 +55,9 @@ export function UserProvider(props) {
 
     // 3️⃣ fetch profile (will block deleted users safely)
     await fetchProfile(user.$id);
+
+    // register the device token
+    await registerPush();
 
     router.replace("/");
   }
