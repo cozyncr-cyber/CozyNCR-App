@@ -28,6 +28,13 @@ export default function ProfileLayout() {
           }}
         />
         <Stack.Screen
+          name="notifications"
+          options={{
+            headerTitle: "Notification Settings",
+            headerTitleAlign: "center",
+          }}
+        />
+        <Stack.Screen
           name="terms"
           options={{
             headerTitle: "Terms & Conditions",

@@ -31,10 +31,8 @@ export function UserProvider(props) {
   const router = useRouter();
 
   async function login(email, password) {
-    // 1️⃣ create session
     await account.createEmailPasswordSession({ email, password });
 
-    // 2️⃣ get user (wrap to avoid crashing)
     let user = null;
 
     try {
@@ -44,7 +42,6 @@ export function UserProvider(props) {
     }
 
     if (!user) {
-      // if we somehow fail, still treat as logged out
       setUser(null);
       setIsLoggedIn(false);
       return;
@@ -53,10 +50,9 @@ export function UserProvider(props) {
     setUser(user);
     setIsLoggedIn(true);
 
-    // 3️⃣ fetch profile (will block deleted users safely)
     await fetchProfile(user.$id);
 
-    // register the device token
+    // 👈 move push registration AFTER everything is stable
     await registerPush();
 
     router.replace("/");

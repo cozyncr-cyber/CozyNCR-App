@@ -10,6 +10,7 @@ import {
   Permission,
   Role,
 } from "react-native-appwrite";
+import Constants from "expo-constants";
 
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
@@ -75,25 +76,72 @@ export const getImagePreviewUrl = (fileId: string, options?: ImageOptions) => {
 };
 
 export async function registerPush() {
-  if (!Device.isDevice) return;
+  try {
+    console.log("REGISTER PUSH START");
 
-  let { status } = await Notifications.getPermissionsAsync();
-  if (status !== "granted") {
-    const res = await Notifications.requestPermissionsAsync();
-    status = res.status;
-  }
+    if (Platform.OS === "web") {
+      console.log("WEB MODE");
 
-  if (status !== "granted") return;
+      const user = await account.get();
+      console.log("USER (WEB):", user.$id);
 
-  const token = await Notifications.getExpoPushTokenAsync();
+      await databases.createDocument(DATABASE_ID, "push_tokens", ID.unique(), {
+        token: "WEB_TEST_TOKEN",
+        platform: "web",
+        userId: user.$id,
+      });
 
-  await databases.createDocument(
-    DATABASE_ID, // databaseId
-    "push_tokens", // collectionId
-    ID.unique(),
-    {
+      console.log("WEB TOKEN SAVED");
+      return;
+    }
+    console.log("MOBILE MODE");
+
+    // ANDROID CHANNEL (important)
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "Default",
+        importance: Notifications.AndroidImportance.MAX,
+      });
+    }
+
+    let { status } = await Notifications.getPermissionsAsync();
+    console.log("PERMISSION:", status);
+
+    if (status !== "granted") {
+      const res = await Notifications.requestPermissionsAsync();
+      status = res.status;
+      console.log("PERMISSION AFTER ASK:", status);
+    }
+
+    if (status !== "granted") {
+      console.log("NOT GRANTED — EXIT");
+      return;
+    }
+    const projectId =
+      Constants?.expoConfig?.extra?.eas?.projectId ??
+      Constants?.easConfig?.projectId;
+
+    if (!projectId) {
+      console.log("NO PROJECT ID FOUND");
+      return;
+    }
+
+    const token = await Notifications.getExpoPushTokenAsync({ projectId });
+    console.log("TOKEN:", token);
+
+    console.log("TOKEN:", token);
+
+    const user = await account.get();
+    console.log("USER:", user.$id);
+
+    await databases.createDocument(DATABASE_ID, "push_tokens", ID.unique(), {
       token: token.data,
       platform: Platform.OS,
-    }
-  );
+      userId: user.$id,
+    });
+
+    console.log("TOKEN SAVED SUCCESS");
+  } catch (err) {
+    console.log("Push registration failed:", err);
+  }
 }

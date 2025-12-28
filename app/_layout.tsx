@@ -7,10 +7,18 @@ import "../global.css";
 import { SearchProvider } from "@/src/contexts/SearchContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LaunchScreen from "./launch";
+import { registerPush } from "@/lib/appwrite";
 
 export function Router() {
   const user = useUser();
   const router = useRouter();
+  const isLoggedIn = user.isLoggedIn;
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      registerPush();
+    }
+  }, [isLoggedIn]);
   useEffect(() => {
     const sub = Linking.addEventListener("url", ({ url }) => {
       const { path } = Linking.parse(url);

@@ -70,6 +70,16 @@ export default function Profile() {
                 <Text className="text-lg">Account Settings</Text>
               </View>
             </Link>
+            <Link href="/notifications">
+              <View className="w-full h-14 flex flex-row items-center gap-4 px-2">
+                <Ionicons
+                  name="notifications-outline"
+                  size={24}
+                  color="#3f3f46"
+                />
+                <Text className="text-lg">Notification Settings</Text>
+              </View>
+            </Link>
             <View className="w-full h-14 text-zinc-700 flex flex-row items-center gap-4 px-2  border-b border-zinc-300">
               <FontAwesome6 name="circle-question" size={24} color="#3f3f46" />
               <Text className="text-lg">Customer Support</Text>
