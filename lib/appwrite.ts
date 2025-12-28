@@ -123,16 +123,13 @@ export async function registerPush(userId: string) {
       console.log("NO PROJECT ID FOUND");
       return;
     }
-
-    const token = await Notifications.getExpoPushTokenAsync({ projectId });
-    console.log("TOKEN:", token);
-
+    const token = (await Notifications.getExpoPushTokenAsync()).data;
     console.log("TOKEN:", token);
 
     console.log("USER:", userId);
 
     await databases.createDocument(DATABASE_ID, "push_tokens", ID.unique(), {
-      token: token.data,
+      token: token,
       platform: Platform.OS,
       userId: userId,
     });

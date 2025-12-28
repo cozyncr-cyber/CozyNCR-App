@@ -51,6 +51,7 @@ export function UserProvider(props) {
     setIsLoggedIn(true);
 
     await fetchProfile(user.$id);
+    console.log(user);
 
     // don't block UI
     registerPush(user.$id).catch((err) => console.log("push failed", err));

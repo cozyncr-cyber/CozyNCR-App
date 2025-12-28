@@ -7,7 +7,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export default function AccountSettings() {
   return (
-    <View className="flex-1 p-4 gap-2 bg-white">
+    <View className="flex-1 p-4 pt-0 gap-2 bg-white">
       <Link href="/account/editProfile">
         <View className="w-full h-14 text-zinc-700 flex flex-row items-center gap-4 px-2  ">
           <MaterialCommunityIcons name="account" size={24} color="#3f3f46" />

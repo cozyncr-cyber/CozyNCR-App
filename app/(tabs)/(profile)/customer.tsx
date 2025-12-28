@@ -88,7 +88,7 @@ export default function CustomerSupport() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white ">
       <ScrollView>
         {/* Hero Section */}
         <View className="px-4 py-6 bg-gradient-to-br from-blue-50 to-purple-50 border-b border-gray-200">
