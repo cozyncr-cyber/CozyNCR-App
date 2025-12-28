@@ -52,8 +52,8 @@ export function UserProvider(props) {
 
     await fetchProfile(user.$id);
 
-    // 👈 move push registration AFTER everything is stable
-    await registerPush();
+    // don't block UI
+    registerPush(user.$id).catch((err) => console.log("push failed", err));
 
     router.replace("/");
   }

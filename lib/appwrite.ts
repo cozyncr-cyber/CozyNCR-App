@@ -74,21 +74,19 @@ export const getImagePreviewUrl = (fileId: string, options?: ImageOptions) => {
 
   return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/preview?${params.toString()}`;
 };
-
-export async function registerPush() {
+export async function registerPush(userId: string) {
   try {
     console.log("REGISTER PUSH START");
 
     if (Platform.OS === "web") {
       console.log("WEB MODE");
 
-      const user = await account.get();
-      console.log("USER (WEB):", user.$id);
+      console.log("USER (WEB):", userId);
 
       await databases.createDocument(DATABASE_ID, "push_tokens", ID.unique(), {
         token: "WEB_TEST_TOKEN",
         platform: "web",
-        userId: user.$id,
+        userId: userId,
       });
 
       console.log("WEB TOKEN SAVED");
@@ -131,13 +129,12 @@ export async function registerPush() {
 
     console.log("TOKEN:", token);
 
-    const user = await account.get();
-    console.log("USER:", user.$id);
+    console.log("USER:", userId);
 
     await databases.createDocument(DATABASE_ID, "push_tokens", ID.unique(), {
       token: token.data,
       platform: Platform.OS,
-      userId: user.$id,
+      userId: userId,
     });
 
     console.log("TOKEN SAVED SUCCESS");

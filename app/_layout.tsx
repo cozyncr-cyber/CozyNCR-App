@@ -15,10 +15,10 @@ export function Router() {
   const isLoggedIn = user.isLoggedIn;
 
   useEffect(() => {
-    if (isLoggedIn) {
-      registerPush();
+    if (isLoggedIn && user?.current?.$id) {
+      registerPush(user?.current.$id).catch(console.log);
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, user?.current?.$id]);
   useEffect(() => {
     const sub = Linking.addEventListener("url", ({ url }) => {
       const { path } = Linking.parse(url);

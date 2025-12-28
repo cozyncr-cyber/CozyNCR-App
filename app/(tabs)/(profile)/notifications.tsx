@@ -19,7 +19,7 @@ export default function SettingsScreen() {
 
       // TURN ON
       if (value) {
-        await registerPush();
+        await registerPush(user?.$id);
         Alert.alert("Notifications enabled");
       }
 
