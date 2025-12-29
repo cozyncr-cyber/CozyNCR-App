@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { account } from "@/lib/appwrite";
 import {
   sendEmailOtp,
   verifyEmailOtp,
@@ -142,10 +143,13 @@ export default function Signup() {
      Submit
   ─────────────────────── */
   const handleSubmit = async () => {
+    console.log("Start");
     if (!validateForm()) return;
 
     setLoading(true);
+    console.log("Validated");
     const result = await completeSignup(formData);
+    console.log("Completed Signup", result);
     setLoading(false);
 
     if (result.success) {
@@ -337,7 +341,12 @@ export default function Signup() {
 
             {/* Footer */}
             <TouchableOpacity
-              onPress={() => router.replace("/signin")}
+              onPress={async () => {
+                try {
+                  await account.deleteSession("current");
+                } catch {}
+                router.replace("/signin");
+              }}
               className="mt-4 items-center"
             >
               <Text className="text-gray-500">

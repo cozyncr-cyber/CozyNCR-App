@@ -57,14 +57,26 @@ export async function verifyEmailOtp(userId: string, otp: string) {
 
 /**
  * Complete signup after OTP verification
- */ export async function completeSignup(formData: any) {
+ */
+
+export async function completeSignup(formData: any) {
   try {
     const user = await account.get();
     if (!user) throw new Error("Session missing. Please verify OTP again.");
-    // Set password after OTP login
+
+    console.log("➡️ Step 1: set password");
     await account.updatePassword(formData.password);
 
-    // Create profile linked to user
+    console.log("➡️ Step 2: delete OTP session");
+    await account.deleteSession("current");
+
+    console.log("➡️ Step 3: create new normal session");
+    await account.createEmailPasswordSession({
+      email: user.email,
+      password: formData.password,
+    });
+
+    console.log("➡️ Step 4: create profile");
     await databases.createDocument(DATABASE_ID, PROFILES_TABLE_ID, user.$id, {
       name: formData.name,
       email: user.email,
@@ -77,6 +89,7 @@ export async function verifyEmailOtp(userId: string, otp: string) {
 
     return { success: true };
   } catch (error: any) {
+    console.log("❌ Signup error:", error);
     return {
       success: false,
       error: error.message || "Signup failed",
