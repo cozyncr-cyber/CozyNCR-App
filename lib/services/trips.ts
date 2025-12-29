@@ -65,9 +65,9 @@ export const getTripDetailsByTripId = async (tripId: string) => {
 
     const thumbnailUrl = listing.thumbnail
       ? getImagePreviewUrl(listing.thumbnail, {
-          width: 400,
-          height: 400,
-          quality: 60,
+          width: 600,
+          height: 600,
+          quality: 70,
         })
       : null;
 

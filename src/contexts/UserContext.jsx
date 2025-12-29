@@ -113,6 +113,24 @@ export function UserProvider(props) {
       setProfileImage(null);
     }
   }, []);
+  async function hydrateAfterSignup() {
+    try {
+      const user = await account.get();
+
+      if (!user) return;
+
+      setUser(user);
+      setIsLoggedIn(true);
+
+      await fetchProfile(user.$id);
+
+      registerPush(user.$id).catch((err) => console.log("push failed", err));
+
+      router.replace("/");
+    } catch (e) {
+      console.log("Hydrate after signup failed", e);
+    }
+  }
 
   const init = useCallback(async () => {
     try {
@@ -152,6 +170,7 @@ export function UserProvider(props) {
         logout,
         isLoggedIn,
         isInitializing,
+        hydrateAfterSignup,
       }}
     >
       {props.children}

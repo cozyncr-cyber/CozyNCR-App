@@ -60,7 +60,7 @@ export async function verifyEmailOtp(userId: string, otp: string) {
  */ export async function completeSignup(formData: any) {
   try {
     const user = await account.get();
-
+    if (!user) throw new Error("Session missing. Please verify OTP again.");
     // Set password after OTP login
     await account.updatePassword(formData.password);
 

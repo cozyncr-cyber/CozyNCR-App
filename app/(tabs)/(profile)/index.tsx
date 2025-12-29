@@ -12,7 +12,7 @@ export default function Profile() {
   return (
     <ScrollView className="bg-white">
       <View className="min-h-screen p-4 flex flex-col gap-6">
-        <Text className="text-3xl font-semibold mt-6 mb-4 px-4">Profile</Text>
+        <Text className="text-3xl font-semibold mt-16 mb-4 px-4">Profile</Text>
         {/* Cards */}
         <View className="flex flex-col gap-2">
           {/* CARD A */}

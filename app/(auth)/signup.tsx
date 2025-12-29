@@ -19,6 +19,9 @@ import {
 } from "@/lib/services/auth";
 import Feather from "@expo/vector-icons/Feather";
 import { useUser } from "@/src/contexts/UserContext";
+import DateTimePicker, {
+  DateTimePickerAndroid,
+} from "@react-native-community/datetimepicker";
 
 export default function Signup() {
   const router = useRouter();
@@ -40,10 +43,12 @@ export default function Signup() {
   const [otpVerified, setOtpVerified] = useState(false);
   const [tempUserId, setTempUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [dobPickerVisible, setDobPickerVisible] = useState(false);
+  const [dobDate, setDobDate] = useState<Date | null>(null);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { hydrateAfterSignup } = useUser();
 
   /* ───────────────────────
      Helpers
@@ -52,7 +57,20 @@ export default function Signup() {
     setFormData({ ...formData, [key]: value });
     if (errors[key]) setErrors({ ...errors, [key]: "" });
   };
-
+  const formatDate = (date: Date): string => date.toISOString().split("T")[0]; // "YYYY-MM-DD"
+  const openDobPicker = () => {
+    DateTimePickerAndroid.open({
+      value: dobDate ?? new Date("2000-01-01"),
+      mode: "date",
+      maximumDate: new Date(),
+      onChange: (event, selectedDate) => {
+        if (event.type === "set" && selectedDate) {
+          setDobDate(selectedDate);
+          handleChange("dob", formatDate(selectedDate));
+        }
+      },
+    });
+  };
   const isAdult = (dob: string) => {
     const birth = new Date(dob);
     const ageDifMs = Date.now() - birth.getTime();
@@ -131,38 +149,11 @@ export default function Signup() {
     setLoading(false);
 
     if (result.success) {
-      setSignupSuccess(true);
+      await hydrateAfterSignup();
     } else {
       setErrors({ backend: result.error });
     }
   };
-
-  /* ───────────────────────
-     Success Screen
-  ─────────────────────── */
-  if (signupSuccess) {
-    return (
-      <View className="flex-1 bg-gray-100 items-center justify-center p-6">
-        <View className="bg-white rounded-3xl p-8 w-full max-w-md items-center">
-          <Feather name="check-circle" size={48} color="green" />
-          <Text className="text-2xl font-bold mt-4">Account Created</Text>
-          <Text className="text-gray-500 text-center mt-2">
-            Your account has been created successfully.
-          </Text>
-
-          <TouchableOpacity
-            onPress={() => {
-              user.logout();
-              router.replace("/signin");
-            }}
-            className="bg-black py-4 rounded-xl mt-6 w-full items-center"
-          >
-            <Text className="text-white font-bold text-lg">Go to Sign In</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
 
   /* ───────────────────────
      Form
@@ -266,16 +257,32 @@ export default function Signup() {
             <Text className="font-medium mt-4 mb-1 text-black">
               Date of Birth
             </Text>
-            <TextInput
-              placeholderTextColor="#9CA3AF"
-              className="bg-gray-100 px-4 py-3 rounded-xl text-black"
-              placeholder="YYYY-MM-DD"
-              onChangeText={(v) => handleChange("dob", v)}
-            />
+
+            {Platform.OS === "web" ? (
+              <input
+                type="date"
+                value={formData.dob}
+                onChange={(e) => handleChange("dob", e.target.value)}
+                className="bg-gray-100 px-4 py-3 rounded-xl outline-none text-black w-full"
+              />
+            ) : (
+              <TouchableOpacity
+                onPress={() =>
+                  Platform.OS === "android"
+                    ? openDobPicker()
+                    : setDobPickerVisible(true)
+                }
+                className="bg-gray-100 px-4 py-3 rounded-xl"
+              >
+                <Text className="text-black">
+                  {formData.dob || "YYYY-MM-DD"}
+                </Text>
+              </TouchableOpacity>
+            )}
+
             {errors.dob && (
               <Text className="text-red-500 text-xs mt-1">{errors.dob}</Text>
             )}
-
             {/* Password */}
             <Text className="font-medium mt-4 mb-1">Password</Text>
             <View className="bg-gray-100 rounded-xl flex-row items-center px-4">
@@ -341,6 +348,20 @@ export default function Signup() {
               </Text>
             </TouchableOpacity>
           </View>
+          {Platform.OS === "ios" && dobPickerVisible && (
+            <DateTimePicker
+              value={dobDate ?? new Date("2000-01-01")}
+              mode="date"
+              display="spinner"
+              maximumDate={new Date()}
+              onChange={(event, selectedDate) => {
+                if (selectedDate) {
+                  setDobDate(selectedDate);
+                  handleChange("dob", formatDate(selectedDate));
+                }
+              }}
+            />
+          )}
         </ScrollView>
       </KeyboardDismissWrapper>
     </KeyboardAvoidingView>

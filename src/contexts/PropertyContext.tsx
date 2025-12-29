@@ -77,9 +77,9 @@ export function PropertyProvider({ children }: any) {
           : [];
       const images = fileIds.map((id: string) =>
         getImagePreviewUrl(id, {
-          width: 400,
-          height: 400,
-          quality: 65,
+          width: 1000,
+          height: 1000,
+          quality: 85,
         })
       );
 

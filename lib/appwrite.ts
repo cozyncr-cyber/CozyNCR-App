@@ -10,10 +10,8 @@ import {
   Permission,
   Role,
 } from "react-native-appwrite";
-import Constants from "expo-constants";
 
 import * as Notifications from "expo-notifications";
-import * as Device from "expo-device";
 
 const client = new Client();
 
@@ -113,14 +111,6 @@ export async function registerPush(userId: string) {
 
     if (status !== "granted") {
       console.log("NOT GRANTED — EXIT");
-      return;
-    }
-    const projectId =
-      Constants?.expoConfig?.extra?.eas?.projectId ??
-      Constants?.easConfig?.projectId;
-
-    if (!projectId) {
-      console.log("NO PROJECT ID FOUND");
       return;
     }
     const token = (await Notifications.getExpoPushTokenAsync()).data;

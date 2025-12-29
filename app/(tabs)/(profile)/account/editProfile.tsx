@@ -7,6 +7,7 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Camera, User } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -20,6 +21,9 @@ import {
   PROFILES_TABLE_ID,
   bucketId,
 } from "@/lib/appwrite";
+import DateTimePicker, {
+  DateTimePickerAndroid,
+} from "@react-native-community/datetimepicker";
 
 interface ProfileForm {
   fullName: string;
@@ -45,6 +49,10 @@ const EditProfile: React.FC = () => {
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [dobPickerVisible, setDobPickerVisible] = useState(false);
+  const [dobDate, setDobDate] = useState<Date | null>(null);
+
+  const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
   // ===== FETCH PROFILE =====
   const loadProfile = async () => {
@@ -64,7 +72,7 @@ const EditProfile: React.FC = () => {
         phone: profile.phone ?? "",
         avatar: profile.avatarUrl ?? null,
       });
-
+      if (profile.dob) setDobDate(new Date(profile.dob));
       setAvatarPreview(profile.avatarUrl ?? null);
     } catch (e) {
       console.log("Error loading profile", e);
@@ -79,6 +87,19 @@ const EditProfile: React.FC = () => {
 
   const handleChange = (field: keyof ProfileForm, value: string) => {
     setProfileForm((prev) => ({ ...prev, [field]: value }));
+  };
+  const openDobPicker = () => {
+    DateTimePickerAndroid.open({
+      value: dobDate ?? new Date("2000-01-01"),
+      mode: "date",
+      maximumDate: new Date(),
+      onChange: (event, selectedDate) => {
+        if (event.type === "set" && selectedDate) {
+          setDobDate(selectedDate);
+          handleChange("dob", formatDate(selectedDate));
+        }
+      },
+    });
   };
 
   // ===== PICK AVATAR =====
@@ -231,13 +252,28 @@ const EditProfile: React.FC = () => {
             <Text className="text-sm font-semibold text-gray-900 mb-2">
               Date of Birth
             </Text>
-            <TextInput
-              value={profileForm.dob}
-              onChangeText={(text) => handleChange("dob", text)}
-              placeholderTextColor="#9CA3AF"
-              placeholder="YYYY-MM-DD"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-2xl"
-            />
+
+            {Platform.OS === "web" ? (
+              <input
+                type="date"
+                value={profileForm.dob}
+                onChange={(e) => handleChange("dob", e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-2xl outline-none text-black"
+              />
+            ) : (
+              <TouchableOpacity
+                onPress={() =>
+                  Platform.OS === "android"
+                    ? openDobPicker()
+                    : setDobPickerVisible(true)
+                }
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-2xl"
+              >
+                <Text className="text-gray-700">
+                  {profileForm.dob || "YYYY-MM-DD"}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View>
@@ -286,6 +322,20 @@ const EditProfile: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </View>
+      {Platform.OS === "ios" && dobPickerVisible && (
+        <DateTimePicker
+          value={dobDate ?? new Date("2000-01-01")}
+          mode="date"
+          display="spinner"
+          maximumDate={new Date()}
+          onChange={(event, selectedDate) => {
+            if (selectedDate) {
+              setDobDate(selectedDate);
+              handleChange("dob", formatDate(selectedDate));
+            }
+          }}
+        />
+      )}
     </View>
   );
 };

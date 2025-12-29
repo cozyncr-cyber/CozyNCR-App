@@ -222,9 +222,9 @@ const Trips = () => {
 
           const images = fileIds.map((fileId) =>
             getImagePreviewUrl(fileId, {
-              width: 400,
-              height: 400,
-              quality: 50,
+              width: 700,
+              height: 700,
+              quality: 70,
             })
           );
 
