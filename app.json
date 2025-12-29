@@ -11,9 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.cozyncr.cozyncr",
-      "associatedDomains": [
-        "applinks:cozyncr.com"
-      ]
+      "associatedDomains": ["applinks:cozyncr.com"]
     },
     "android": {
       "adaptiveIcon": {
@@ -22,6 +20,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.cozyncr.cozyncr",
+      "permissions": ["POST_NOTIFICATIONS"],
       "useNextNotificationsApi": true,
       "intentFilters": [
         {
@@ -33,10 +32,7 @@
               "pathPrefix": "/"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },

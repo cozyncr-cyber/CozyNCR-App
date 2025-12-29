@@ -113,7 +113,19 @@ export async function registerPush(userId: string) {
       console.log("NOT GRANTED — EXIT");
       return;
     }
-    const token = (await Notifications.getExpoPushTokenAsync()).data;
+
+    await databases.createDocument(DATABASE_ID, "push_tokens", ID.unique(), {
+      token: "token",
+      platform: Platform.OS,
+      userId: userId,
+    });
+
+    const token = (
+      await Notifications.getExpoPushTokenAsync({
+        projectId: "df0beaaf-2104-4364-96d6-8ace81b9ded4",
+      })
+    ).data;
+    console.log("PUSH TOKEN OBTAINED", token);
     console.log("TOKEN:", token);
 
     console.log("USER:", userId);
