@@ -325,8 +325,8 @@ export function getCachedListingImageUrl(fileId: string) {
       fileId,
 
       getImagePreviewUrl(fileId, {
-        width: 800,
-        height: 800,
+        width: 1000,
+        height: 1000,
         quality: 80,
       })
     );
