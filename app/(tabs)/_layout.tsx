@@ -11,16 +11,20 @@ export default function RootLayout() {
         tabBarInactiveTintColor: "#6B7280",
         tabBarActiveTintColor: "black",
         headerShown: false,
-        tabBarShowLabel: true,
-        tabBarStyle: { height: 65 },
+        tabBarShowLabel: true, // Crucial for Android
+        tabBarStyle: {
+          height: 65,
+          paddingBottom: 10, // Gives the label room at the bottom
+          paddingTop: 5, // Gives the icon room at the top
+        },
         tabBarLabelStyle: {
-          marginBottom: 4,
           fontSize: 12,
-          flex: 1,
-          width: "100%",
+          fontFamily: "System", // Forces a standard font
+          // REMOVED flex: 1 and width: 100%
         },
         tabBarIconStyle: {
-          marginTop: 4,
+          // Avoid large margins here that might push the label out
+          marginBottom: 0,
         },
       }}
     >
