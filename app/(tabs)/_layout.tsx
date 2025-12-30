@@ -8,23 +8,23 @@ export default function RootLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarInactiveTintColor: "#6B7280",
-        tabBarActiveTintColor: "black",
         headerShown: false,
-        tabBarShowLabel: true, // Crucial for Android
+        tabBarActiveTintColor: "black",
+        tabBarInactiveTintColor: "#6B7280",
+
+        tabBarShowLabel: true,
+
         tabBarStyle: {
-          height: 65,
-          paddingBottom: 10, // Gives the label room at the bottom
-          paddingTop: 5, // Gives the icon room at the top
+          height: 60,
         },
+
         tabBarLabelStyle: {
           fontSize: 12,
-          fontFamily: "System", // Forces a standard font
-          // REMOVED flex: 1 and width: 100%
+          marginBottom: 4,
         },
+
         tabBarIconStyle: {
-          // Avoid large margins here that might push the label out
-          marginBottom: 0,
+          marginTop: 4,
         },
       }}
     >
