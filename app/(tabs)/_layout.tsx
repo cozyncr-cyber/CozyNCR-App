@@ -8,9 +8,20 @@ export default function RootLayout() {
   return (
     <Tabs
       screenOptions={{
+        tabBarInactiveTintColor: "#6B7280",
         tabBarActiveTintColor: "black",
         headerShown: false,
-        tabBarStyle: { height: 60 },
+        tabBarShowLabel: true,
+        tabBarStyle: { height: 65 },
+        tabBarLabelStyle: {
+          marginBottom: 4,
+          fontSize: 12,
+          flex: 1,
+          width: "100%",
+        },
+        tabBarIconStyle: {
+          marginTop: 4,
+        },
       }}
     >
       <Tabs.Screen

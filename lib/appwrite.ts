@@ -99,7 +99,6 @@ export async function registerPush(userId: string) {
         importance: Notifications.AndroidImportance.MAX,
       });
     }
-
     let { status } = await Notifications.getPermissionsAsync();
     console.log("PERMISSION:", status);
 

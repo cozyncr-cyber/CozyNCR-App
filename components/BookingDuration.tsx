@@ -13,7 +13,7 @@ const DURATIONS = [
   { id: "3h", label: "3 Hour" },
   { id: "6h", label: "6 Hour" },
   { id: "12h", label: "12 Hour" },
-  { id: "24h", label: "Nightly" },
+  { id: "24h", label: "Full Day" },
 ] as const;
 
 export const BookingDurationSelector = ({

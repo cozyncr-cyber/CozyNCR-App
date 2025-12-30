@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "29422156642",
+    "project_id": "cozyncr-102345",
+    "storage_bucket": "cozyncr-102345.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:29422156642:android:a247b903099541cdab4a3b",
+        "android_client_info": {
+          "package_name": "com.cozyncr.cozyncr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCtFRCGykMEbZ_jVxyOC4XTLk7tst1xg8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

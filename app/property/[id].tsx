@@ -8,6 +8,8 @@ import {
   Text,
   ActivityIndicator,
   Share,
+  Modal,
+  TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
 import Entypo from "@expo/vector-icons/Entypo";
@@ -25,7 +27,6 @@ import { useProperty } from "@/src/contexts/PropertyContext";
 import PriceModal from "@/components/PriceModal";
 import { useSearch } from "@/src/contexts/SearchContext";
 import { useWishlist } from "@/src/hooks/useWishlist";
-
 export function useNights() {
   const { searchState } = useSearch();
   const calendar = searchState.calendar;
@@ -58,6 +59,11 @@ export default function Details() {
   const [priceOpen, setPriceOpen] = useState(false);
   const listingId = data?.$id;
   const minimumPrice = useMemo(() => getMinimumBookingPrice(data), [data]);
+
+  const [showAmenitiesModal, setShowAmenitiesModal] = useState(false);
+
+  const visibleAmenities = data?.amenities?.slice(0, 6) ?? [];
+  const hasMore = (data?.amenities?.length ?? 0) > 6;
 
   const handleShare = async () => {
     if (!listingId || !data) return;
@@ -258,24 +264,36 @@ export default function Details() {
                 <Text className="text-xl font-semibold mb-6">
                   What this place offers
                 </Text>
+
                 <View className="gap-4">
-                  {data?.amenities &&
-                    data.amenities.map((amenity: string) => {
-                      const iconData =
-                        amenityIcons[amenity] || amenityIcons["default"];
-                      const Icon = iconData.component;
-                      return (
-                        <View
-                          key={amenity}
-                          className="flex-row items-center gap-4"
-                        >
-                          <Icon name={iconData.name} size={24} color="black" />
-                          <Text>
-                            {amenity.charAt(0).toUpperCase() + amenity.slice(1)}
-                          </Text>
-                        </View>
-                      );
-                    })}
+                  {visibleAmenities.map((amenity: string) => {
+                    const iconData =
+                      amenityIcons[amenity] || amenityIcons["default"];
+                    const Icon = iconData.component;
+
+                    return (
+                      <View
+                        key={amenity}
+                        className="flex-row items-center gap-4"
+                      >
+                        <Icon size={24} color="black" />
+                        <Text>
+                          {amenity.charAt(0).toUpperCase() + amenity.slice(1)}
+                        </Text>
+                      </View>
+                    );
+                  })}
+
+                  {hasMore && (
+                    <TouchableOpacity
+                      onPress={() => setShowAmenitiesModal(true)}
+                      className="mt-2"
+                    >
+                      <Text className="text-blue-600 font-semibold">
+                        See all amenities
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
               {/* Add-ons */}
@@ -440,6 +458,39 @@ export default function Details() {
           </View>
         </Pressable>
       </View>
+      <Modal visible={showAmenitiesModal} animationType="slide" transparent>
+        <View className="flex-1 bg-black/40 justify-end">
+          <View className="bg-white p-6 rounded-t-3xl max-h-[75%]">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-semibold">All amenities</Text>
+
+              <TouchableOpacity onPress={() => setShowAmenitiesModal(false)}>
+                <Text className="text-blue-600 font-semibold">Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView className="gap-8 flex flex-col">
+              {data?.amenities?.map((amenity: string) => {
+                const iconData =
+                  amenityIcons[amenity] || amenityIcons["default"];
+                const Icon = iconData.component;
+
+                return (
+                  <View
+                    key={amenity}
+                    className=" flex flex-row items-center gap-4 mb-3 p-2"
+                  >
+                    <Icon size={22} color="black" />
+                    <Text className="">
+                      {amenity.charAt(0).toUpperCase() + amenity.slice(1)}
+                    </Text>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }

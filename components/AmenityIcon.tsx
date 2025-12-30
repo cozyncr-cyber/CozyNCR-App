@@ -1,44 +1,69 @@
-import FontAwesome6 from "@expo/vector-icons/FontAwesome";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import Feather from "@expo/vector-icons/Feather";
+import {
+  Wifi,
+  Tv,
+  Snowflake,
+  Utensils,
+  Wind,
+  Cigarette,
+  Wine,
+  Zap,
+  Accessibility,
+  ShieldCheck,
+  Speaker,
+  Flame,
+  Key,
+  Waves,
+  Flower2,
+  BriefcaseMedical,
+  Users,
+  Car,
+  Monitor,
+  Coffee,
+  Home,
+  Armchair,
+  PartyPopper,
+  Castle,
+  Briefcase,
+  Music,
+  MapPin,
+} from "lucide-react-native";
 
-export const amenityIcons: Record<
-  string,
-  { component: any; name: string; size?: number; color?: string }
-> = {
-  wifi: {
-    component: Feather,
-    name: "wifi",
-  },
-  tv: {
-    component: Feather,
-    name: "tv",
-  },
-  ac: {
-    component: FontAwesome6,
-    name: "snowflake-o",
-  },
-  desk: {
-    component: MaterialIcons,
-    name: "desk",
-  },
-  parking: {
-    component: MaterialIcons,
-    name: "local-parking",
-  },
-  coffee: {
-    component: Ionicons,
-    name: "cafe-outline",
-  },
-  kitchen: {
-    component: MaterialIcons,
-    name: "kitchen",
-  },
+export const amenityIcons: Record<string, { component: any }> = {
+  // Core
+  wifi: { component: Wifi },
+  ac: { component: Snowflake },
+  tv: { component: Tv },
+  kitchen: { component: Utensils },
 
-  // fallback icon if key does not match
-  default: {
-    component: FontAwesome6,
-    name: "circle-question",
-  },
+  // Extra features
+  parking: { component: Car },
+  desk: { component: Monitor },
+  coffee: { component: Coffee },
+  washing_machine: { component: Waves },
+  lift: { component: Accessibility },
+  power_backup: { component: Zap },
+  balcony: { component: Wind },
+  garden: { component: Flower2 },
+  sound_system: { component: Speaker },
+  private_entrance: { component: Key },
+  first_aid: { component: BriefcaseMedical },
+  fire_ext: { component: Flame },
+  safety: { component: ShieldCheck },
+
+  // Rules
+  smoking: { component: Cigarette },
+  alcohol: { component: Wine },
+  party: { component: Users },
+
+  // Optional / misc (present on web)
+  home: { component: Home },
+  armchair: { component: Armchair },
+  party_popper: { component: PartyPopper },
+  castle: { component: Castle },
+  briefcase: { component: Briefcase },
+  music: { component: Music },
+  map: { component: MapPin },
+
+  // fallback
+  default: { component: ShieldCheck },
 };

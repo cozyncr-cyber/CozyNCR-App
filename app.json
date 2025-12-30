@@ -18,6 +18,8 @@
         "backgroundColor": "#E6F4FE"
       },
       "edgeToEdgeEnabled": true,
+
+      "googleServicesFile": "./google-services.json",
       "predictiveBackGestureEnabled": false,
       "package": "com.cozyncr.cozyncr",
       "permissions": ["POST_NOTIFICATIONS"],
