@@ -10,6 +10,7 @@ import LaunchScreen from "./launch";
 
 export function Router() {
   const user = useUser();
+  //H\User
   const router = useRouter();
   useEffect(() => {
     const sub = Linking.addEventListener("url", ({ url }) => {
