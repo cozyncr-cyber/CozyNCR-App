@@ -1,6 +1,6 @@
 import { UserProvider, useUser } from "@/src/contexts/UserContext";
-import { Stack, useRouter } from "expo-router";
 import * as Linking from "expo-linking";
+import { Stack, useRouter } from "expo-router";
 import { useEffect } from "react";
 import "../global.css";
 
