@@ -153,7 +153,7 @@ const BookingDetailsView: React.FC = () => {
           <View className="flex-row items-center">
             <Pressable
               className="p-2 -ml-2 rounded-full active:bg-gray-100"
-              onPress={() => router.push("/trips")}
+              onPress={() => router.push("/")}
             >
               <ArrowLeft size={20} />
             </Pressable>
