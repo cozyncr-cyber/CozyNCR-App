@@ -1,21 +1,26 @@
-import ListingCard from "@/components/ListingCard";
-import SkeletonCard from "@/components/SkeletonCard";
 import {
   BookingDurationSelector,
   type BookingDuration,
 } from "@/components/BookingDuration";
+import ListingCard from "@/components/ListingCard";
+import SkeletonCard from "@/components/SkeletonCard";
+import { useEffect, useState } from "react";
+import {
+  FlatList,
+  Pressable,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
-import { useState, useEffect } from "react";
-import { View, Pressable, Text, FlatList } from "react-native";
-
-import Ionicons from "@expo/vector-icons/Ionicons";
-import Feather from "@expo/vector-icons/Feather";
-import Component from "@/components/Search";
-import { FiltersModal } from "@/components/Filters";
 import type { FiltersState } from "@/components/Filters";
+import { FiltersModal } from "@/components/Filters";
+import Component from "@/components/Search";
+import Feather from "@expo/vector-icons/Feather";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { useSearch } from "@/src/contexts/SearchContext";
 import { useListings } from "@/src/contexts/ListingContext";
+import { useSearch } from "@/src/contexts/SearchContext";
 import * as Location from "expo-location";
 
 export default function HomeScreen() {
@@ -33,6 +38,11 @@ export default function HomeScreen() {
   const cityLong = searchState.city?.long ?? userLong ?? null;
 
   const guests = searchState.guests ?? null;
+
+  const { width } = useWindowDimensions();
+
+  // adjust this breakpoint based on your design
+  const numColumns = width >= 768 ? 2 : 1;
   useEffect(() => {
     async function getLocation() {
       // If user already chose something → skip
@@ -156,14 +166,19 @@ export default function HomeScreen() {
       <FlatList
         data={listings}
         keyExtractor={(item) => item.$id}
+        numColumns={numColumns}
+        key={numColumns} // <-- important to force re-render when layout changes
         renderItem={({ item }) => (
           <ListingCard data={item} duration={filters?.duration ?? null} />
         )}
+        columnWrapperStyle={
+          numColumns > 1
+            ? { gap: 12, paddingHorizontal: 12 } // optional spacing between columns
+            : undefined
+        }
         onEndReachedThreshold={0.5}
         onEndReached={() => {
-          if (!loading && hasMore && !isSearchActive) {
-            loadMore();
-          }
+          if (!loading && hasMore && !isSearchActive) loadMore();
         }}
         refreshing={loading}
         onRefresh={refresh}

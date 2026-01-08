@@ -1,10 +1,17 @@
 import Star from "@/components/SVGs/Star";
-import { useRouter } from "expo-router";
-import { useState, memo } from "react";
-import { ScrollView, Dimensions, Pressable, View, Text } from "react-native";
-import { Image } from "expo-image";
-import Entypo from "@expo/vector-icons/Entypo";
 import { useWishlist } from "@/src/hooks/useWishlist";
+import Entypo from "@expo/vector-icons/Entypo";
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import { memo, useState } from "react";
+import {
+  Dimensions,
+  Pressable,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 const ListingCard = memo(function ListingCard({
   data,
   duration,
@@ -12,7 +19,12 @@ const ListingCard = memo(function ListingCard({
   data: any;
   duration: "3h" | "6h" | "12h" | "24h" | null;
 }) {
-  const width = Dimensions.get("window").width * 0.9;
+  const { width } = useWindowDimensions();
+  const widthDevice =
+    width >= 768
+      ? Dimensions.get("window").width * 0.48
+      : Dimensions.get("window").width * 0.9;
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const { wishlisted, toggle } = useWishlist(data?.$id);
@@ -21,13 +33,13 @@ const ListingCard = memo(function ListingCard({
   const hasMultipleImages = data.images.length > 1;
 
   const handleScroll = (event: any) => {
-    const slide = Math.round(event.nativeEvent.contentOffset.x / width);
+    const slide = Math.round(event.nativeEvent.contentOffset.x / widthDevice);
     setActiveIndex(slide);
   };
 
   return (
     <View
-      style={{ width: width, marginBottom: 16 }} // FIXES INVISIBLE CARD ISSUE
+      style={{ width: widthDevice, marginBottom: 16 }} // FIXES INVISIBLE CARD ISSUE
       className="rounded-2xl bg-white shadow-sm overflow-hidden mx-auto"
     >
       {/* IMAGE CAROUSEL */}
@@ -54,7 +66,7 @@ const ListingCard = memo(function ListingCard({
           scrollEventThrottle={16}
           onScrollBeginDrag={() => setIsSwiping(true)}
           onMomentumScrollEnd={() => setIsSwiping(false)}
-          style={{ width, height: width, borderRadius: 16 }}
+          style={{ width: widthDevice, height: widthDevice, borderRadius: 16 }}
         >
           {data.images.map((src: string, index: number) => (
             <Pressable
@@ -73,7 +85,7 @@ const ListingCard = memo(function ListingCard({
             >
               <Image
                 source={{ uri: src }}
-                style={{ width, height: width }}
+                style={{ width: widthDevice, height: widthDevice }}
                 contentFit="cover"
                 transition={200}
                 cachePolicy="memory-disk"
