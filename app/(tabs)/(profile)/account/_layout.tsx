@@ -21,6 +21,10 @@ export default function AccountLayout() {
         options={{ headerTitle: "Change Password" }}
       />
       <Stack.Screen
+        name="paymentPreference"
+        options={{ headerTitle: "Refund Preference " }}
+      />
+      <Stack.Screen
         name="requestPersonalData"
         options={{ headerTitle: "Request Personal Data" }}
       />

@@ -1,29 +1,28 @@
-import React, { useState, useMemo, useCallback } from "react";
 import {
-  tablesDB,
-  DATABASE_ID,
   BOOKINGS_TABLE_ID,
+  DATABASE_ID,
   LISTINGS_TABLE_ID,
   PROFILES_TABLE_ID,
-  getFileUrl,
   getImagePreviewUrl,
+  tablesDB,
 } from "@/lib/appwrite";
-import { Query } from "react-native-appwrite";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  Platform,
-} from "react-native";
 import * as Linking from "expo-linking";
+import React, { useCallback, useMemo, useState } from "react";
+import {
+  Image,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { Query } from "react-native-appwrite";
 
+import Star from "@/components/SVGs/Star";
+import { useUser } from "@/src/contexts/UserContext";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 import Feather from "@expo/vector-icons/Feather";
-import Star from "@/components/SVGs/Star";
-import { Link, useRouter, useFocusEffect } from "expo-router";
-import { useUser } from "@/src/contexts/UserContext";
+import { Link, useFocusEffect, useRouter } from "expo-router";
 
 type TripType = "upcoming" | "past";
 
@@ -113,7 +112,8 @@ const Trips = () => {
         databaseId: DATABASE_ID,
         tableId: BOOKINGS_TABLE_ID,
         queries: [
-          Query.equal("customerId", userId), // ✅ THIS WAS MISSING
+          Query.equal("customerId", userId),
+          Query.notEqual("paid", "pending"), // 👈 THIS LINE
           Query.orderDesc("$createdAt"),
         ],
       });

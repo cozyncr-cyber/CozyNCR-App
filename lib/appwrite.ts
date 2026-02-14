@@ -1,17 +1,17 @@
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import {
-  Client,
-  TablesDB,
   Account,
+  Client,
   Databases,
-  Storage,
   Functions,
   ID,
   Permission,
   Role,
+  Storage,
+  TablesDB,
 } from "react-native-appwrite";
-
-import * as Notifications from "expo-notifications";
 
 const client = new Client();
 
@@ -43,6 +43,8 @@ export const RAZORPAY_CREATE_ORDER_FUNCTION_ID =
   process.env.EXPO_PUBLIC_APPWRITE_RAZORPAY_CREATE_ORDER_FUNCTION_ID!;
 export const RAZORPAY_VERIFY_PAYMENT_FUNCTION_ID =
   process.env.EXPO_PUBLIC_APPWRITE_RAZORPAY_VERIFY_PAYMENT_FUNCTION_ID!;
+export const PAYMENT_PREFERENCES_TABLE_ID =
+  process.env.EXPO_PUBLIC_APPWRITE_PAYMENT_PREFERENCES_TABLE_ID!;
 
 export const account = new Account(client);
 export const tablesDB = new TablesDB(client);
@@ -91,6 +93,10 @@ export async function registerPush(userId: string) {
       return;
     }
     console.log("MOBILE MODE");
+    if (!Device.isDevice) {
+      console.log("Must use physical device for Push Notifications");
+      return;
+    }
 
     // ANDROID CHANNEL (important)
     if (Platform.OS === "android") {
@@ -112,12 +118,6 @@ export async function registerPush(userId: string) {
       console.log("NOT GRANTED — EXIT");
       return;
     }
-
-    await databases.createDocument(DATABASE_ID, "push_tokens", ID.unique(), {
-      token: "token",
-      platform: Platform.OS,
-      userId: userId,
-    });
 
     const token = (
       await Notifications.getExpoPushTokenAsync({

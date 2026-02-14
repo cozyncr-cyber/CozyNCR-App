@@ -2,7 +2,7 @@
   "expo": {
     "name": "CozyNCR",
     "slug": "cozyncr",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "cozyncr",
@@ -11,9 +11,30 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.cozyncr.cozyncr",
-      "associatedDomains": ["applinks:cozyncr.com"]
+      "buildNumber": "1",
+      "associatedDomains": ["applinks:cozyncr.com"],
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "tel",
+          "mailto",
+          "maps",
+          "comgooglemaps"
+        ],
+        "NSCameraUsageDescription": "CozyNCR needs camera access to let hosts upload property photos.",
+        "NSPhotoLibraryUsageDescription": "CozyNCR needs access to your photos so you can upload a profile picture.",
+        "NSLocationWhenInUseUsageDescription": "We use your location to show you nearby hourly stays in the NCR region."
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          }
+        ]
+      }
     },
     "android": {
+      "versionCode": 20,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE"
       },

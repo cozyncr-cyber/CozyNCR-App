@@ -1,9 +1,10 @@
-import { View, Text } from "react-native";
-import { Link } from "expo-router";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Link } from "expo-router";
+import { Text, View } from "react-native";
 
 export default function AccountSettings() {
   return (
@@ -24,6 +25,14 @@ export default function AccountSettings() {
         <View className="w-full h-14 text-zinc-700 flex flex-row items-center gap-4 px-2 ">
           <MaterialIcons name="password" size={24} color="#3f3f46" />
           <Text className="text-lg">Change Password</Text>
+        </View>
+      </Link>
+      <Link href="/account/paymentPreference">
+        <View className="w-full h-14 text-zinc-700 flex flex-row items-center gap-4 px-2">
+          <View className="px-1">
+            <FontAwesome name="rupee" size={24} color="#3f3f46" />
+          </View>
+          <Text className="text-lg">Refund Prefernce</Text>
         </View>
       </Link>
       <Link href="/account/requestPersonalData">
