@@ -1,8 +1,8 @@
 // lib/auth.ts
 import {
   account,
-  databases,
   DATABASE_ID,
+  databases,
   PROFILES_TABLE_ID,
 } from "@/lib/appwrite";
 import { ID } from "react-native-appwrite";
@@ -80,11 +80,11 @@ export async function completeSignup(formData: any) {
     await databases.createDocument(DATABASE_ID, PROFILES_TABLE_ID, user.$id, {
       name: formData.name,
       email: user.email,
-      phone: formData.phone,
-      location: formData.location,
       kycStatus: "unverified",
-      dob: formData.dob,
       role: "host",
+      phone: formData.phone || null,
+      location: formData.location || null,
+      dob: formData.dob || null,
     });
 
     return { success: true };
