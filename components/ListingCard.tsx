@@ -1,4 +1,5 @@
 import Star from "@/components/SVGs/Star";
+import { useUser } from "@/src/contexts/UserContext";
 import { useWishlist } from "@/src/hooks/useWishlist";
 import Entypo from "@expo/vector-icons/Entypo";
 import { Image } from "expo-image";
@@ -20,6 +21,7 @@ const ListingCard = memo(function ListingCard({
   duration: "3h" | "6h" | "12h" | "24h" | null;
 }) {
   const { width } = useWindowDimensions();
+  const { isLoggedIn } = useUser();
   const widthDevice =
     width >= 768
       ? Dimensions.get("window").width * 0.48
@@ -44,19 +46,21 @@ const ListingCard = memo(function ListingCard({
     >
       {/* IMAGE CAROUSEL */}
       <View>
-        <View className="absolute top-3 right-3 z-10">
-          <Pressable
-            onPress={toggle}
-            hitSlop={10}
-            className="w-9 h-9 rounded-full bg-white/90 items-center justify-center"
-          >
-            <Entypo
-              name={wishlisted ? "heart" : "heart-outlined"}
-              size={18}
-              color={wishlisted ? "red" : "black"}
-            />
-          </Pressable>
-        </View>
+        {isLoggedIn && (
+          <View className="absolute top-3 right-3 z-10">
+            <Pressable
+              onPress={toggle}
+              hitSlop={10}
+              className="w-9 h-9 rounded-full bg-white/90 items-center justify-center"
+            >
+              <Entypo
+                name={wishlisted ? "heart" : "heart-outlined"}
+                size={18}
+                color={wishlisted ? "red" : "black"}
+              />
+            </Pressable>
+          </View>
+        )}
         <ScrollView
           horizontal={hasMultipleImages}
           pagingEnabled={hasMultipleImages}
@@ -77,10 +81,19 @@ const ListingCard = memo(function ListingCard({
               onPress={() => {
                 if (isSwiping) return;
 
-                router.push({
-                  pathname: "/property/[id]",
-                  params: { id: String(data.$id) },
-                });
+                const id = String(data.$id);
+
+                if (isLoggedIn) {
+                  router.push({
+                    pathname: "/property/[id]",
+                    params: { id },
+                  });
+                } else {
+                  router.push({
+                    pathname: "/(guest)/property/[id]",
+                    params: { id },
+                  });
+                }
               }}
             >
               <Image
@@ -118,12 +131,21 @@ const ListingCard = memo(function ListingCard({
 
       <Pressable
         className="p-4"
-        onPress={() =>
-          router.push({
-            pathname: "/property/[id]",
-            params: { id: String(data.$id) },
-          })
-        }
+        onPress={() => {
+          const id = String(data.$id);
+
+          if (isLoggedIn) {
+            router.push({
+              pathname: "/property/[id]",
+              params: { id },
+            });
+          } else {
+            router.push({
+              pathname: "/(guest)/property/[id]",
+              params: { id },
+            });
+          }
+        }}
       >
         <View className="flex-row justify-between items-start mb-1">
           <Text className="font-semibold text-gray-900" numberOfLines={1}>

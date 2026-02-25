@@ -1,28 +1,28 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
-  TouchableWithoutFeedback,
-} from "react-native";
-import { useRouter } from "expo-router";
 import { account } from "@/lib/appwrite";
 import {
+  completeSignup,
   sendEmailOtp,
   verifyEmailOtp,
-  completeSignup,
 } from "@/lib/services/auth";
-import Feather from "@expo/vector-icons/Feather";
 import { useUser } from "@/src/contexts/UserContext";
+import Feather from "@expo/vector-icons/Feather";
 import DateTimePicker, {
   DateTimePickerAndroid,
 } from "@react-native-community/datetimepicker";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 
 export default function Signup() {
   const router = useRouter();
@@ -87,9 +87,6 @@ export default function Signup() {
       newErrors.email = "Enter a valid email";
     if (!otpVerified) newErrors.otp = "Email verification required";
     if (!formData.phone) newErrors.phone = "Phone is required";
-    if (!formData.location) newErrors.location = "City is required";
-    if (!formData.dob) newErrors.dob = "Date of birth required";
-    else if (!isAdult(formData.dob)) newErrors.dob = "You must be at least 18";
 
     if (!formData.password || formData.password.length < 8)
       newErrors.password = "Password must be 8+ characters";
@@ -354,6 +351,16 @@ export default function Signup() {
                 <Text className="text-black font-medium underline">
                   Sign In
                 </Text>
+              </Text>
+            </TouchableOpacity>
+            {/* CONTINUE AS GUEST */}
+            <TouchableOpacity
+              onPress={() => router.replace("/")}
+              disabled={loading}
+              className="mt-3 items-center"
+            >
+              <Text className="text-gray-600 text-sm underline">
+                Continue as Guest
               </Text>
             </TouchableOpacity>
           </View>

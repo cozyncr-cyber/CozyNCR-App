@@ -8,13 +8,19 @@
     "scheme": "cozyncr",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "backgroundColor": "#ffffff",
     "ios": {
       "supportsTablet": true,
+      "requireFullScreen": true,
       "bundleIdentifier": "com.cozyncr.cozyncr",
       "buildNumber": "1",
-      "associatedDomains": ["applinks:cozyncr.com"],
+      "associatedDomains": ["applinks:cozyncr.com", "applinks:cozyncr.com"],
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
+          "tel",
+          "mailto",
+          "maps",
+          "comgooglemaps",
           "tel",
           "mailto",
           "maps",
@@ -22,10 +28,15 @@
         ],
         "NSCameraUsageDescription": "CozyNCR needs camera access to let hosts upload property photos.",
         "NSPhotoLibraryUsageDescription": "CozyNCR needs access to your photos so you can upload a profile picture.",
-        "NSLocationWhenInUseUsageDescription": "We use your location to show you nearby hourly stays in the NCR region."
+        "NSLocationWhenInUseUsageDescription": "We use your location to show you nearby hourly stays in the NCR region.",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          },
           {
             "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
             "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
@@ -39,7 +50,6 @@
         "backgroundColor": "#E6F4FE"
       },
       "edgeToEdgeEnabled": true,
-
       "googleServicesFile": "./google-services.json",
       "predictiveBackGestureEnabled": false,
       "package": "com.cozyncr.cozyncr",

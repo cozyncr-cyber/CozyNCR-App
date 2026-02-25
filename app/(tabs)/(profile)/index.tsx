@@ -1,18 +1,18 @@
 /* eslint-disable eqeqeq */
 import { useUser } from "@/src/contexts/UserContext";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import * as Linking from "expo-linking";
 import { Link } from "expo-router";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
-import * as Linking from "expo-linking";
 export default function Profile() {
   const user = useUser();
   return (
     <ScrollView className="bg-white">
       <View className="min-h-screen p-4 flex flex-col gap-6">
-        <Text className="text-3xl font-semibold mt-16 mb-4 px-4">Profile</Text>
+        <Text className="text-3xl font-semibold mt-8 mb-4 px-4">Profile</Text>
         {/* Cards */}
         <View className="flex flex-col gap-2">
           {/* CARD A */}

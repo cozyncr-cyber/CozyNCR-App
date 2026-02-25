@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from "react";
-import {
-  TouchableOpacity,
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
-  TouchableWithoutFeedback,
-  ScrollView,
-  Image,
-} from "react-native";
+import { sendPasswordRecovery } from "@/lib/services/auth";
 import Feather from "@expo/vector-icons/Feather";
-import { useUser } from "../../src/contexts/UserContext";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { Link, useRouter } from "expo-router";
-import { sendPasswordRecovery } from "@/lib/services/auth";
+import React, { useEffect, useState } from "react";
+import {
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
+import { useUser } from "../../src/contexts/UserContext";
 export default function SignIn() {
   const { login } = useUser();
   const router = useRouter();
@@ -249,6 +249,17 @@ export default function SignIn() {
                         </Text>
                       </TouchableOpacity>
                     )}
+                  </View>
+                  {/* CONTINUE AS GUEST */}
+                  <View className="items-center mt-4">
+                    <TouchableOpacity
+                      onPress={() => router.replace("/")}
+                      disabled={isLoading}
+                    >
+                      <Text className="text-gray-600 text-sm underline">
+                        Continue as Guest
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               )}

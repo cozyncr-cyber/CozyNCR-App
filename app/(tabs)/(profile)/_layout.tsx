@@ -4,7 +4,7 @@ import { View } from "react-native";
 export default function ProfileLayout() {
   return (
     <>
-      <View className="flex-1 -mt-10">
+      <View className="flex-1">
         <Stack>
           <Stack.Screen
             name="index"

@@ -43,6 +43,7 @@ export function Router() {
       </Stack.Protected>
       <Stack.Protected guard={!user.isLoggedIn}>
         <Stack.Screen name="(auth)/signin" />
+        <Stack.Screen name="(guest)" />
       </Stack.Protected>
     </Stack>
   );
