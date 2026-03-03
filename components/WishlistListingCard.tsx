@@ -1,8 +1,8 @@
-import { View, Text, Image, Pressable } from "react-native";
-import { useRouter } from "expo-router";
+import Star from "@/components/SVGs/Star";
 import Entypo from "@expo/vector-icons/Entypo";
 import Feather from "@expo/vector-icons/Feather";
-import Star from "@/components/SVGs/Star";
+import { useRouter } from "expo-router";
+import { Image, Pressable, Text, View } from "react-native";
 
 type Props = {
   data: any;
@@ -14,7 +14,7 @@ export default function WishlistListingCard({ data, onRemove }: Props) {
 
   const openProperty = () => {
     router.push({
-      pathname: "/property/[id]",
+      pathname: "/property?id=[id]" as any,
       params: { id: String(data.$id) },
     });
   };

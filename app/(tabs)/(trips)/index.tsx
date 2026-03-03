@@ -453,7 +453,7 @@ const Trips = () => {
           {trip.status === "confirmed" ? (
             isPast ? (
               <TouchableOpacity
-                onPress={() => router.push(`/property/${trip.listingId}`)}
+                onPress={() => router.push(`/property?id=${trip.listingId}`)}
                 className="flex-1 py-2 border border-gray-900 rounded-lg items-center"
               >
                 <Text className="font-semibold">Book again</Text>

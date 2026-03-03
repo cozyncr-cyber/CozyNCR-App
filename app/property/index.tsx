@@ -33,10 +33,10 @@ export function useNights() {
   const { searchState } = useSearch();
   const calendar = searchState.calendar;
 
-  const { idx } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   useEffect(() => {
-    console.log("Property Detail Loaded with ID:", idx);
-  }, [idx]);
+    console.log("Property Detail Loaded with ID:", id);
+  }, [id]);
 
   const nights = useMemo(() => {
     if (!calendar?.checkIn || !calendar?.checkOut) {

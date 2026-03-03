@@ -14,12 +14,16 @@ export function Router() {
   const router = useRouter();
   useEffect(() => {
     const sub = Linking.addEventListener("url", ({ url }) => {
-      const { path } = Linking.parse(url);
+      const { path, queryParams } = Linking.parse(url);
 
-      // cozyncr://property/123 or https://cozyncr.com/property/123
+      // If the link is old format: cozyncr://property/123
       if (path?.startsWith("property/")) {
         const id = path.split("/")[1];
-        router.push(`/property/${id}`);
+        router.push(`/property?id=${id}`);
+      }
+      // If the link is new format: cozyncr://property?id=123
+      else if (path === "property" && queryParams?.id) {
+        router.push(`/property?id=${queryParams.id}`);
       }
     });
 
@@ -33,13 +37,13 @@ export function Router() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={user.isLoggedIn}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="property" />
-        <Stack>
-          <Stack.Screen
-            name="property/reserve"
-            options={{ presentation: "modal" }}
-          />
-        </Stack>
+        <Stack.Screen
+          name="property"
+          options={{
+            // This ensures the router knows this is a nested stack
+            headerShown: false,
+          }}
+        />
       </Stack.Protected>
       <Stack.Protected guard={!user.isLoggedIn}>
         <Stack.Screen name="(auth)/signin" />

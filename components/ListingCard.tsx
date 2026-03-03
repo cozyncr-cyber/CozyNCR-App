@@ -38,6 +38,27 @@ const ListingCard = memo(function ListingCard({
     const slide = Math.round(event.nativeEvent.contentOffset.x / widthDevice);
     setActiveIndex(slide);
   };
+  // Inside ListingCard.tsx - Update both Pressables (the image and the text)
+  const handlePress = () => {
+    const id = String(data.$id);
+    const targetPath = isLoggedIn
+      ? "/property?id=[id]"
+      : "/(guest)/property/[id]";
+
+    console.log("--- Navigation Test ---");
+    console.log("Logged In:", isLoggedIn);
+    console.log("Target Pathname:", targetPath);
+    console.log("ID Parameter:", id);
+    console.log(
+      "Full Constructed Route:",
+      isLoggedIn ? `/property?id=${id}` : `/(guest)/property/${id}`
+    );
+
+    router.push({
+      pathname: targetPath as any, // Cast to any if TS complains about the string
+      params: { id: id },
+    });
+  };
 
   return (
     <View
@@ -81,19 +102,7 @@ const ListingCard = memo(function ListingCard({
               onPress={() => {
                 if (isSwiping) return;
 
-                const id = String(data.$id);
-
-                if (isLoggedIn) {
-                  router.push({
-                    pathname: "/property/[id]",
-                    params: { id },
-                  });
-                } else {
-                  router.push({
-                    pathname: "/(guest)/property/[id]",
-                    params: { id },
-                  });
-                }
+                handlePress();
               }}
             >
               <Image
@@ -129,24 +138,7 @@ const ListingCard = memo(function ListingCard({
 
       {/* CONTENT */}
 
-      <Pressable
-        className="p-4"
-        onPress={() => {
-          const id = String(data.$id);
-
-          if (isLoggedIn) {
-            router.push({
-              pathname: "/property/[id]",
-              params: { id },
-            });
-          } else {
-            router.push({
-              pathname: "/(guest)/property/[id]",
-              params: { id },
-            });
-          }
-        }}
-      >
+      <Pressable className="p-4" onPress={handlePress}>
         <View className="flex-row justify-between items-start mb-1">
           <Text className="font-semibold text-gray-900" numberOfLines={1}>
             {data.title}

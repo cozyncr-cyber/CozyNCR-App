@@ -246,7 +246,9 @@ export default function Signup() {
             />
 
             {/* City */}
-            <Text className="font-medium mt-4 mb-1">City</Text>
+            <Text className="font-medium mt-4 mb-1">
+              City &#40; Optional &#41;
+            </Text>
             <TextInput
               placeholderTextColor="#9CA3AF"
               className="bg-gray-100 px-4 py-3 rounded-xl text-black"
@@ -256,7 +258,7 @@ export default function Signup() {
 
             {/* DOB */}
             <Text className="font-medium mt-4 mb-1 text-black">
-              Date of Birth
+              Date of Birth &#40; Optional &#41;
             </Text>
 
             {Platform.OS === "web" ? (
