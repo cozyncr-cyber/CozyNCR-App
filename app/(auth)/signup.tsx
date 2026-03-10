@@ -86,7 +86,8 @@ export default function Signup() {
     if (!/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = "Enter a valid email";
     if (!otpVerified) newErrors.otp = "Email verification required";
-    if (!formData.phone) newErrors.phone = "Phone is required";
+    if (!formData.phone || !/^\d{10}$/.test(formData.phone))
+      newErrors.phone = "Enter a valid phone number";
 
     if (!formData.password || formData.password.length < 8)
       newErrors.password = "Password must be 8+ characters";
@@ -241,10 +242,15 @@ export default function Signup() {
             <TextInput
               placeholderTextColor="#9CA3AF"
               className="bg-gray-100 px-4 py-3 rounded-xl text-black"
-              placeholder="+91..."
+              placeholder="9897000000"
+              keyboardType="number-pad"
+              maxLength={10}
               onChangeText={(v) => handleChange("phone", v)}
             />
 
+            {errors.phone && (
+              <Text className="text-red-500 text-xs mb-2">{errors.phone}</Text>
+            )}
             {/* City */}
             <Text className="font-medium mt-4 mb-1">
               City &#40; Optional &#41;
