@@ -5,7 +5,7 @@ import {
   databases,
   PROFILES_TABLE_ID,
 } from "@/lib/appwrite";
-import { ID } from "react-native-appwrite";
+import { ID, Query } from "react-native-appwrite";
 
 export async function sendPasswordRecovery(email: string) {
   const redirectUrl = "https://cozyncr.com/reset-password";
@@ -22,11 +22,26 @@ export async function sendEmailOtp(
   { success: true; userId: string } | { success: false; error: string }
 > {
   try {
+    // 1. Check if a profile with this email already exists in your DB
+    const existingProfile = await databases.listDocuments(
+      DATABASE_ID,
+      PROFILES_TABLE_ID,
+      [Query.equal("email", email)]
+    );
+
+    if (existingProfile.total > 0) {
+      return {
+        success: false,
+        error: "This email is already registered. Please sign in.",
+      };
+    }
+
+    // 2. If not found, proceed to send OTP
     const token = await account.createEmailToken(ID.unique(), email);
 
     return {
       success: true,
-      userId: token.userId!, // ✅ Appwrite guarantees this
+      userId: token.userId,
     };
   } catch (error: any) {
     return {
@@ -64,18 +79,20 @@ export async function completeSignup(formData: any) {
     const user = await account.get();
     if (!user) throw new Error("Session missing. Please verify OTP again.");
 
+    if (!formData.password)
+      throw new Error("Password is required to complete signup.");
     console.log("➡️ Step 1: set password");
     await account.updatePassword(formData.password);
 
     console.log("➡️ Step 2: delete OTP session");
     await account.deleteSession("current");
-
     console.log("➡️ Step 3: create new normal session");
-    await account.createEmailPasswordSession({
+    const newSession = await account.createEmailPasswordSession({
       email: user.email,
       password: formData.password,
     });
 
+    if (!newSession) throw new Error("Failed to create permanent session.");
     console.log("➡️ Step 4: create profile");
     await databases.createDocument(DATABASE_ID, PROFILES_TABLE_ID, user.$id, {
       name: formData.name,

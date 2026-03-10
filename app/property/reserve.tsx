@@ -1,25 +1,26 @@
-import React, { useState, useEffect, useMemo } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  Image,
-  ScrollView,
-  Modal,
-  Platform,
-} from "react-native";
-import Feather from "@expo/vector-icons/Feather";
-import Star from "@/components/SVGs/Star";
-import { useRouter } from "expo-router";
-import { useProperty } from "@/src/contexts/PropertyContext";
 import Calendar from "@/components/Calendar";
 import Guests from "@/components/Guests";
 import PriceModal from "@/components/PriceModal";
-import TimeModal, { generateSlots } from "@/components/TimeModal";
-import { tablesDB, DATABASE_ID, BOOKINGS_TABLE_ID, ID } from "@/lib/appwrite";
-import { useUser } from "@/src/contexts/UserContext";
-import { payForBooking } from "@/lib/razorpay";
+import Star from "@/components/SVGs/Star";
 import BookingTermsModal from "@/components/TermsModal";
+import TimeModal, { generateSlots } from "@/components/TimeModal";
+import { BOOKINGS_TABLE_ID, DATABASE_ID, ID, tablesDB } from "@/lib/appwrite";
+import { payForBooking } from "@/lib/razorpay";
+import { useProperty } from "@/src/contexts/PropertyContext";
+import { useSearch } from "@/src/contexts/SearchContext";
+import { useUser } from "@/src/contexts/UserContext";
+import Feather from "@expo/vector-icons/Feather";
+import { useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Image,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 // also your auth context to get current userId
 // also you probably have current user somewhere, e.g. useAuth()
@@ -99,6 +100,7 @@ const isHourlyType = (t: BookingTypeId) =>
 export default function Booking() {
   const { data, loading, bookings, blockedDates, checkoutOnlyDates } =
     useProperty();
+  const { searchState } = useSearch(); // 2. Access global search state
   const user = useUser();
   const router = useRouter();
   const [showTerms, setShowTerms] = useState(false);
@@ -136,6 +138,40 @@ export default function Booking() {
       setCheckInDate(closest);
     }
   }, [blockedDates, checkoutOnlyDates]);
+
+  useEffect(() => {
+    // --- AUTOFILL DATES ---
+    if (searchState.calendar) {
+      const { checkIn, checkOut, mode } = searchState.calendar;
+
+      // Update local check-in
+      setCheckInDate(new Date(checkIn));
+
+      // Update booking type based on search mode
+      if (mode === "range" && checkOut) {
+        setBookingType("daily");
+        setCheckOutDate(new Date(checkOut));
+      } else {
+        // If it was a single date search, default to the first available hourly type
+        // or daily if hourly isn't supported (handled by your existing bookingTypes useEffect)
+        setCheckOutDate(null);
+      }
+    }
+
+    // --- AUTOFILL GUESTS ---
+    if (searchState.guests) {
+      const g = searchState.guests;
+      setGuestCounts({
+        adults: g.adults || 1,
+        children: g.children || 0,
+        infants: g.infants || 0,
+        pets: g.pets || 0,
+      });
+
+      // Update the display string "guests"
+      setGuests(g.label);
+    }
+  }, []); // Run only once when the screen opens
 
   const [selectedAddOns, setSelectedAddOns] = useState<AddOn[]>([]);
 

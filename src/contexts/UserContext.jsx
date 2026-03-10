@@ -1,19 +1,19 @@
+import { useRouter } from "expo-router";
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
-  useCallback,
 } from "react";
 import {
-  account,
-  tablesDB,
   DATABASE_ID,
   PROFILES_TABLE_ID,
+  account,
   getFileUrl,
   registerPush,
+  tablesDB,
 } from "../../lib/appwrite";
-import { useRouter } from "expo-router";
 
 const UserContext = createContext();
 
@@ -115,23 +115,33 @@ export function UserProvider(props) {
   }, []);
   async function hydrateAfterSignup() {
     try {
+      setIsInitializing(true); // 1. Start loading state
       const user = await account.get();
 
-      if (!user) return;
+      if (!user) {
+        setIsInitializing(false);
+        return;
+      }
 
       setUser(user);
       setIsLoggedIn(true);
+      console.log(user);
+      console.log("logged in");
 
+      // 2. Fetch the profile before navigating
       await fetchProfile(user.$id);
 
+      // 3. Optional: register push
       registerPush(user.$id).catch((err) => console.log("push failed", err));
 
+      // 4. Navigate to home
       router.replace("/");
     } catch (e) {
       console.log("Hydrate after signup failed", e);
+    } finally {
+      setIsInitializing(false); // 5. End loading state
     }
   }
-
   const init = useCallback(async () => {
     try {
       const session = await account.getSession("current");
