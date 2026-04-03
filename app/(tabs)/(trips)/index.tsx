@@ -195,73 +195,81 @@ const Trips = () => {
 
       // 6) Map bookings -> Trip[] using booking + listing + profile data
       const now = new Date();
+      const mapped: Trip[] = rows
+        .map((row: any): Trip | null => {
+          const endTimeISO = row.endTime as string | undefined;
+          const startTimeISO = row.startTime as string | undefined;
 
-      const mapped: Trip[] = rows.map((row: any) => {
-        const endTimeISO = row.endTime as string | undefined;
-        const startTimeISO = row.startTime as string | undefined;
+          const endDate = endTimeISO ? new Date(endTimeISO) : null;
+          const type: TripType =
+            endDate && endDate >= now ? "upcoming" : "past";
 
-        const endDate = endTimeISO ? new Date(endTimeISO) : null;
-        const type: TripType = endDate && endDate >= now ? "upcoming" : "past";
+          const listing = row.listingId ? listingMap[row.listingId] : undefined;
+          if (!listing) {
+            // Skip broken bookings entirely
+            return null;
+          }
 
-        const listing = row.listingId ? listingMap[row.listingId] : undefined;
+          // 👇 Adjust this to match your schema
+          const hostProfile =
+            listing?.ownerId && profileMap[listing.ownerId]
+              ? profileMap[listing.ownerId]
+              : undefined;
+          // Images from Appwrite (using imageIds field on listing)
+          let imageUrl: string | undefined;
 
-        // 👇 Adjust this to match your schema
-        const hostProfile =
-          listing?.ownerId && profileMap[listing.ownerId]
-            ? profileMap[listing.ownerId]
-            : undefined;
-        // Images from Appwrite (using imageIds field on listing)
-        let imageUrl: string | undefined;
+          if (
+            listing?.imageIds &&
+            Array.isArray(listing.imageIds) &&
+            listing.imageIds.length
+          ) {
+            const fileIds = listing.imageIds as string[];
 
-        if (
-          listing?.imageIds &&
-          Array.isArray(listing.imageIds) &&
-          listing.imageIds.length
-        ) {
-          const fileIds = listing.imageIds as string[];
+            const images = fileIds.map((fileId) =>
+              getImagePreviewUrl(fileId, {
+                width: 700,
+                height: 700,
+                quality: 70,
+              })
+            );
 
-          const images = fileIds.map((fileId) =>
-            getImagePreviewUrl(fileId, {
-              width: 700,
-              height: 700,
-              quality: 70,
-            })
-          );
+            imageUrl = images[0]; // use first as cover
+          }
 
-          imageUrl = images[0]; // use first as cover
-        }
+          // Build host label from profile (e.g. profile.name)
+          const hostName = hostProfile?.name;
+          const hostLabel = hostName
+            ? `Hosted by ${hostName}`
+            : "Hosted by ...";
 
-        // Build host label from profile (e.g. profile.name)
-        const hostName = hostProfile?.name;
-        const hostLabel = hostName ? `Hosted by ${hostName}` : "Hosted by ...";
+          const review = reviewMap[listing?.$id];
+          return {
+            id: row.$id,
+            listingId: listing?.$id,
+            type,
 
-        const review = reviewMap[listing?.$id];
-        return {
-          id: row.$id,
-          listingId: listing?.$id,
-          type,
+            title: listing?.title,
+            location: listing?.city,
+            image: imageUrl,
+            dates: formatDates(startTimeISO, endTimeISO),
+            nights: diffNights(startTimeISO, endTimeISO),
+            status: row.status,
+            latitude: listing?.latitude,
+            longitude: listing?.longitude,
+            phone: hostProfile?.phone,
 
-          title: listing?.title,
-          location: listing?.city,
-          image: imageUrl,
-          dates: formatDates(startTimeISO, endTimeISO),
-          nights: diffNights(startTimeISO, endTimeISO),
-          status: row.status,
-          latitude: listing?.latitude,
-          longitude: listing?.longitude,
-          phone: hostProfile.phone,
+            host: hostLabel,
+            ownerId: listing?.ownerId,
+            rating: listing?.avg_rating ?? 0,
+            reviews: listing?.review_count ?? 0,
 
-          host: hostLabel,
-          ownerId: listing?.ownerId,
-          rating: listing?.avg_rating ?? 0,
-          reviews: listing?.review_count ?? 0,
+            reviewed: Boolean(review),
+            reviewId: review?.$id,
 
-          reviewed: Boolean(review),
-          reviewId: review?.$id,
-
-          raw: row,
-        };
-      });
+            raw: row,
+          };
+        })
+        .filter((trip): trip is Trip => trip !== null);
       setTrips(mapped);
     } catch (err) {
       console.error("Error fetching trips", err);
